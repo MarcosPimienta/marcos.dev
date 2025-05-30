@@ -27,12 +27,16 @@ const Content: React.FC = () => {
     const instances: InstancedMesh[] = [];
     for (let i = 0; i < NUM_LEAVES; i++) {
       const inst = leaf.createInstance(`leafInst_${i}`); // returns InstancedMesh
+
+      // ← make this instance billboard too
+      inst.billboardMode = Mesh.BILLBOARDMODE_ALL;
+
       inst.position = new Vector3(
         (Math.random() - 0.5) * 4,
         (Math.random() - 0.5) * 4,
         (Math.random() - 0.5) * 4
       );
-      inst.rotation = new Vector3(0, Math.random() * Math.PI * 2, 0);
+      inst.rotation = new Vector3(0, 0, 0);
       const s = 0.5 + Math.random() * 0.7;
       inst.scaling = new Vector3(s, s, s);
       instances.push(inst);
