@@ -7,11 +7,13 @@
     "build": "webpack --mode=production"
   },
   "dependencies": {
-    "@babylonjs/core": "^8.0.0",
-    "@babylonjs/gui": "^8.0.0",
+    "@babylonjs/core": "^8.11.0",
+    "@babylonjs/gui": "^8.11.0",
     "@babylonjs/havok": "^1.3.10",
+    "@babylonjs/inspector": "^8.11.0",
     "@babylonjs/loaders": "^8.11.0",
-    "@babylonjs/materials": "^8.10.0",
+    "@babylonjs/materials": "^8.11.0",
+    "@babylonjs/node-editor": "^8.11.0",
     "@babylonjs/procedural-textures": "^8.10.0",
     "react": "^19",
     "react-dom": "^19",

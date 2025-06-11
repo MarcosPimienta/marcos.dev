@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import {
   Vector3,
-  StandardMaterial,
+  NodeMaterial,
   Texture,
   Color3,
   Mesh,
@@ -35,11 +35,11 @@ const Content: React.FC = () => {
     leafPlane.isVisible = false; // hide the “template” leaf
 
     // 2️⃣ Assign a cel-shaded, alpha-masked material to the base leaf
-    const leafMat = new StandardMaterial('leafMat', scene);
-    leafMat.diffuseTexture = new Texture('/textures/alphaleaf.png', scene);
-    leafMat.diffuseTexture.hasAlpha = true;
+    const leafMat = new NodeMaterial('leafMat', scene);
+    /* leafMat.diffuseTexture = new Texture('/textures/alphaleaf.png', scene);
+    leafMat.diffuseTexture.hasAlpha = true; */
     leafMat.backFaceCulling = true;
-    leafMat.emissiveColor = new Color3(1, 1, 1);
+    /* leafMat.emissiveColor = new Color3(1, 1, 1); */
     leafPlane.material = leafMat;
 
     // 3️⃣ Find the emitter mesh from loadedMeshes
