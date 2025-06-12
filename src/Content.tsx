@@ -1,23 +1,19 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';// registers shaders in Effect.ShadersStore
 import {
   Vector3,
-  NodeMaterial,
-  Texture,
   Color3,
+  Texture,
   Mesh,
   InstancedMesh,
-  MeshBuilder,
+  MeshBuilder
 } from '@babylonjs/core';
+import { CustomMaterial } from '@babylonjs/materials';
 import { useScene, useModel } from 'reactylon';
 import '@babylonjs/loaders';
 
 const Content: React.FC = () => {
   const scene = useScene();
-  // ① Load the emitter glTF via useModel (Suspense-friendly)
-  //    This returns an object containing the loaded meshes.
-  const { meshes: loadedMeshes } = useModel('/meshes/leaf_emitter.glb');
-
-  // ② Create a ref for our hidden “base leaf” plane
+  const { meshes: loadedMeshes } = useModel('meshes/leaf_emitter.glb');
   const leafPlaneRef = useRef<Mesh>(null!);
 
   useEffect(() => {
@@ -25,80 +21,88 @@ const Content: React.FC = () => {
       return;
     }
     const leafPlane = leafPlaneRef.current;
+    leafPlane.isVisible = false;
 
-    // 1️⃣ Create & hide the base leaf plane (only do this once)
-    //    If the plane doesn’t exist yet, build it now:
-    if (!leafPlane) {
-      // This block will actually never run because we set the ref on JSX below.
-      return;
-    }
-    leafPlane.isVisible = false; // hide the “template” leaf
+    // ─── Register per-instance faceNormal buffer ───────────────────────────────
+    leafPlane.registerInstancedBuffer("faceNormal", 3);
 
-    // 2️⃣ Assign a cel-shaded, alpha-masked material to the base leaf
-    const leafMat = new NodeMaterial('leafMat', scene);
-    /* leafMat.diffuseTexture = new Texture('/textures/alphaleaf.png', scene);
-    leafMat.diffuseTexture.hasAlpha = true; */
+    // 1) Create your CustomMaterial
+    const leafMat = new CustomMaterial('leafMat', scene);
+
+    // 1) In the VERTEX stage: declare our instanced attribute + varying
+    leafMat.Vertex_Definitions(`
+    #ifdef INSTANCES
+    attribute vec3 faceNormal;
+    varying vec3 vFaceNormal;
+    #endif
+    `);
+
+    // 2) At the top of main(): copy faceNormal into vFaceNormal
+    leafMat.Vertex_MainBegin(`
+    #ifdef INSTANCES
+        vFaceNormal = faceNormal;
+    #endif
+    `);
+
+    // 3) In the FRAGMENT stage: declare the varying
+    leafMat.Fragment_Definitions(`
+    varying vec3 vFaceNormal;
+    `);
+
+    // 4) Override the diffuse term to use vFaceNormal
+    leafMat.Fragment_Custom_Diffuse(`
+        vec3 N = normalize(vFaceNormal);
+        vec3 L = normalize(vec3(1.0, 1.0, 0.5));
+        float ndl = max(dot(N, L), 0.0);
+        diffuseColor.rgb *= ndl;
+    `);
+
+    // 5) Usual texture + alpha
+    leafMat.diffuseTexture = new Texture('textures/alphaleaf.png', scene);
+    leafMat.diffuseTexture.hasAlpha = true;
+    leafMat.emissiveColor = new Color3(0.1, 0.1, 0.1);
     leafMat.backFaceCulling = true;
-    /* leafMat.emissiveColor = new Color3(1, 1, 1); */
+
+    // Finally assign it
     leafPlane.material = leafMat;
 
-    // 3️⃣ Find the emitter mesh from loadedMeshes
-    //    (Replace “LeafEmitter” with the actual name you exported from Blender,
-    //     or simply take the first mesh if it’s the only one.)
-    const emitter =
-      loadedMeshes.find((m) => m.name === 'LeafEmitter') ?? loadedMeshes[0];
-    emitter.isVisible = false; // hide the emitter itself
-
-    // 4️⃣ Extract emitter geometry data:
+    // ─── Hide emitter and extract geometry ────────────────────────────────────
+    const emitter = loadedMeshes.find(m => m.name === 'LeafEmitter') ?? loadedMeshes[0];
+    emitter.isVisible = false;
     const positions = emitter.getVerticesData('position')!;
-    const indices = emitter.getIndices()!;
-    // We’ll recompute normals from the triangle vertices instead of reading “normal” data.
+    const indices   = emitter.getIndices()!;
 
-    // 5️⃣ Build arrays of face centers + face normals:
+    // ─── Compute face centers & normals ────────────────────────────────────────
     const faceCenters: Vector3[] = [];
     const faceNormals: Vector3[] = [];
     for (let i = 0; i < indices.length; i += 3) {
       const i0 = indices[i] * 3;
       const i1 = indices[i + 1] * 3;
       const i2 = indices[i + 2] * 3;
-
-      const v0 = new Vector3(positions[i0], positions[i0 + 1], positions[i0 + 2]);
-      const v1 = new Vector3(positions[i1], positions[i1 + 1], positions[i1 + 2]);
-      const v2 = new Vector3(positions[i2], positions[i2 + 1], positions[i2 + 2]);
-
-      // center = (v0 + v1 + v2) / 3
-      const center = v0.add(v1).add(v2).scale(1 / 3);
-      faceCenters.push(center);
-
-      // normal = cross(v1 - v0, v2 - v0).normalize()
-      const edge1 = v1.subtract(v0);
-      const edge2 = v2.subtract(v0);
-      const normal = Vector3.Cross(edge1, edge2).normalize();
-      faceNormals.push(normal);
+      const v0 = new Vector3(positions[i0],     positions[i0 + 1],     positions[i0 + 2]);
+      const v1 = new Vector3(positions[i1],     positions[i1 + 1],     positions[i1 + 2]);
+      const v2 = new Vector3(positions[i2],     positions[i2 + 1],     positions[i2 + 2]);
+      faceCenters.push(v0.add(v1).add(v2).scale(1 / 3));
+      faceNormals.push(Vector3.Cross(v1.subtract(v0), v2.subtract(v0)).normalize());
     }
 
-    // 6️⃣ Instantiate one leaf per face
-    const density = 0.2; // 20% of faces
+    // ─── Instantiate leaves (random 20% sampling) ──────────────────────────────
+    const density = 0.2;
     const instances: InstancedMesh[] = [];
-
     faceCenters.forEach((center, idx) => {
-      // Only proceed for ~20% of faces:
-      if (Math.random() > density) {
-        return;
-      }
-
+      if (Math.random() > density) return;
       const normal = faceNormals[idx];
       const inst = leafPlane.createInstance(`leafInst_${idx}`);
-      inst.position   = center.add(normal.scale(0.01));
-      inst.billboardMode = Mesh.BILLBOARDMODE_ALL;
-
-      const s = 0.5 + Math.random() * 0.7;
-      inst.scaling    = new Vector3(s, s, s);
-      inst.rotation.z = Math.random() * Math.PI * 2;
+      inst.position        = center.add(normal.scale(0.01));
+      inst.billboardMode   = Mesh.BILLBOARDMODE_ALL;
+      const s              = 0.5 + Math.random() * 0.7;
+      inst.scaling         = new Vector3(s, s, s);
+      inst.rotation.z      = Math.random() * Math.PI * 2;
+      inst.instancedBuffers.faceNormal = [normal.x, normal.y, normal.z];
       instances.push(inst);
     });
 
-    // 7️⃣ Simple wind sway via sine-wave on each instance
+    // ─── Simple wind sway ──────────────────────────────────────────────────────
     const windObserver = scene.onBeforeRenderObservable.add(() => {
       const t = performance.now() * 0.001;
       instances.forEach((inst, i) => {
@@ -106,16 +110,15 @@ const Content: React.FC = () => {
       });
     });
 
-    // 8️⃣ Clean up when unmounting or rerendering:
+    // ─── Cleanup on unmount ────────────────────────────────────────────────────
     return () => {
       scene.onBeforeRenderObservable.remove(windObserver);
-      instances.forEach((i) => i.dispose());
+      instances.forEach(i => i.dispose());
       leafMat.dispose();
       leafPlane.dispose();
     };
   }, [scene, loadedMeshes]);
 
-  // 9️⃣ Render the “hidden” leaf template. We don’t render the emitter because it’s hidden above.
   return (
     <plane
       ref={leafPlaneRef}

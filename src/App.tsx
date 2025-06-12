@@ -37,7 +37,7 @@ const App: React.FC<AppProps> = ({ havok }) => {
               if (scene.debugLayer.isVisible()) {
                 scene.debugLayer.hide();
               } else {
-                scene.debugLayer.show({ embedMode: true, overlay: true });
+                scene.debugLayer.show({ embedMode: true, overlay: true});
               }
             }
           });
