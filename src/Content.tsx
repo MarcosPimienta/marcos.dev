@@ -7,6 +7,7 @@ import {
   InstancedMesh,
 } from '@babylonjs/core';
 import { CustomMaterial } from '@babylonjs/materials';
+import { TransformNode } from '@babylonjs/core/Meshes';
 import { useScene, useModel } from 'reactylon';
 import '@babylonjs/loaders';
 
@@ -35,7 +36,7 @@ const Content: React.FC = () => {
     leafMat.backFaceCulling       = true;
 
     // ─── 2) Emissive = your green ramp ──────────────────────────────────────
-    //     (we'll sample this as `emissiveSampler` in the fragment)
+    //     (we'll sample this as emissiveSampler in the fragment)
     leafMat.emissiveTexture       = new Texture('textures/greenRamp.png', scene);
     leafMat.emissiveTexture.hasAlpha = false;
 
@@ -86,7 +87,7 @@ const Content: React.FC = () => {
 
     // 4c) Pass the alpha through so you keep the leaf silhouette
     leafMat.Fragment_Custom_Alpha(`
-      alpha = texture2D(diffuseSampler, vUV).a;
+      alpha = texture2D(diffuseSampler, vUV).a;'
     `);
 
     // texture + alpha settings
@@ -135,6 +136,14 @@ const Content: React.FC = () => {
       instances.push(inst);
     });
 
+    const bush00 = new TransformNode('bush00', scene);
+    instances.forEach(inst => inst.parent = bush00);
+
+    // Now you can _clone_ the entire hierarchy (bush + all its children)
+    // with a normal deep clone:
+    const bush01 = bush00.clone('bush01', null /* newParent */, true /* cloneChildren */)!;
+    bush01.position.set(5, 2, 1);
+
     // Wind sway
     const windObserver = scene.onBeforeRenderObservable.add(() => {
       const t = performance.now() * 0.001;
@@ -146,7 +155,9 @@ const Content: React.FC = () => {
     // Cleanup
     return () => {
       scene.onBeforeRenderObservable.remove(windObserver);
-      instances.forEach((i) => i.dispose());
+      instances.forEach(i => i.dispose());
+      bush00.dispose();   // this also disposes all children
+      bush01.dispose();   // if you created instances
       leafMat.dispose();
       leafPlane.dispose();
     };
