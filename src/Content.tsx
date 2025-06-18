@@ -45,11 +45,12 @@ const Content: React.FC = () => {
     leafPlane.isVisible = false;
 
     const root = new TransformNode('Tree_W_Leaves', scene);
+    root.position = new Vector3(0, -1, 0);
 
     const treeRoot = treeMeshes[0];
     treeRoot.parent = root;
     treeRoot.isVisible = true;
-    treeRoot.position    = new Vector3(0, -1, 0);
+    treeRoot.position    = new Vector3(0, 0, 0);
     treeRoot.checkCollisions = false;
 
     // 1) Per-instance buffers
