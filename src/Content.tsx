@@ -44,9 +44,12 @@ const Content: React.FC = () => {
     leafPlane.scaling.scaleInPlace(GLOBAL_SCALE);
     leafPlane.isVisible = false;
 
+    const root = new TransformNode('Tree_W_Leaves', scene);
+
     const treeRoot = treeMeshes[0];
+    treeRoot.parent = root;
     treeRoot.isVisible = true;
-    treeRoot.position    = new Vector3(0, 0, 0);
+    treeRoot.position    = new Vector3(0, -1, 0);
     treeRoot.checkCollisions = false;
 
     // 1) Per-instance buffers
@@ -122,6 +125,7 @@ varying float vShadeOffset;
     const allInstances: InstancedMesh[] = [];
     const allBushes = BUSH_POSITIONS.map((pos, bi) => {
       const bushNode = new TransformNode(`bush${bi}, scene`);
+      bushNode.parent   = root;
       bushNode.position.copyFrom(pos);
       bushNode.scaling.scaleInPlace(GLOBAL_SCALE);
 
@@ -158,6 +162,7 @@ varying float vShadeOffset;
       allBushes.forEach(b => b.dispose());
       leafMat.dispose();
       leafPlane.dispose();
+      root.dispose();
     };
   }, [scene, loadedMeshes]);
 
