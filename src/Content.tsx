@@ -170,12 +170,48 @@ export const Content: React.FC = () => {
     grassPlane.registerInstancedBuffer('faceNormal', 3);
     grassPlane.registerInstancedBuffer('shadeOffset', 1);
 
-    const grassMat = new StandardMaterial('grassMat', scene);
+    const grassMat = new CustomMaterial('grassMat', scene);
     grassMat.diffuseTexture = new Texture('textures/grass_leaf.png', scene);
     grassMat.diffuseTexture.hasAlpha = true;
     grassMat.alphaCutOff = 0.7;
+    grassMat.emissiveTexture = new Texture('textures/grass_ramp.png', scene);
     grassMat.specularColor = new Color3(0.1, 0.3, 0.1);
-    grassMat.specularPower = 64;
+    grassMat.specularPower = 128;
+
+    grassMat.Vertex_Definitions(`
+      #ifdef INSTANCES
+        attribute vec3 faceNormal;
+        attribute float shadeOffset;
+        varying vec3 vFaceNormal;
+        varying float vShadeOffset;
+      #endif
+      varying vec2 vUV;
+    `);
+    grassMat.Vertex_MainBegin(`vUV = uv;`);
+    grassMat.Vertex_Before_PositionUpdated(`
+      #ifdef INSTANCES
+        vFaceNormal = normalize((world * vec4(faceNormal, 0.0)).xyz);
+        vShadeOffset = shadeOffset;
+      #endif
+    `);
+    grassMat.Fragment_Definitions(`
+      varying vec3 vFaceNormal;
+      varying vec2 vUV;
+      varying float vShadeOffset;
+      uniform sampler2D ambientSampler;
+    `);
+    grassMat.Fragment_Custom_Diffuse(`
+      float a = texture2D(diffuseSampler, vUV).a;
+      if (a < 0.5) discard;
+
+      float ndl = max(dot(normalize(vFaceNormal), normalize(vec3(1.0,1.0,0.5))), 0.0);
+      float u = clamp(ndl + vShadeOffset, 0.0, 1.0);
+      vec3 rampCol = texture2D(emissiveSampler, vec2(u, 0.5)).rgb;
+      float ao = texture2D(ambientSampler, vUV).r;
+      rampCol *= ao;
+      diffuseColor = rampCol;
+    `);
+    grassMat.Fragment_Custom_Alpha(`alpha = texture2D(diffuseSampler, vUV).a;`);
     grassPlane.material = grassMat;
 
     const hill = hillMeshes.find(m => m.name === 'Hill') ?? hillMeshes[0];
