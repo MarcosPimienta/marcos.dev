@@ -208,11 +208,11 @@ export const Content: React.FC = () => {
     const toCam = new Vector3();
 
     gFaceCenters.forEach((center, idx) => {
-      if (Math.random() > 0.1) return;
+      if (Math.random() > 0.4) return;
       const normal = gFaceNormals[idx];
       const inst = grassPlane.createInstance(`g_inst_${idx}`);
+      inst.position = center.subtract(root.position); // compensate for root shift
       inst.parent = grassRoot;
-      inst.position = center;
       inst.billboardMode = Mesh.BILLBOARDMODE_ALL;
       const s = 0.15 + Math.random() * 0.15;
       inst.scaling = new Vector3(s, s, s);
