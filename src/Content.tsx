@@ -41,9 +41,11 @@ export const Content: React.FC = () => {
   const { meshes: treeMeshes } = useModel('/meshes/SakuraTree.glb');
   const { meshes: hillMeshes } = useModel('/meshes/Hill.glb');
   const { meshes: grassEmitter } = useModel('/meshes/GrassEmitter.glb');
+  const { meshes: sandMeshes } = useModel('/meshes/Sand.glb');
 
   const leafPlaneRef = useRef<Mesh>(null!);
   const grassPlaneRef = useRef<Mesh>(null!);
+  const sandPlaneRef = useRef<Mesh>(null!);
 
   useEffect(() => {
     if (!scene || !leafPlaneRef.current || !grassPlaneRef.current || leafMeshes.length === 0) return;
@@ -51,6 +53,11 @@ export const Content: React.FC = () => {
     const GLOBAL_SCALE = 0.3;
     const root = new TransformNode('SceneRoot', scene);
     root.position.set(0, -1, 0);
+
+    // ─── Sand setup ─────────────────────────
+    const sand = sandMeshes.find(m => m.name === 'Sand') ?? sandMeshes[0];
+    sand.parent = root;
+    sand.isVisible = true;
 
     // ─── Tree setup ─────────────────────────
     const treeRoot = treeMeshes[0];
@@ -164,6 +171,7 @@ export const Content: React.FC = () => {
     // ─── Grass instancing ─────────────────────────────
     const grassPlane = grassPlaneRef.current;
     const grassRoot = new TransformNode('GrassRoot', scene);
+    grassRoot.position = new Vector3(0, -0.95, 0);
     grassRoot.parent = root;
     grassPlane.scaling.scaleInPlace(0.1);
     grassPlane.isVisible = false;
@@ -264,7 +272,7 @@ export const Content: React.FC = () => {
         i.rotation.z = Math.sin(t + x * 0.15) * 0.05;
       });
       grassInstances.forEach((g, x) => {
-        g.rotation.z = Math.cos(t + x * 0.11) * 0.03;
+        g.rotation.z = Math.cos(t + x * 0.11) * 0.08;
       });
     });
 
