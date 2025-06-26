@@ -8,7 +8,11 @@ import {
   Mesh,
   InstancedMesh,
   StandardMaterial,
-  PBRMaterial
+  CubeTexture,
+  MeshBuilder,
+  ArcRotateCamera,
+  PBRMaterial,
+  Tools
 } from '@babylonjs/core';
 import { CustomMaterial, CellMaterial } from '@babylonjs/materials';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode';
@@ -54,10 +58,77 @@ export const Content: React.FC = () => {
     const root = new TransformNode('SceneRoot', scene);
     root.position.set(0, -1, 0);
 
+    const target = scene.getMeshByName('tree')?.position ?? Vector3.Zero();
+
+    const camera = new ArcRotateCamera(
+      'mainCamera',
+      Tools.ToRadians(135), // alpha (horizontal angle)
+      Tools.ToRadians(65),  // beta (vertical angle)
+      10,                   // radius (distance from target)
+      target,
+      scene
+    );
+
+    // Orbit constraints
+    camera.lowerBetaLimit = Tools.ToRadians(15);   // Prevent going too low
+    camera.upperBetaLimit = Tools.ToRadians(85);   // Prevent flipping over
+    camera.lowerRadiusLimit = 10;                  // Zoom-in limit
+    camera.upperRadiusLimit = 50;                  // Zoom-out limit
+    camera.allowUpsideDown = false;
+
+    camera.attachControl(undefined, true);
+    scene.activeCamera = camera;
+
+    // Create a large sphere for the sky
+    const skyDome = MeshBuilder.CreateSphere("skyDome", { diameter: 10000 }, scene);
+    skyDome.scaling.x = -1; // Invert it to be visible from inside
+    skyDome.isPickable = false;
+    skyDome.infiniteDistance = false;
+
+    // Create the background material
+    // Skybox
+    const skybox = MeshBuilder.CreateBox("skyBox", {size:1000.0}, scene);
+    const skyboxMaterial = new StandardMaterial("skyBox", scene);
+    skyboxMaterial.backFaceCulling = false;
+    skyboxMaterial.reflectionTexture = new CubeTexture("textures/skybox/sandbox", scene, ["_px.png", "_py.png", "_pz.png", "_nx.png", "_ny.png", "_nz.png"]);
+    skyboxMaterial.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
+    skyboxMaterial.diffuseColor = new Color3(0, 0, 0);
+    skyboxMaterial.specularColor = new Color3(0, 0, 0);
+    skybox.material = skyboxMaterial;
+
     // ─── Sand setup ─────────────────────────
     const sand = sandMeshes.find(m => m.name === 'Sand') ?? sandMeshes[0];
     sand.parent = root;
     sand.isVisible = true;
+
+    const sandMat = new CustomMaterial('sandGrainMat', scene);
+
+    sandMat.diffuseColor = Color3.FromHexString('#DBD5D1').toLinearSpace();
+    sandMat.specularColor = new Color3(0.0, 0.0, 0.0);
+
+    sandMat.Vertex_Definitions(`
+      attribute vec2 uv;
+      varying vec2 vUV;
+    `);
+
+    sandMat.Vertex_MainEnd(`
+      vUV = uv;
+    `);
+
+    sandMat.Fragment_Definitions(`
+      varying vec2 vUV;
+      float random(vec2 uv) {
+        return fract(sin(dot(uv, vec2(12.9898,78.233))) * 43758.5453123);
+      }
+    `);
+
+    sandMat.Fragment_Custom_Diffuse(`
+      float grain = random(vUV * 200.0);
+      vec3 sandColor = diffuseColor * (0.9 + 0.1 * grain);
+      diffuseColor = sandColor;
+    `);
+
+    sand.material = sandMat;
 
     // ─── Tree setup ─────────────────────────
     const treeRoot = treeMeshes[0];
@@ -87,7 +158,7 @@ export const Content: React.FC = () => {
     leafMat.diffuseTexture = new Texture('textures/alphaleaf.png', scene);
     leafMat.diffuseTexture.hasAlpha = true;
     leafMat.alphaCutOff = 0.7;
-    leafMat.emissiveTexture = new Texture('textures/h_greenRamp.png', scene);
+    leafMat.emissiveTexture = new Texture('textures/grass_ramp.png', scene);
     leafMat.specularColor = new Color3(0.1, 0.3, 0.1);
     leafMat.specularPower = 128;
 
@@ -223,12 +294,20 @@ export const Content: React.FC = () => {
     grassPlane.material = grassMat;
 
     const hill = hillMeshes.find(m => m.name === 'Hill') ?? hillMeshes[0];
+    hill.scaling = new Vector3(1.05, 0.55, 1.06);
     hill.parent = root;
     hill.isVisible = true;
+    const hillMat = new StandardMaterial('hillCell', scene);
+    hillMat.diffuseColor = Color3.FromHexString('#89EF00').toLinearSpace();
+    hillMat.diffuseTexture = new Texture("textures/HillBase.png", scene);
+    hillMat.emissiveTexture = new Texture("textures/HillBase.png", scene);
+    hillMat.specularColor = new Color3(0, 0, 0);
+    //hill.material = hillMat;
 
     const baseEmitter = grassEmitter.find(m => m.name === 'GrassEmitt') ?? grassEmitter[0];
     baseEmitter.parent = root;
-    baseEmitter.isVisible = true;
+    baseEmitter.isVisible = false;
+
     const gPositions = baseEmitter.getVerticesData('position')!;
     const gIndices = baseEmitter.getIndices()!;
     const gFaceCenters: Vector3[] = [];
@@ -246,10 +325,6 @@ export const Content: React.FC = () => {
     }
 
     const grassInstances: InstancedMesh[] = [];
-    const up = Vector3.Up();
-    const tmpQuat = new Quaternion();
-    const tmpMat = Matrix.Identity();
-    const toCam = new Vector3();
 
     gFaceCenters.forEach((center, idx) => {
       if (Math.random() > 0.4) return;
@@ -290,6 +365,7 @@ export const Content: React.FC = () => {
       leafMat.dispose();
       leafPlane.dispose();
       grassPlane.dispose();
+      camera.dispose(); // Clean up on unmount
       root.dispose();
     };
   }, [scene, leafMeshes, treeMeshes]);
