@@ -70,10 +70,10 @@ export const Content: React.FC = () => {
     );
 
     // Orbit constraints
-    camera.lowerBetaLimit = Tools.ToRadians(15);   // Prevent going too low
-    camera.upperBetaLimit = Tools.ToRadians(85);   // Prevent flipping over
-    camera.lowerRadiusLimit = 10;                  // Zoom-in limit
-    camera.upperRadiusLimit = 50;                  // Zoom-out limit
+    camera.lowerBetaLimit = Tools.ToRadians(45);   // Prevent going too low
+    camera.upperBetaLimit = Tools.ToRadians(98);   // Prevent flipping over
+    camera.lowerRadiusLimit = 3;                  // Zoom-in limit
+    camera.upperRadiusLimit = 6;                  // Zoom-out limit
     camera.allowUpsideDown = false;
 
     camera.attachControl(undefined, true);
