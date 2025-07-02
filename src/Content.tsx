@@ -46,6 +46,7 @@ export const Content: React.FC = () => {
   const { meshes: hillMeshes } = useModel('/meshes/Hill.glb');
   const { meshes: grassEmitter } = useModel('/meshes/GrassEmitter.glb');
   const { meshes: sandMeshes } = useModel('/meshes/Sand.glb');
+  const { meshes: largeWallMeshes } = useModel('/meshes/LargeWalls.glb');
 
   const leafPlaneRef = useRef<Mesh>(null!);
   const grassPlaneRef = useRef<Mesh>(null!);
