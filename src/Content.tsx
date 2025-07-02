@@ -46,11 +46,10 @@ export const Content: React.FC = () => {
   const { meshes: hillMeshes } = useModel('/meshes/Hill.glb');
   const { meshes: grassEmitter } = useModel('/meshes/GrassEmitter.glb');
   const { meshes: sandMeshes } = useModel('/meshes/Sand.glb');
-  const { meshes: largeWallMeshes } = useModel('/meshes/LargeWalls.glb');
+  const { meshes: smallWallMeshes } = useModel('/meshes/SmallWalls.glb');
 
   const leafPlaneRef = useRef<Mesh>(null!);
   const grassPlaneRef = useRef<Mesh>(null!);
-  const sandPlaneRef = useRef<Mesh>(null!);
 
   useEffect(() => {
     if (!scene || !leafPlaneRef.current || !grassPlaneRef.current || leafMeshes.length === 0) return;
@@ -96,6 +95,22 @@ export const Content: React.FC = () => {
     skyboxMaterial.diffuseColor = new Color3(0, 0, 0);
     skyboxMaterial.specularColor = new Color3(0, 0, 0);
     skybox.material = skyboxMaterial;
+
+    // ─── Ground setup ─────────────────────────
+    const ground = MeshBuilder.CreatePlane("floor", {size:15.0}, scene);
+    const groundMat = new StandardMaterial("dirtGround", scene);
+    groundMat.diffuseTexture = new Texture('textures/dirt_floor.png', scene);
+    groundMat.emissiveTexture = new Texture('textures/dirt_floor.png', scene);
+    ground.material = groundMat;
+    ground.rotation.x = Tools.ToRadians(90);
+    ground.position.set(0, -1.295, 0);
+
+
+    // ─── Wall setup ─────────────────────────
+    const walls = smallWallMeshes.find(m => m.name === 'LargeWalls') ?? smallWallMeshes[0];
+    walls.parent = root;
+    walls.position.set(0, -1, 0);
+    walls.isVisible = true;
 
     // ─── Sand setup ─────────────────────────
     const sand = sandMeshes.find(m => m.name === 'Sand') ?? sandMeshes[0];
