@@ -22,6 +22,13 @@ const App: React.FC<AppProps> = ({ havok }) => {
           // Create default camera & light
           scene.createDefaultCameraOrLight(true, undefined, true);
 
+          // Increase default light intensity
+          if (scene.lights.length > 0) {
+            scene.lights.forEach(light => {
+              light.intensity = 1.34; // 💡 Adjust brightness
+            });
+          }
+
           // Show the Inspector immediately
           scene.debugLayer.show({
             embedMode: true,  // Inspector embedded in canvas area

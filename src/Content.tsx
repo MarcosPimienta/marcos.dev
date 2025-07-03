@@ -46,7 +46,7 @@ export const Content: React.FC = () => {
   const { meshes: hillMeshes } = useModel('/meshes/Hill.glb');
   const { meshes: grassEmitter } = useModel('/meshes/GrassEmitter.glb');
   const { meshes: sandMeshes } = useModel('/meshes/Sand.glb');
-  const { meshes: smallWallMeshes } = useModel('/meshes/SmallWalls.glb');
+  const { meshes: smallWallMeshes } = useModel('/meshes/SmallerWalls.glb');
 
   const leafPlaneRef = useRef<Mesh>(null!);
   const grassPlaneRef = useRef<Mesh>(null!);
@@ -57,6 +57,7 @@ export const Content: React.FC = () => {
     const GLOBAL_SCALE = 0.3;
     const root = new TransformNode('SceneRoot', scene);
     root.position.set(0, -1, 0);
+    root.scaling.set(1.8, 1.8, 1.8);
 
     const target = scene.getMeshByName('tree')?.position ?? Vector3.Zero();
 
@@ -73,50 +74,37 @@ export const Content: React.FC = () => {
     camera.lowerBetaLimit = Tools.ToRadians(45);   // Prevent going too low
     camera.upperBetaLimit = Tools.ToRadians(98);   // Prevent flipping over
     camera.lowerRadiusLimit = 3;                  // Zoom-in limit
-    camera.upperRadiusLimit = 6;                  // Zoom-out limit
+    camera.upperRadiusLimit = 7.2;                  // Zoom-out limit
     camera.allowUpsideDown = false;
 
     camera.attachControl(undefined, true);
     scene.activeCamera = camera;
 
     // Create a large sphere for the sky
-    const skyDome = MeshBuilder.CreateSphere("skyDome", { diameter: 10000 }, scene);
+    /* const skyDome = MeshBuilder.CreateSphere("skyDome", { diameter: 10000 }, scene);
     skyDome.scaling.x = -1; // Invert it to be visible from inside
     skyDome.isPickable = false;
-    skyDome.infiniteDistance = false;
+    skyDome.infiniteDistance = false; */
 
     // Create the background material
     // Skybox
-    const skybox = MeshBuilder.CreateBox("skyBox", {size:1000.0}, scene);
+    const skybox = MeshBuilder.CreateBox("skyBox", {size:500.0}, scene);
     const skyboxMaterial = new StandardMaterial("skyBox", scene);
     skyboxMaterial.backFaceCulling = false;
-    skyboxMaterial.reflectionTexture = new CubeTexture("textures/skybox/sandbox", scene, ["_px.png", "_py.png", "_pz.png", "_nx.png", "_ny.png", "_nz.png"]);
+    skyboxMaterial.reflectionTexture = new CubeTexture("textures/skybox/skybox", scene, ["_px.png", "_py.png", "_pz.png", "_nx.png", "_ny.png", "_nz.png"]);
     skyboxMaterial.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
     skyboxMaterial.diffuseColor = new Color3(0, 0, 0);
     skyboxMaterial.specularColor = new Color3(0, 0, 0);
     skybox.material = skyboxMaterial;
 
-    // ─── Ground setup ─────────────────────────
-    const ground = MeshBuilder.CreatePlane("floor", {size:15.0}, scene);
-    const groundMat = new StandardMaterial("dirtGround", scene);
-    groundMat.diffuseTexture = new Texture('textures/dirt_floor.png', scene);
-    groundMat.emissiveTexture = new Texture('textures/dirt_floor.png', scene);
-    ground.material = groundMat;
-    ground.rotation.x = Tools.ToRadians(90);
-    ground.position.set(0, -1.295, 0);
-
-
     // ─── Wall setup ─────────────────────────
     const walls = smallWallMeshes.find(m => m.name === 'LargeWalls') ?? smallWallMeshes[0];
-    walls.parent = root;
-    walls.position.set(0, -1, 0);
+    walls.position.set(0, -1.4, 0);
     walls.isVisible = true;
 
     // ─── Sand setup ─────────────────────────
     const sand = sandMeshes.find(m => m.name === 'Sand') ?? sandMeshes[0];
     sand.parent = root;
-    sand.scaling.x = 1.4;
-    sand.scaling.z = 1.4;
     sand.isVisible = true;
 
     const sandMat = new CustomMaterial('sandGrainMat', scene);
@@ -312,7 +300,7 @@ export const Content: React.FC = () => {
     grassPlane.material = grassMat;
 
     const hill = hillMeshes.find(m => m.name === 'Hill') ?? hillMeshes[0];
-    hill.scaling = new Vector3(1.43, 0.55, 1.43);
+    hill.scaling = new Vector3(0.92, 0.445, 0.91);
     hill.parent = root;
     hill.isVisible = true;
     const hillMat = new StandardMaterial('hillCell', scene);
@@ -407,7 +395,7 @@ export const Content: React.FC = () => {
       leafPlane.dispose();
       grassPlane.dispose();
       watercolorPost.dispose();
-      camera.dispose(); // Clean up on unmount
+      camera.dispose();
       root.dispose();
     };
   }, [scene, leafMeshes, treeMeshes]);
