@@ -2,8 +2,8 @@ import React, { useEffect, useRef } from 'react';
 import {
   Vector3,
   Color3,
-  Quaternion,
-  Matrix,
+  PostProcess,
+  Effect,
   Texture,
   Mesh,
   InstancedMesh,
@@ -115,6 +115,8 @@ export const Content: React.FC = () => {
     // ─── Sand setup ─────────────────────────
     const sand = sandMeshes.find(m => m.name === 'Sand') ?? sandMeshes[0];
     sand.parent = root;
+    sand.scaling.x = 1.4;
+    sand.scaling.z = 1.4;
     sand.isVisible = true;
 
     const sandMat = new CustomMaterial('sandGrainMat', scene);
@@ -310,7 +312,7 @@ export const Content: React.FC = () => {
     grassPlane.material = grassMat;
 
     const hill = hillMeshes.find(m => m.name === 'Hill') ?? hillMeshes[0];
-    hill.scaling = new Vector3(1.05, 0.55, 1.06);
+    hill.scaling = new Vector3(1.43, 0.55, 1.43);
     hill.parent = root;
     hill.isVisible = true;
     const hillMat = new StandardMaterial('hillCell', scene);
@@ -318,7 +320,6 @@ export const Content: React.FC = () => {
     hillMat.diffuseTexture = new Texture("textures/HillBase.png", scene);
     hillMat.emissiveTexture = new Texture("textures/HillBase.png", scene);
     hillMat.specularColor = new Color3(0, 0, 0);
-    //hill.material = hillMat;
 
     const baseEmitter = grassEmitter.find(m => m.name === 'GrassEmitt') ?? grassEmitter[0];
     baseEmitter.parent = root;
@@ -367,6 +368,30 @@ export const Content: React.FC = () => {
       });
     });
 
+    // PostProcess: Watercolor Shader
+    Effect.ShadersStore["watercolorFragmentShader"] = `
+      precision highp float;
+      varying vec2 vUV;
+      uniform sampler2D textureSampler;
+
+      void main(void) {
+        vec4 color = texture2D(textureSampler, vUV);
+        float gray = dot(color.rgb, vec3(0.299, 0.587, 0.114));
+        gray += (fract(sin(dot(vUV.xy, vec2(12.9898,78.233))) * 43758.5453123) - 0.5) * 0.05;
+        vec3 finalColor = mix(color.rgb, vec3(gray), 0.3);
+        gl_FragColor = vec4(finalColor, 1.0);
+      }
+    `;
+    console.log("Shader loaded?", "watercolorFragmentShader" in Effect.ShadersStore);
+    const watercolorPost = new PostProcess(
+      "watercolor",
+      "watercolor",
+      [],
+      null,
+      1.0,
+      camera
+    );
+
     const ssao = new SSAO2RenderingPipeline("ssao", scene, 0.5, [scene.activeCamera!]);
     ssao.radius = 2;
     ssao.samples = 16;
@@ -381,6 +406,7 @@ export const Content: React.FC = () => {
       leafMat.dispose();
       leafPlane.dispose();
       grassPlane.dispose();
+      watercolorPost.dispose();
       camera.dispose(); // Clean up on unmount
       root.dispose();
     };
