@@ -4,6 +4,7 @@ import {
   Color3,
   PostProcess,
   Effect,
+  NoiseProceduralTexture,
   Texture,
   Mesh,
   InstancedMesh,
@@ -45,7 +46,7 @@ export const Content: React.FC = () => {
   const { meshes: treeMeshes } = useModel('/meshes/SakuraTree.glb');
   const { meshes: hillMeshes } = useModel('/meshes/Hill.glb');
   const { meshes: grassEmitter } = useModel('/meshes/GrassEmitter.glb');
-  const { meshes: sandMeshes } = useModel('/meshes/Sand.glb');
+  /* const { meshes: sandMeshes } = useModel('/meshes/Sand.glb'); */
   const { meshes: smallWallMeshes } = useModel('/meshes/SmallerWalls.glb');
 
   const leafPlaneRef = useRef<Mesh>(null!);
@@ -102,39 +103,44 @@ export const Content: React.FC = () => {
     walls.position.set(0, -1.4, 0);
     walls.isVisible = true;
 
-    // ─── Sand setup ─────────────────────────
-    const sand = sandMeshes.find(m => m.name === 'Sand') ?? sandMeshes[0];
-    sand.parent = root;
-    sand.isVisible = true;
+    // Load ground from height map
+    const ground = MeshBuilder.CreateGroundFromHeightMap(
+      "sandGround",
+      "textures/sand_height_waves.png", // ✅ your heightmap image
+      {
+        width: 15,             // Width of ground
+        height: 15,            // Height of ground
+        subdivisions: 1000,     // More subdivisions = smoother
+        minHeight: 0,          // Lowest height
+        maxHeight: 0.15          // Highest height
+      },
+      scene
+    );
 
-    const sandMat = new CustomMaterial('sandGrainMat', scene);
+    // Adjust position if needed
+    ground.position.y = -1.5;
 
-    sandMat.diffuseColor = Color3.FromHexString('#DBD5D1').toLinearSpace();
-    sandMat.specularColor = new Color3(0.0, 0.0, 0.0);
+    // Create PBR Material for sand
+    const sandPBRMat = new PBRMaterial("sandPBRMat", scene);
 
-    sandMat.Vertex_Definitions(`
-      attribute vec2 uv;
-      varying vec2 vUV;
-    `);
+    // Albedo (diffuse) texture for sand color
+    const albedoTex = new Texture("textures/sand_diffuse.png", scene);
+    albedoTex.uScale = 10; // Tile
+    albedoTex.vScale = 10;
+    sandPBRMat.albedoTexture = albedoTex;
 
-    sandMat.Vertex_MainEnd(`
-      vUV = uv;
-    `);
+    // Macro height details
+    const normalTex = new Texture("textures/sand_normal.png", scene);
+    normalTex.uScale = 10;
+    normalTex.vScale = 10;
+    sandPBRMat.bumpTexture = normalTex;
 
-    sandMat.Fragment_Definitions(`
-      varying vec2 vUV;
-      float random(vec2 uv) {
-        return fract(sin(dot(uv, vec2(12.9898,78.233))) * 43758.5453123);
-      }
-    `);
+    // PBR settings
+    sandPBRMat.metallic = 0;
+    sandPBRMat.roughness = 0.8;
 
-    sandMat.Fragment_Custom_Diffuse(`
-      float grain = random(vUV * 200.0);
-      vec3 sandColor = diffuseColor * (0.9 + 0.1 * grain);
-      diffuseColor = sandColor;
-    `);
-
-    sand.material = sandMat;
+    // Apply material
+    ground.material = sandPBRMat;
 
     // ─── Tree setup ─────────────────────────
     const treeRoot = treeMeshes[0];
