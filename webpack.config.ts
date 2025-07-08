@@ -1,6 +1,7 @@
 import { Configuration } from 'webpack';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import ForkTsCheckerWebpackPlugin from 'fork-ts-checker-webpack-plugin';
+import path from 'path';
 
 const config: Configuration = {
     entry: './src/index.tsx',
@@ -9,6 +10,8 @@ const config: Configuration = {
     },
     output: {
         clean: true,
+        path: path.resolve(__dirname, 'dist'), // <-- should say 'dist'
+        filename: 'main.js',
     },
     module: {
         rules: [

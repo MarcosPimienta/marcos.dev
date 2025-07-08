@@ -46,7 +46,6 @@ export const Content: React.FC = () => {
   const { meshes: treeMeshes } = useModel('/meshes/SakuraTree.glb');
   const { meshes: hillMeshes } = useModel('/meshes/Hill.glb');
   const { meshes: grassEmitter } = useModel('/meshes/GrassEmitter.glb');
-  /* const { meshes: sandMeshes } = useModel('/meshes/Sand.glb'); */
   const { meshes: smallWallMeshes } = useModel('/meshes/SmallerWalls.glb');
 
   const leafPlaneRef = useRef<Mesh>(null!);
@@ -81,13 +80,6 @@ export const Content: React.FC = () => {
     camera.attachControl(undefined, true);
     scene.activeCamera = camera;
 
-    // Create a large sphere for the sky
-    /* const skyDome = MeshBuilder.CreateSphere("skyDome", { diameter: 10000 }, scene);
-    skyDome.scaling.x = -1; // Invert it to be visible from inside
-    skyDome.isPickable = false;
-    skyDome.infiniteDistance = false; */
-
-    // Create the background material
     // Skybox
     const skybox = MeshBuilder.CreateBox("skyBox", {size:500.0}, scene);
     const skyboxMaterial = new StandardMaterial("skyBox", scene);

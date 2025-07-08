@@ -4,8 +4,11 @@
   "description": "Reactylon app created by create-reactylon-app.",
   "scripts": {
     "start": "webpack serve --port 3000 --mode=development",
-    "build": "webpack --mode=production"
+    "build": "webpack --mode=production",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
   },
+  "homepage": "https://MarcosPimienta.github.io/anime-foliage",
   "dependencies": {
     "@babylonjs/core": "^8.11.0",
     "@babylonjs/gui": "^8.11.0",
@@ -15,6 +18,7 @@
     "@babylonjs/materials": "^8.11.0",
     "@babylonjs/node-editor": "^8.11.0",
     "@babylonjs/procedural-textures": "^8.10.0",
+    "gh-pages": "^6.3.0",
     "react": "^19",
     "react-dom": "^19",
     "reactylon": "^3.0.0"
