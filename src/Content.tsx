@@ -41,7 +41,7 @@ const BUSH_POSITIONS: Vector3[] = [
 
 export const Content: React.FC = () => {
   const scene = useScene();
-  const basePath = process.env.PUBLIC_URL || '';
+  const basePath = `${process.env.PUBLIC_URL}`;
 
   const { meshes: leafMeshes } = useModel(`${basePath}/meshes/leaf_emitter.glb`);
   const { meshes: treeMeshes } = useModel(`${basePath}/meshes/SakuraTree.glb`);
