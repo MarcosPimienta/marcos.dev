@@ -30,10 +30,10 @@ const App: React.FC<AppProps> = ({ havok }) => {
           }
 
           // Show the Inspector immediately
-          scene.debugLayer.show({
+          /* scene.debugLayer.show({
             embedMode: false,  // Inspector embedded in canvas area
             overlay: false,    // Inspector overlay on top of canvas
-          });
+          }); */
 
           // Toggle Inspector on “I” key press
           scene.onKeyboardObservable.add((kbInfo) => {
