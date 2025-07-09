@@ -8,7 +8,7 @@
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist"
   },
-  "homepage": "https://MarcosPimienta.github.io/anime-foliage",
+  "homepage": "https://marcospimienta.github.io/anime-foliage/",
   "dependencies": {
     "@babylonjs/core": "^8.11.0",
     "@babylonjs/gui": "^8.11.0",
