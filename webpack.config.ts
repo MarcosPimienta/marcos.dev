@@ -12,6 +12,7 @@ const config: Configuration = {
         clean: true,
         path: path.resolve(__dirname, 'dist'), // <-- should say 'dist'
         filename: 'main.js',
+        publicPath: process.env.NODE_ENV === "production" ? "/anime-foliage/" : "/",
     },
     module: {
         rules: [
