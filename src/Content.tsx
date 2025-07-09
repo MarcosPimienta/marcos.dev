@@ -41,11 +41,11 @@ const BUSH_POSITIONS: Vector3[] = [
 
 export const Content: React.FC = () => {
   const scene = useScene();
-  const { meshes: leafMeshes } = useModel("./assets/meshes/leaf_emitter.glb");
-  const { meshes: treeMeshes } = useModel("./assets/meshes/SakuraTree.glb");
-  const { meshes: hillMeshes } = useModel("./assets/meshes/Hill.glb");
-  const { meshes: grassEmitter } = useModel("./assets/meshes/GrassEmitter.glb");
-  const { meshes: smallWallMeshes } = useModel("./assets/meshes/SmallerWalls.glb");
+  const { meshes: leafMeshes } = useModel('/meshes/leaf_emitter.glb');
+  const { meshes: treeMeshes } = useModel('/meshes/SakuraTree.glb');
+  const { meshes: hillMeshes } = useModel('/meshes/Hill.glb');
+  const { meshes: grassEmitter } = useModel('/meshes/GrassEmitter.glb');
+  const { meshes: smallWallMeshes } = useModel('/meshes/SmallerWalls.glb');
 
   const leafPlaneRef = useRef<Mesh>(null!);
   const grassPlaneRef = useRef<Mesh>(null!);
@@ -83,7 +83,7 @@ export const Content: React.FC = () => {
     const skybox = MeshBuilder.CreateBox("skyBox", {size:500.0}, scene);
     const skyboxMaterial = new StandardMaterial("skyBox", scene);
     skyboxMaterial.backFaceCulling = false;
-    skyboxMaterial.reflectionTexture = new CubeTexture("./assets/textures/skybox/skybox", scene, ["_px.png", "_py.png", "_pz.png", "_nx.png", "_ny.png", "_nz.png"]);
+    skyboxMaterial.reflectionTexture = new CubeTexture("textures/skybox/skybox", scene, ["_px.png", "_py.png", "_pz.png", "_nx.png", "_ny.png", "_nz.png"]);
     skyboxMaterial.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
     skyboxMaterial.diffuseColor = new Color3(0, 0, 0);
     skyboxMaterial.specularColor = new Color3(0, 0, 0);
@@ -97,7 +97,7 @@ export const Content: React.FC = () => {
     // Load ground from height map
     const ground = MeshBuilder.CreateGroundFromHeightMap(
       "sandGround",
-      `./assets/textures/sand_height_waves.png`, // ✅ your heightmap image
+      "textures/sand_height_waves.png", // ✅ your heightmap image
       {
         width: 15,             // Width of ground
         height: 15,            // Height of ground
@@ -115,13 +115,13 @@ export const Content: React.FC = () => {
     const sandPBRMat = new PBRMaterial("sandPBRMat", scene);
 
     // Albedo (diffuse) texture for sand color
-    const albedoTex = new Texture(`./assets/textures/sand_diffuse.png`, scene);
+    const albedoTex = new Texture("textures/sand_diffuse.png", scene);
     albedoTex.uScale = 10; // Tile
     albedoTex.vScale = 10;
     sandPBRMat.albedoTexture = albedoTex;
 
     // Macro height details
-    const normalTex = new Texture(`./assets/textures/sand_normal.png`, scene);
+    const normalTex = new Texture("textures/sand_normal.png", scene);
     normalTex.uScale = 10;
     normalTex.vScale = 10;
     sandPBRMat.bumpTexture = normalTex;
@@ -158,10 +158,10 @@ export const Content: React.FC = () => {
     leafPlane.registerInstancedBuffer('shadeOffset', 1);
 
     const leafMat = new CustomMaterial('leafMat', scene);
-    leafMat.diffuseTexture = new Texture(`./assets/textures/alphaleaf.png`, scene);
+    leafMat.diffuseTexture = new Texture('textures/alphaleaf.png', scene);
     leafMat.diffuseTexture.hasAlpha = true;
     leafMat.alphaCutOff = 0.7;
-    leafMat.emissiveTexture = new Texture(`./assets/textures/grass_ramp.png`, scene);
+    leafMat.emissiveTexture = new Texture('textures/grass_ramp.png', scene);
     leafMat.specularColor = new Color3(0.1, 0.3, 0.1);
     leafMat.specularPower = 128;
 
@@ -253,10 +253,10 @@ export const Content: React.FC = () => {
     grassPlane.registerInstancedBuffer('shadeOffset', 1);
 
     const grassMat = new CustomMaterial('grassMat', scene);
-    grassMat.diffuseTexture = new Texture(`./assets/textures/grass_leaf.png`, scene);
+    grassMat.diffuseTexture = new Texture('textures/grass_leaf.png', scene);
     grassMat.diffuseTexture.hasAlpha = true;
     grassMat.alphaCutOff = 0.7;
-    grassMat.emissiveTexture = new Texture(`./assets/textures/grass_ramp.png`, scene);
+    grassMat.emissiveTexture = new Texture('textures/grass_ramp.png', scene);
     grassMat.specularColor = new Color3(0.1, 0.3, 0.1);
     grassMat.specularPower = 128;
 
@@ -302,8 +302,8 @@ export const Content: React.FC = () => {
     hill.isVisible = true;
     const hillMat = new StandardMaterial('hillCell', scene);
     hillMat.diffuseColor = Color3.FromHexString('#89EF00').toLinearSpace();
-    hillMat.diffuseTexture = new Texture(`./assets/textures/HillBase.png`, scene);
-    hillMat.emissiveTexture = new Texture(`./assets/textures/HillBase.png`, scene);
+    hillMat.diffuseTexture = new Texture("textures/HillBase.png", scene);
+    hillMat.emissiveTexture = new Texture("textures/HillBase.png", scene);
     hillMat.specularColor = new Color3(0, 0, 0);
 
     const baseEmitter = grassEmitter.find(m => m.name === 'GrassEmitt') ?? grassEmitter[0];
