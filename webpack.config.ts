@@ -15,7 +15,7 @@ const config: Configuration = {
     path: path.resolve(__dirname, 'dist'),
     filename: 'main.js',
     // ✅ Fix: Correctly set publicPath for GitHub Pages
-    publicPath: isProduction ? "/anime-foliage/" : "/",
+    publicPath: isProduction ? "/anime-foliage/" : "./",
   },
   module: {
     rules: [
