@@ -68,7 +68,11 @@ const config: Configuration = {
     ],
   },
   plugins: [
-    new HtmlWebpackPlugin({ template: 'public/index.html' }),
+    new HtmlWebpackPlugin({
+      template: 'public/index.html',
+      publicPath: isProduction ? "/anime-foliage/" : "/",
+      base: isProduction ? "/anime-foliage/" : "/"
+    }),
     new ForkTsCheckerWebpackPlugin(),
     new webpack.DefinePlugin({
       "process.env.PUBLIC_URL": JSON.stringify(isProduction ? "/anime-foliage" : "")
