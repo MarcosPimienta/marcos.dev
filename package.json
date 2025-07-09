@@ -33,6 +33,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/webpack": "^5.28.5",
+    "@types/webpack-dev-server": "^4.7.1",
     "babel-loader": "^10.0.0",
     "babel-plugin-reactylon": "^1.0.0",
     "css-loader": "^6.10.0",

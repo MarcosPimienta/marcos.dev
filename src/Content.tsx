@@ -20,7 +20,11 @@ import { useScene, useModel } from 'reactylon';
 import { SSAO2RenderingPipeline } from '@babylonjs/core/PostProcesses/RenderPipeline/Pipelines/ssao2RenderingPipeline';
 import '@babylonjs/loaders';
 
-const baseUrl = process.env.PUBLIC_URL + "/";
+const baseUrl =
+  process.env.NODE_ENV === "production"
+    ? process.env.PUBLIC_URL ?? "" // fallback for undefined
+    : ""; // ✅ in dev, serve from root
+
 Tools.BaseUrl = baseUrl;
 (window as any).__reactylon_base_url__ = baseUrl;
 

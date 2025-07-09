@@ -1,8 +1,13 @@
-import { Configuration } from 'webpack';
+import { Configuration as WebpackConfiguration } from 'webpack';
+import { Configuration as WebpackDevServerConfiguration } from 'webpack-dev-server';
 import webpack from "webpack";
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import ForkTsCheckerWebpackPlugin from 'fork-ts-checker-webpack-plugin';
 import path from 'path';
+
+interface Configuration extends WebpackConfiguration {
+  devServer?: WebpackDevServerConfiguration;
+}
 
 const isProduction = process.env.NODE_ENV === "production";
 
@@ -63,16 +68,24 @@ const config: Configuration = {
     ],
   },
   plugins: [
-  new HtmlWebpackPlugin({ template: 'public/index.html' }),
-  new ForkTsCheckerWebpackPlugin(),
-  new webpack.DefinePlugin({
-    "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV || "production"),
-    "process.env.PUBLIC_URL": JSON.stringify(isProduction ? "/anime-foliage" : "")
-  }),
-  new webpack.ProvidePlugin({
-    process: "process/browser" // 👈 Fix process not defined
-  })
-],
+    new HtmlWebpackPlugin({ template: 'public/index.html' }),
+    new ForkTsCheckerWebpackPlugin(),
+    new webpack.DefinePlugin({
+      "process.env.PUBLIC_URL": JSON.stringify(isProduction ? "/anime-foliage" : "")
+    }),
+    new webpack.ProvidePlugin({
+      process: "process/browser" // 👈 Fix process not defined
+    })
+  ],
+  devServer: {
+    static: {
+      directory: path.join(__dirname, "public"), // ✅ Serve public folder during dev
+    },
+    compress: true,
+    port: 3000,
+    historyApiFallback: true,
+    hot: true
+  }
 };
 
 export default config;
