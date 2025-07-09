@@ -1,4 +1,5 @@
 import { Configuration } from 'webpack';
+import webpack from "webpack";
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import ForkTsCheckerWebpackPlugin from 'fork-ts-checker-webpack-plugin';
 import path from 'path';
@@ -15,7 +16,7 @@ const config: Configuration = {
     path: path.resolve(__dirname, 'dist'),
     filename: 'main.js',
     // ✅ Fix: Correctly set publicPath for GitHub Pages
-    /* publicPath: isProduction ? "/anime-foliage/" : "./", */
+    publicPath: isProduction ? "/anime-foliage/" : "/",
   },
   module: {
     rules: [
@@ -62,9 +63,16 @@ const config: Configuration = {
     ],
   },
   plugins: [
-    new HtmlWebpackPlugin({ template: 'public/index.html' }),
-    new ForkTsCheckerWebpackPlugin()
-  ]
+  new HtmlWebpackPlugin({ template: 'public/index.html' }),
+  new ForkTsCheckerWebpackPlugin(),
+  new webpack.DefinePlugin({
+    "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV || "production"),
+    "process.env.PUBLIC_URL": JSON.stringify(isProduction ? "/anime-foliage" : "")
+  }),
+  new webpack.ProvidePlugin({
+    process: "process/browser" // 👈 Fix process not defined
+  })
+],
 };
 
 export default config;
