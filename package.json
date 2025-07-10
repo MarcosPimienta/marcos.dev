@@ -9,10 +9,6 @@
     "deploy": "gh-pages -d dist"
   },
   "homepage": "https://MarcosPimienta.github.io/anime-foliage",
-  "repository": {
-    "type": "git",
-    "url": "git@github.com:MarcosPimienta/anime-foliage.git"
-  },
   "dependencies": {
     "@babylonjs/core": "^8.11.0",
     "@babylonjs/gui": "^8.11.0",
