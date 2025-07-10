@@ -15,6 +15,7 @@ const config: Configuration = {
     path: path.resolve(__dirname, "dist"),
     filename: "main.js",
     clean: true,
+    publicPath: process.env.NODE_ENV === 'production' ? '/anime-foliage/' : '/',
   },
   resolve: { extensions: [".tsx", ".ts", ".js"] },
   module: {
