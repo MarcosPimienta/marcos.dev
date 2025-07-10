@@ -17,7 +17,7 @@ const config: Configuration = {
   output: {
     path: path.resolve(__dirname, "dist"),
     filename: "main.js",
-    publicPath: repoBase,           // ← here
+    publicPath: repoBase,           // ← this makes all assets load from /anime-foliage/ in prod
     clean: true,
   },
   resolve: { extensions: [".tsx", ".ts", ".js"] },
@@ -25,65 +25,42 @@ const config: Configuration = {
     rules: [
       {
         test: /\.tsx?$/,
+        exclude: /node_modules/,
         use: [
-          {
-            loader: 'ts-loader',
-            options: {
-              transpileOnly: true
-            }
-          },
-          {
-            loader: "babel-loader",
-            options: {
+          { loader: "ts-loader", options: { transpileOnly: true } },
+          { loader: "babel-loader", options: {
               presets: [
-                ["@babel/preset-env", {
-                  "modules": false
-                }],
-                ["@babel/preset-react", {
-                  runtime: "automatic"
-                }],
+                ["@babel/preset-env",{ modules: false }],
+                ["@babel/preset-react",{ runtime: "automatic" }],
                 "@babel/preset-typescript"
               ],
-              plugins: [
-                ["babel-plugin-reactylon"]
-              ]
+              plugins: [["babel-plugin-reactylon"]]
             }
-          },
-        ],
-        exclude: '/node_modules/',
+          }
+        ]
       },
-      {
-        test: /\.css$/i,
-        use: [
-          'style-loader',
-          'css-loader',
-        ],
-      },
-      {
-        test: /\.(png|jpg|jpeg|glb|gltf|wasm)$/i, // ✅ Add glb/gltf/wasm
-        type: 'asset/resource'
-      },
-    ],
+      { test: /\.css$/, use: ["style-loader","css-loader"] },
+      { test: /\.(png|jpe?g|glb|gltf|wasm)$/, type: "asset/resource" }
+    ]
   },
   plugins: [
     new webpack.DefinePlugin({
-      "process.env.PUBLIC_URL": JSON.stringify(repoBase.slice(0, -1)),
+      "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV),
+      "process.env.PUBLIC_URL": JSON.stringify(repoBase.slice(0,-1)),
+    }),
+    new webpack.ProvidePlugin({
+      process: "process/browser"  // ← polyfill `process`
     }),
     new HtmlWebpackPlugin({
       template: "public/index.html",
-      templateParameters: {
-        BASE_HREF: repoBase     // ← pass it here
-      }
+      templateParameters: { BASE_HREF: repoBase }
     }),
-    new ForkTsCheckerWebpackPlugin(),
-    new webpack.ProvidePlugin({
-      process: "process/browser"
-    })
+    new ForkTsCheckerWebpackPlugin()
   ],
   devServer: {
-    static: path.join(__dirname, "public"),
-    hot: true,
+    static: path.join(__dirname,"public"),
     historyApiFallback: true,
+    hot: true,
     port: 3000
   }
 };

@@ -4,33 +4,16 @@
   <meta charset="utf-8" />
   <title>Anime Foliage</title>
 
-  <!-- Use the BASE_HREF we injected -->
-  <base href="<%= BASE_HREF %>" />
+  <!-- THIS <base> is replaced at build-time -->
+  <base href="<%= BASE_HREF %>"/>
 
-  <!-- DEBUG: print out the base href and script src -->
-  <script>
-    console.log("→ PUBLIC_URL:", process.env.PUBLIC_URL);
-    console.log("→ HtmlPlugin BASE_HREF:", "<%= BASE_HREF %>");
-    console.log("🛠️ PUBLIC_PATH:", document.querySelector("base").getAttribute("href"));
-    document.querySelectorAll("script[src]").forEach(s => {
-      console.log("📄 script tag src:", s.getAttribute("src"));
-    });
-  </script>
-
-  <!-- ✅ Babylon GUI (Inspector dependency) -->
+  <!-- Babylon dependencies -->
   <script src="https://preview.babylonjs.com/gui/babylon.gui.js"></script>
-
-  <!-- ✅ glTF Loader (so .glb/.gltf files load) -->
   <script src="https://preview.babylonjs.com/loaders/babylonjs.loaders.js"></script>
-
-  <!-- ✅ Babylon Inspector core -->
   <script src="https://preview.babylonjs.com/inspector/babylon.inspector.js"></script>
-
-  <!-- ✅ Babylon Node Material Editor -->
   <script src="https://preview.babylonjs.com/nodeEditor/babylon.nodeEditor.js"></script>
 </head>
 <body>
   <div id="root"></div>
-  <!-- Reactylon’s scripts will be injected here -->
 </body>
 </html>

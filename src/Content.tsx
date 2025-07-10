@@ -20,11 +20,15 @@ import { useScene, useModel } from 'reactylon';
 import { SSAO2RenderingPipeline } from '@babylonjs/core/PostProcesses/RenderPipeline/Pipelines/ssao2RenderingPipeline';
 import '@babylonjs/loaders';
 
-const baseUrl =
-  process.env.NODE_ENV === "production"
-    ? process.env.PUBLIC_URL ?? "" // fallback for undefined
-    : ""; // ✅ in dev, serve from root
+// strip any trailing slash from PUBLIC_URL
+const PUBLIC_URL = (process.env.PUBLIC_URL ?? "").replace(/\/$/, "");
 
+// in prod we serve from /anime-foliage/, in dev from /
+const baseUrl = process.env.NODE_ENV === "production"
+  ? `${PUBLIC_URL}/`
+  : "/";
+
+// tell Babylon to prefix _all_ asset requests with that
 Tools.BaseUrl = baseUrl;
 (window as any).__reactylon_base_url__ = baseUrl + "/";
 //(window as any).BABYLON_BASE_ASSETS_URL = baseUrl;
