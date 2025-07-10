@@ -11,6 +11,7 @@ interface Configuration extends WebpackConfig {
 
 const isProd = process.env.NODE_ENV === "production";
 const repoBase = isProd ? "/anime-foliage/" : "/";
+console.log("🛠️ PUBLIC_PATH:", process.env.PUBLIC_URL, "→ repoBase=", repoBase);
 
 const config: Configuration = {
   entry: "./src/index.tsx",
@@ -45,8 +46,8 @@ const config: Configuration = {
   },
   plugins: [
     new webpack.DefinePlugin({
-      "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV),
-      "process.env.PUBLIC_URL": JSON.stringify(repoBase.slice(0,-1)),
+      /* "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV),
+      "process.env.PUBLIC_URL": JSON.stringify(repoBase.slice(0,-1)), */
     }),
     new webpack.ProvidePlugin({
       process: "process/browser"  // ← polyfill `process`
