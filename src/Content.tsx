@@ -26,8 +26,8 @@ const baseUrl =
     : ""; // ✅ in dev, serve from root
 
 Tools.BaseUrl = baseUrl;
-//(window as any).__reactylon_base_url__ = baseUrl;
-(window as any).BABYLON_BASE_ASSETS_URL = baseUrl;
+(window as any).__reactylon_base_url__ = baseUrl + "/";
+//(window as any).BABYLON_BASE_ASSETS_URL = baseUrl;
 
 const BUSH_POSITIONS: Vector3[] = [
   new Vector3(0.065, 0.85, -0.78),
