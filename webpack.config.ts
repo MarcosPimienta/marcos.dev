@@ -17,38 +17,56 @@ const config: Configuration = {
     clean: true,
     publicPath: process.env.NODE_ENV === 'production' ? '/anime-foliage/' : '/',
   },
-  resolve: { extensions: [".tsx", ".ts", ".js"] },
+  resolve: {
+    extensions: [".tsx", ".ts", ".js"],
+    fallback: {
+      "path": require.resolve("path-browserify"),
+      "fs": false,
+      "crypto": false
+    }
+  },
   module: {
     rules: [
       {
         test: /\.tsx?$/,
         exclude: /node_modules/,
         use: [
-          { loader: "ts-loader", options: { transpileOnly: true } },
-          { loader: "babel-loader", options: {
-              presets: [
-                ["@babel/preset-env",{ modules: false }],
-                ["@babel/preset-react",{ runtime: "automatic" }],
-                "@babel/preset-typescript"
-              ],
-              plugins: [["babel-plugin-reactylon"]]
+          {
+            loader: "ts-loader",
+            options: {
+              transpileOnly: true,
+              compilerOptions: {
+                moduleResolution: "node"
+              }
             }
           }
         ]
       },
-      { test: /\.css$/, use: ["style-loader","css-loader"] },
-      { test: /\.(png|jpe?g|glb|gltf|wasm)$/, type: "asset/resource" }
+      { test: /\.css$/, use: ["style-loader", "css-loader"] },
+      {
+        test: /\.(png|jpe?g|glb|gltf|wasm)$/,
+        type: "asset/resource",
+        generator: {
+          filename: 'assets/[hash][ext][query]'
+        }
+      }
     ]
   },
   plugins: [
-    new webpack.ProvidePlugin({
-      process: "process/browser"  // ← polyfill `process`
+    new webpack.DefinePlugin({
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
+      'process.env.PUBLIC_URL': JSON.stringify('/anime-foliage')
     }),
     new HtmlWebpackPlugin({
       template: "public/index.html",
+      publicPath: process.env.NODE_ENV === 'production' ? '/anime-foliage/' : '/'
     }),
     new ForkTsCheckerWebpackPlugin()
   ],
+  devServer: {
+    historyApiFallback: true,
+    hot: true
+  }
 };
 
 export default config;

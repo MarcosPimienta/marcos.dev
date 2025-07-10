@@ -4,7 +4,7 @@
   "description": "Reactylon app created by create-reactylon-app.",
   "scripts": {
     "start": "webpack serve --port 3000 --mode=development",
-    "build": "webpack --mode=production",
+    "build": "cross-env NODE_ENV=production webpack --mode=production",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist"
   },
@@ -36,9 +36,11 @@
     "@types/webpack-dev-server": "^4.7.1",
     "babel-loader": "^10.0.0",
     "babel-plugin-reactylon": "^1.0.0",
+    "cross-env": "^7.0.3",
     "css-loader": "^6.10.0",
     "fork-ts-checker-webpack-plugin": "^9.0.3",
     "html-webpack-plugin": "^5.5.0",
+    "path-browserify": "^1.0.1",
     "process": "^0.11.10",
     "style-loader": "^4.0.0",
     "ts-loader": "^9.4.1",
