@@ -9,16 +9,11 @@ interface Configuration extends WebpackConfig {
   devServer?: DevServerConfig;
 }
 
-const isProd = process.env.NODE_ENV === "production";
-const repoBase = isProd ? "/anime-foliage/" : "/";
-console.log("🛠️ PUBLIC_PATH:", process.env.PUBLIC_URL, "→ repoBase=", repoBase);
-
 const config: Configuration = {
   entry: "./src/index.tsx",
   output: {
     path: path.resolve(__dirname, "dist"),
     filename: "main.js",
-    publicPath: repoBase,           // ← this makes all assets load from /anime-foliage/ in prod
     clean: true,
   },
   resolve: { extensions: [".tsx", ".ts", ".js"] },
@@ -45,25 +40,14 @@ const config: Configuration = {
     ]
   },
   plugins: [
-    new webpack.DefinePlugin({
-      /* "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV),
-      "process.env.PUBLIC_URL": JSON.stringify(repoBase.slice(0,-1)), */
-    }),
     new webpack.ProvidePlugin({
       process: "process/browser"  // ← polyfill `process`
     }),
     new HtmlWebpackPlugin({
       template: "public/index.html",
-      templateParameters: { BASE_HREF: repoBase }
     }),
     new ForkTsCheckerWebpackPlugin()
   ],
-  devServer: {
-    static: path.join(__dirname,"public"),
-    historyApiFallback: true,
-    hot: true,
-    port: 3000
-  }
 };
 
 export default config;

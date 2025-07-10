@@ -20,11 +20,6 @@ import { useScene, useModel } from 'reactylon';
 import { SSAO2RenderingPipeline } from '@babylonjs/core/PostProcesses/RenderPipeline/Pipelines/ssao2RenderingPipeline';
 import '@babylonjs/loaders';
 
-const basePath =
-  process.env.NODE_ENV === 'production'
-    ? '/anime-foliage'
-    : '';
-
 const BUSH_POSITIONS: Vector3[] = [
   new Vector3(0.065, 0.85, -0.78),
   new Vector3(0.58, 1.11, -0.92),
@@ -46,11 +41,11 @@ const BUSH_POSITIONS: Vector3[] = [
 
 export const Content: React.FC = () => {
   const scene = useScene();
-  const { meshes: leafMeshes } = useModel(`${basePath}/meshes/leaf_emitter.glb`);
-  const { meshes: treeMeshes } = useModel(`${basePath}/meshes/SakuraTree.glb`);
-  const { meshes: hillMeshes } = useModel(`${basePath}/meshes/Hill.glb`);
-  const { meshes: grassEmitter } = useModel(`${basePath}/meshes/GrassEmitter.glb`);
-  const { meshes: smallWallMeshes } = useModel(`${basePath}/meshes/SmallerWalls.glb`);
+  const { meshes: leafMeshes } = useModel(`/meshes/leaf_emitter.glb`);
+  const { meshes: treeMeshes } = useModel(`/meshes/SakuraTree.glb`);
+  const { meshes: hillMeshes } = useModel(`/meshes/Hill.glb`);
+  const { meshes: grassEmitter } = useModel(`/meshes/GrassEmitter.glb`);
+  const { meshes: smallWallMeshes } = useModel(`/meshes/SmallerWalls.glb`);
 
   const leafPlaneRef = useRef<Mesh>(null!);
   const grassPlaneRef = useRef<Mesh>(null!);
