@@ -74,8 +74,9 @@ export const Content: React.FC = () => {
     camera.lowerBetaLimit = Tools.ToRadians(45);   // Prevent going too low
     camera.upperBetaLimit = Tools.ToRadians(98);   // Prevent flipping over
     camera.lowerRadiusLimit = 3;                  // Zoom-in limit
-    camera.upperRadiusLimit = 7.2;                  // Zoom-out limit
+    camera.upperRadiusLimit = 7.2;                // Zoom-out limit
     camera.allowUpsideDown = false;
+    camera.panningSensibility = 0;                // ❌ Disable panning
 
     camera.attachControl(undefined, true);
     scene.activeCamera = camera;
