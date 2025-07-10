@@ -1,28 +1,26 @@
-import { Configuration as WebpackConfiguration } from 'webpack';
-import { Configuration as WebpackDevServerConfiguration } from 'webpack-dev-server';
+import path from "path";
 import webpack from "webpack";
-import HtmlWebpackPlugin from 'html-webpack-plugin';
-import ForkTsCheckerWebpackPlugin from 'fork-ts-checker-webpack-plugin';
-import path from 'path';
+import HtmlWebpackPlugin from "html-webpack-plugin";
+import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
+import { Configuration as WebpackConfig } from "webpack";
+import { Configuration as DevServerConfig } from "webpack-dev-server";
 
-interface Configuration extends WebpackConfiguration {
-  devServer?: WebpackDevServerConfiguration;
+interface Configuration extends WebpackConfig {
+  devServer?: DevServerConfig;
 }
 
-const isProduction = process.env.NODE_ENV === "production";
+const isProd = process.env.NODE_ENV === "production";
+const repoBase = isProd ? "/anime-foliage/" : "/";
 
 const config: Configuration = {
-  entry: './src/index.tsx',
-  resolve: {
-    extensions: ['.tsx', '.ts', '.js']
-  },
+  entry: "./src/index.tsx",
   output: {
+    path: path.resolve(__dirname, "dist"),
+    filename: "main.js",
+    publicPath: repoBase,           // ← here
     clean: true,
-    path: path.resolve(__dirname, 'dist'),
-    filename: 'main.js',
-    // ✅ Fix: Correctly set publicPath for GitHub Pages
-    publicPath: process.env.PUBLIC_URL,
   },
+  resolve: { extensions: [".tsx", ".ts", ".js"] },
   module: {
     rules: [
       {
@@ -68,27 +66,25 @@ const config: Configuration = {
     ],
   },
   plugins: [
+    new webpack.DefinePlugin({
+      "process.env.PUBLIC_URL": JSON.stringify(repoBase.slice(0, -1)),
+    }),
     new HtmlWebpackPlugin({
-      template: 'public/index.html',
-      // this string will be visible inside index.html as htmlWebpackPlugin.options.baseHref
-      baseHref: isProduction ? '/anime-foliage/' : '/'
+      template: "public/index.html",
+      templateParameters: {
+        BASE_HREF: repoBase     // ← pass it here
+      }
     }),
     new ForkTsCheckerWebpackPlugin(),
-    new webpack.DefinePlugin({
-      "process.env.PUBLIC_URL": JSON.stringify(isProduction ? "/anime-foliage" : "/")
-    }),
     new webpack.ProvidePlugin({
-      process: "process/browser" // 👈 Fix process not defined
+      process: "process/browser"
     })
   ],
   devServer: {
-    static: {
-      directory: path.join(__dirname, "public"), // ✅ Serve public folder during dev
-    },
-    compress: true,
-    port: 3000,
+    static: path.join(__dirname, "public"),
+    hot: true,
     historyApiFallback: true,
-    hot: true
+    port: 3000
   }
 };
 
