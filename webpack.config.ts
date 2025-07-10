@@ -21,7 +21,7 @@ const config: Configuration = {
     path: path.resolve(__dirname, 'dist'),
     filename: 'main.js',
     // ✅ Fix: Correctly set publicPath for GitHub Pages
-    publicPath: process.env.PUBLIC_URL || "/",
+    publicPath: process.env.PUBLIC_URL,
   },
   module: {
     rules: [
@@ -70,12 +70,12 @@ const config: Configuration = {
   plugins: [
     new HtmlWebpackPlugin({
       template: 'public/index.html',
-      publicPath: isProduction ? "/anime-foliage/" : "/",
-      base: isProduction ? "/anime-foliage/" : "/"
+      // this string will be visible inside index.html as htmlWebpackPlugin.options.baseHref
+      baseHref: isProduction ? '/anime-foliage/' : '/'
     }),
     new ForkTsCheckerWebpackPlugin(),
     new webpack.DefinePlugin({
-      "process.env.PUBLIC_URL": JSON.stringify(isProduction ? "/anime-foliage" : "")
+      "process.env.PUBLIC_URL": JSON.stringify(isProduction ? "/anime-foliage" : "/")
     }),
     new webpack.ProvidePlugin({
       process: "process/browser" // 👈 Fix process not defined

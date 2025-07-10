@@ -5,7 +5,15 @@
   <title>Anime Foliage</title>
 
   <!-- Set base URL for all relative paths -->
-  <base href="%PUBLIC_URL%/" />
+  <base href="<%= htmlWebpackPlugin.options.baseHref %>" />
+
+  <!-- DEBUG: print out the base href and script src -->
+  <script>
+    console.log("🛠️ PUBLIC_PATH:", document.querySelector("base").getAttribute("href"));
+    document.querySelectorAll("script[src]").forEach(s => {
+      console.log("📄 script tag src:", s.getAttribute("src"));
+    });
+  </script>
 
   <!-- ✅ Babylon GUI (Inspector dependency) -->
   <script src="https://preview.babylonjs.com/gui/babylon.gui.js"></script>
