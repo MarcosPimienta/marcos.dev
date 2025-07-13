@@ -16,9 +16,16 @@ import {
 } from '@babylonjs/core';
 import { CustomMaterial, CellMaterial } from '@babylonjs/materials';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode';
-import { useScene, useModel } from 'reactylon';
+import { useScene, useModel, register } from 'reactylon';
 import { SSAO2RenderingPipeline } from '@babylonjs/core/PostProcesses/RenderPipeline/Pipelines/ssao2RenderingPipeline';
 import '@babylonjs/loaders';
+import { getBasePath } from './config';
+
+// Register the plane primitive
+register('plane', (props) => {
+  const { scene, name, options = {} } = props;
+  return MeshBuilder.CreatePlane(name, options, scene);
+});
 
 const BUSH_POSITIONS: Vector3[] = [
   new Vector3(0.065, 0.85, -0.78),
@@ -38,20 +45,17 @@ const BUSH_POSITIONS: Vector3[] = [
   new Vector3(-0.56, 1.15, 0.41),
   new Vector3(-0.23, 1.29, 0.25),
 ];
-const basePath = process.env.PUBLIC_URL || "";
 export const Content: React.FC = () => {
   const scene = useScene();
+  const basePath = getBasePath();
   const { meshes: leafMeshes } = useModel(`${basePath}/meshes/leaf_emitter.glb`);
   const { meshes: treeMeshes } = useModel(`${basePath}/meshes/SakuraTree.glb`);
   const { meshes: hillMeshes } = useModel(`${basePath}/meshes/Hill.glb`);
   const { meshes: grassEmitter } = useModel(`${basePath}/meshes/GrassEmitter.glb`);
   const { meshes: smallWallMeshes } = useModel(`${basePath}/meshes/SmallerWalls.glb`);
 
-  const leafPlaneRef = useRef<Mesh>(null!);
-  const grassPlaneRef = useRef<Mesh>(null!);
-
   useEffect(() => {
-    if (!scene || !leafPlaneRef.current || !grassPlaneRef.current || leafMeshes.length === 0) return;
+    if (!scene || leafMeshes.length === 0) return;
 
     const GLOBAL_SCALE = 0.3;
     const root = new TransformNode('SceneRoot', scene);
@@ -152,8 +156,7 @@ export const Content: React.FC = () => {
     treeRoot.material = cellMat;
 
     // ─── Leaf instancing ───────────────────────
-    const leafPlane = leafPlaneRef.current;
-    leafPlane.scaling.scaleInPlace(GLOBAL_SCALE);
+    const leafPlane = MeshBuilder.CreatePlane("leafPlane", { size: 1 }, scene);
     leafPlane.isVisible = false;
     leafPlane.registerInstancedBuffer('faceNormal', 3);
     leafPlane.registerInstancedBuffer('shadeOffset', 1);
@@ -244,7 +247,7 @@ export const Content: React.FC = () => {
     });
 
     // ─── Grass instancing ─────────────────────────────
-    const grassPlane = grassPlaneRef.current;
+    const grassPlane = MeshBuilder.CreatePlane("grassPlane", { size: 1 }, scene);
     const grassRoot = new TransformNode('GrassRoot', scene);
     grassRoot.position = new Vector3(0, -0.95, 0);
     grassRoot.parent = root;
@@ -400,8 +403,6 @@ export const Content: React.FC = () => {
 
   return (
     <>
-      <plane ref={leafPlaneRef} name="leafPlane" options={{ size: 1 }} />
-      <plane ref={grassPlaneRef} name="grassPlane" options={{ size: 1 }} />
     </>
   );
 };
