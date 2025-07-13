@@ -1,4 +1,6 @@
 # Anime Foliage
+<img width="1024" height="768" alt="anime-foliage" src="https://github.com/user-attachments/assets/03241891-e156-4b8d-945d-cce3284e2646" />
+
 
 A real-time 3D “anime foliage” demo built with **Reactylon** + **Babylon.js**, inspired by Trung Duy Nguyen’s Blender pipeline. Watch brush-stroke-style leaves always face the camera and sway in the wind!
 
