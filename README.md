@@ -13,6 +13,8 @@ anime-foliage/
 │   ├── App.tsx             # Reactylon engine + scene setup
 │   ├── Content.tsx         # Foliage generation, instancing & wind logic
 │   └── index.tsx           # React entry point
+├── scripts/
+│   ├── coppy-assets.js     # Manages the deployment in production
 ├── .gitignore
 ├── package.json
 └── README.md
