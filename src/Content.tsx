@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Vector3,
   Color3,
@@ -21,11 +21,16 @@ import { SSAO2RenderingPipeline } from '@babylonjs/core/PostProcesses/RenderPipe
 import '@babylonjs/loaders';
 import { getBasePath } from './config';
 
-// Register the plane primitive
-register('plane', (props) => {
-  const { scene, name, options = {} } = props;
-  return MeshBuilder.CreatePlane(name, options, scene);
-});
+export enum Season {
+  Spring = 'spring',
+  Summer = 'summer',
+  Fall   = 'fall',
+  Winter = 'winter',
+};
+
+interface ContentProps {
+  season: Season;
+};
 
 const BUSH_POSITIONS: Vector3[] = [
   new Vector3(0.065, 0.85, -0.78),
@@ -45,7 +50,7 @@ const BUSH_POSITIONS: Vector3[] = [
   new Vector3(-0.56, 1.15, 0.41),
   new Vector3(-0.23, 1.29, 0.25),
 ];
-export const Content: React.FC = () => {
+export const Content: React.FC<ContentProps> = ({ season }) => {
   const scene = useScene();
   const basePath = getBasePath();
   const { meshes: leafMeshes } = useModel(`${basePath}/meshes/leaf_emitter.glb`);
@@ -53,6 +58,9 @@ export const Content: React.FC = () => {
   const { meshes: hillMeshes } = useModel(`${basePath}/meshes/Hill.glb`);
   const { meshes: grassEmitter } = useModel(`${basePath}/meshes/GrassEmitter.glb`);
   const { meshes: smallWallMeshes } = useModel(`${basePath}/meshes/SmallerWalls.glb`);
+
+  // — Step 1 state hook —
+  const [currentSeason, setCurrentSeason] = useState<Season>(Season.Summer);
 
   useEffect(() => {
     if (!scene || leafMeshes.length === 0) return;
@@ -399,12 +407,15 @@ export const Content: React.FC = () => {
       camera.dispose();
       root.dispose();
     };
-  }, [scene, leafMeshes, treeMeshes]);
+  }, [scene, leafMeshes, treeMeshes, currentSeason]);
 
-  return (
-    <>
-    </>
-  );
+  // placeholder: respond to external `season` prop changes
+  useEffect(() => {
+    setCurrentSeason(currentSeason);
+  }, [currentSeason]);
+
+  return null;
+
 };
 
 export default Content;

@@ -1,61 +1,75 @@
-import React from 'react';
+// App.tsx
+import React, { useState } from 'react';
+import Content, { Season } from './Content';
 import { Engine } from 'reactylon/web';
 import { Scene } from 'reactylon';
-import Content from './Content';
 import { HavokPlugin } from '@babylonjs/core/Physics/v2/Plugins/havokPlugin';
-// Ensure .glb/.gltf loading works
 import '@babylonjs/loaders';
-// Import the Inspector (DebugLayer)
 import '@babylonjs/inspector';
-// Import KeyboardEventTypes so we can check kbInfo.type
 import { KeyboardEventTypes } from '@babylonjs/core/Events/keyboardEvents';
 
-type AppProps = {
-  havok: unknown;
-};
+const seasons = [Season.Summer, Season.Fall, Season.Winter, Season.Spring];
 
-const App: React.FC<AppProps> = ({ havok }) => {
+const App: React.FC<{ havok: unknown }> = ({ havok }) => {
+  const [selectedSeason, setSelectedSeason] = useState<Season>(Season.Summer);
+
   return (
-    <Engine antialias>
-      <Scene
-        onSceneReady={(scene) => {
-          // Create default camera & light
-          scene.createDefaultCameraOrLight(true, undefined, true);
-
-          // Increase default light intensity
-          if (scene.lights.length > 0) {
-            scene.lights.forEach(light => {
-              light.intensity = 1.34; // 💡 Adjust brightness
-            });
-          }
-
-          // Show the Inspector immediately
-          /* scene.debugLayer.show({
-            embedMode: false,  // Inspector embedded in canvas area
-            overlay: false,    // Inspector overlay on top of canvas
-          }); */
-
-          // Toggle Inspector on “I” key press
-          scene.onKeyboardObservable.add((kbInfo) => {
-            if (
-              kbInfo.type === KeyboardEventTypes.KEYUP &&
-              kbInfo.event.key === 'i'
-            ) {
-              if (scene.debugLayer.isVisible()) {
-                scene.debugLayer.hide();
-              } else {
-                scene.debugLayer.show({ embedMode: true, overlay: true});
-              }
-            }
-          });
-        }}
-        physicsOptions={{
-          plugin: new HavokPlugin(true, havok),
+    // 1) Container with relative positioning and full-viewport size
+    <div style={{ position: 'relative', width: '100vw', height: '100vh' }}>
+      {/* 2) Overlayed React buttons */}
+      <div
+        style={{
+          position: 'absolute',
+          top: 20,
+          left: 20,
+          display: 'flex',
+          gap: '8px',
+          zIndex: 5,
         }}
       >
-        <Content />
-      </Scene>
-    </Engine>
+        {seasons.map(s => (
+          <button
+            key={s}
+            onClick={() => setSelectedSeason(s)}
+            style={{
+              padding: '8px 12px',
+              fontSize: '14px',
+              background: selectedSeason === s ? '#4cafef' : '#fff',
+              border: '1px solid #ccc',
+              borderRadius: '4px',
+              cursor: 'pointer',
+            }}
+          >
+            {s.charAt(0).toUpperCase() + s.slice(1)}
+          </button>
+        ))}
+      </div>
+
+      {/* 3) Babylon Engine + Scene (no style on Engine) */}
+      <Engine antialias>
+        <Scene
+          // the Scene will fill its parent <div>
+          onSceneReady={scene => {
+            scene.createDefaultCameraOrLight(true, undefined, true);
+            scene.lights.forEach(l => (l.intensity = 1.34));
+            scene.onKeyboardObservable.add(kbInfo => {
+              if (
+                kbInfo.type === KeyboardEventTypes.KEYUP &&
+                kbInfo.event.key === 'i'
+              ) {
+                scene.debugLayer.isVisible()
+                  ? scene.debugLayer.hide()
+                  : scene.debugLayer.show({ embedMode: true, overlay: true });
+              }
+            });
+          }}
+          physicsOptions={{ plugin: new HavokPlugin(true, havok) }}
+        >
+          {/* 4) Pass selection down to your Content */}
+          <Content season={selectedSeason} />
+        </Scene>
+      </Engine>
+    </div>
   );
 };
 
