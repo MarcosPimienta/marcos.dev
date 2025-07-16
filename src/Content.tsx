@@ -16,7 +16,7 @@ import {
 } from '@babylonjs/core';
 import { CustomMaterial, CellMaterial } from '@babylonjs/materials';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode';
-import { useScene, useModel, register } from 'reactylon';
+import { useScene, useModel } from 'reactylon';
 import { SSAO2RenderingPipeline } from '@babylonjs/core/PostProcesses/RenderPipeline/Pipelines/ssao2RenderingPipeline';
 import '@babylonjs/loaders';
 import { getBasePath } from './config';
@@ -58,6 +58,7 @@ export const Content: React.FC<ContentProps> = ({ season }) => {
   const { meshes: hillMeshes } = useModel(`${basePath}/meshes/Hill.glb`);
   const { meshes: grassEmitter } = useModel(`${basePath}/meshes/GrassEmitter.glb`);
   const { meshes: smallWallMeshes } = useModel(`${basePath}/meshes/SmallerWalls.glb`);
+  const { meshes: snowMeshes } = useModel(`${basePath}/meshes/Snow.glb`);
 
   // — Step 1 state hook —
   const [currentSeason, setCurrentSeason] = useState<Season>(Season.Summer);
@@ -106,6 +107,11 @@ export const Content: React.FC<ContentProps> = ({ season }) => {
     const walls = smallWallMeshes.find(m => m.name === 'LargeWalls') ?? smallWallMeshes[0];
     walls.position.set(0, -1.4, 0);
     walls.isVisible = true;
+
+    // ─── Snow setup ─────────────────────────
+    const snow = snowMeshes.find(m => m.name === 'Snow') ?? snowMeshes[0];
+    snow.position.set(0, -1.4, 0);
+    snow.isVisible = true;
 
     // Load ground from height map
     const ground = MeshBuilder.CreateGroundFromHeightMap(
