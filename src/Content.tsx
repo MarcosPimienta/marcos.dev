@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   Vector3,
   Color3,
@@ -20,6 +20,7 @@ import { useScene, useModel } from 'reactylon';
 import { SSAO2RenderingPipeline } from '@babylonjs/core/PostProcesses/RenderPipeline/Pipelines/ssao2RenderingPipeline';
 import '@babylonjs/loaders';
 import { getBasePath } from './config';
+import Animations from './Animations';
 
 export enum Season {
   Spring = 'spring',
@@ -30,6 +31,60 @@ export enum Season {
 
 interface ContentProps {
   season: Season;
+};
+
+interface SeasonTargets {
+  light: {
+    color: Color3;
+    intensity: number;
+    alpha: number;
+    beta: number;
+  };
+  leaf: {
+    tint: Color3;
+    alphaCutOff: number;
+  };
+  snow: {
+    visible: boolean;
+    fromY: number;
+    toY: number;
+  };
+  grass: {
+    fromY: number;
+    toY: number;
+  };
+  skybox: string;
+}
+
+export const seasonTargets: Record<Season, SeasonTargets> = {
+  [Season.Summer]: {
+    light: { color: Color3.FromHexString('#FFF8E0'), intensity: 1.2, alpha: Tools.ToRadians(135), beta: Tools.ToRadians(65) },
+    leaf: { tint: new Color3(1,1,1),      alphaCutOff: 0.7 },
+    snow: { visible: false, fromY: -1, toY: -1 },
+    grass:{ fromY:  0,    toY:  0 },
+    skybox:'sky_summer',
+  },
+  [Season.Fall]: {
+    light: { color: Color3.FromHexString('#FFD1A3'), intensity: 0.8, alpha: Tools.ToRadians(130), beta: Tools.ToRadians(50) },
+    leaf: { tint: Color3.FromHexString('#A63A0D'), alphaCutOff: 0.6 },
+    snow: { visible: false, fromY: -1, toY: -1 },
+    grass:{ fromY:  0,    toY:  0 },
+    skybox:'sky_fall',
+  },
+  [Season.Winter]: {
+    light: { color: Color3.FromHexString('#C8E8FF'), intensity: 0.9, alpha: Tools.ToRadians(140), beta: Tools.ToRadians(40) },
+    leaf: { tint: Color3.FromHexString('#7A7A7A'), alphaCutOff: 0.8 },
+    snow: { visible: true,  fromY: -1, toY: 1.4 },
+    grass:{ fromY:  0,    toY: -0.5 },
+    skybox:'sky_winter',
+  },
+  [Season.Spring]: {
+    light: { color: Color3.FromHexString('#FAFDE1'), intensity: 1.1, alpha: Tools.ToRadians(135), beta: Tools.ToRadians(60) },
+    leaf: { tint: Color3.FromHexString('#8CCF3B'), alphaCutOff: 0.7 },
+    snow: { visible: false, fromY: -1, toY: -1 },
+    grass:{ fromY: -0.5,   toY:  0.2 },
+    skybox:'sky_spring',
+  },
 };
 
 const BUSH_POSITIONS: Vector3[] = [
@@ -53,6 +108,13 @@ const BUSH_POSITIONS: Vector3[] = [
 export const Content: React.FC<ContentProps> = ({ season }) => {
   const scene = useScene();
   const basePath = getBasePath();
+  // refs to hold our scene objects
+  const cameraRef     = useRef<ArcRotateCamera | null>(null);
+  const leafMatRef    = useRef<CustomMaterial | null>(null);
+  const snowMeshRef   = useRef<Mesh | null>(null);
+  const grassRootRef  = useRef<TransformNode | null>(null);
+  const skyboxMatRef  = useRef<StandardMaterial | null>(null);
+  // Load models and textures
   const { meshes: leafMeshes } = useModel(`${basePath}/meshes/leaf_emitter.glb`);
   const { meshes: treeMeshes } = useModel(`${basePath}/meshes/SakuraTree.glb`);
   const { meshes: hillMeshes } = useModel(`${basePath}/meshes/Hill.glb`);
@@ -81,6 +143,7 @@ export const Content: React.FC<ContentProps> = ({ season }) => {
       target,
       scene
     );
+    cameraRef.current = camera;
 
     // Orbit constraints
     camera.lowerBetaLimit = Tools.ToRadians(45);   // Prevent going too low
@@ -102,6 +165,7 @@ export const Content: React.FC<ContentProps> = ({ season }) => {
     skyboxMaterial.diffuseColor = new Color3(0, 0, 0);
     skyboxMaterial.specularColor = new Color3(0, 0, 0);
     skybox.material = skyboxMaterial;
+    skyboxMatRef.current = skyboxMaterial;
 
     // ─── Wall setup ─────────────────────────
     const walls = smallWallMeshes.find(m => m.name === 'LargeWalls') ?? smallWallMeshes[0];
@@ -112,6 +176,7 @@ export const Content: React.FC<ContentProps> = ({ season }) => {
     const snow = snowMeshes.find(m => m.name === 'Snow') ?? snowMeshes[0];
     snow.position.set(0, -1.4, 0);
     snow.isVisible = true;
+    snowMeshRef.current = snow;
 
     // Load ground from height map
     const ground = MeshBuilder.CreateGroundFromHeightMap(
@@ -182,6 +247,7 @@ export const Content: React.FC<ContentProps> = ({ season }) => {
     leafMat.emissiveTexture = new Texture(`${basePath}/textures/grass_ramp.png`, scene);
     leafMat.specularColor = new Color3(0.1, 0.3, 0.1);
     leafMat.specularPower = 128;
+    leafMatRef.current = leafMat;
 
     leafMat.Vertex_Definitions(`
       #ifdef INSTANCES
@@ -265,6 +331,7 @@ export const Content: React.FC<ContentProps> = ({ season }) => {
     const grassRoot = new TransformNode('GrassRoot', scene);
     grassRoot.position = new Vector3(0, -0.95, 0);
     grassRoot.parent = root;
+    grassRootRef.current = grassRoot;
     grassPlane.scaling.scaleInPlace(0.1);
     grassPlane.isVisible = false;
     grassPlane.registerInstancedBuffer('faceNormal', 3);
@@ -420,7 +487,21 @@ export const Content: React.FC<ContentProps> = ({ season }) => {
     setCurrentSeason(currentSeason);
   }, [currentSeason]);
 
-  return null;
+  return (
+    <>
+      {/* No visible meshes here—the scene is all in the Effect above */}
+      <Animations
+        season={currentSeason}
+        scene={scene!}
+        camera={cameraRef.current!}
+        leafMat={leafMatRef.current!}
+        snowMesh={snowMeshRef.current!}
+        grassRoot={grassRootRef.current!}
+        skyboxMaterial={skyboxMatRef.current!}
+        basePath={basePath}
+      />
+    </>
+  );
 
 };
 
