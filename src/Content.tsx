@@ -58,12 +58,19 @@ export const Content: React.FC<ContentProps> = ({ season }) => {
   const { meshes: hillMeshes } = useModel(`${basePath}/meshes/Hill.glb`);
   const { meshes: grassEmitter } = useModel(`${basePath}/meshes/GrassEmitter.glb`);
   const { meshes: smallWallMeshes } = useModel(`${basePath}/meshes/SmallerWalls.glb`);
-
-  // — Step 1 state hook —
-  const [currentSeason, setCurrentSeason] = useState<Season>(Season.Summer);
+  const { meshes: snowMeshes } = useModel(`${basePath}/meshes/Snow.glb`);
 
   useEffect(() => {
-    if (!scene || leafMeshes.length === 0) return;
+    if (
+      !scene ||
+      leafMeshes.length   === 0 ||
+      treeMeshes.length   === 0 ||
+      hillMeshes.length   === 0 ||
+      grassEmitter.length === 0 ||
+      smallWallMeshes.length === 0
+    ) {
+      return;
+    }
 
     const GLOBAL_SCALE = 0.3;
     const root = new TransformNode('SceneRoot', scene);
@@ -90,6 +97,19 @@ export const Content: React.FC<ContentProps> = ({ season }) => {
     camera.panningSensibility = 0;                // ❌ Disable panning
 
     camera.attachControl(undefined, true);
+    // ─── Defer SSAO until scene is fully initialized ─────────────────────────
+      try {
+        if (scene.activeCamera) {
+          new SSAO2RenderingPipeline(
+            "ssao",
+            scene,
+            0.5,
+            [scene.activeCamera]
+          );
+        }
+      } catch (e) {
+        console.warn("SSAO pipeline failed to initialize:", e);
+      }
     scene.activeCamera = camera;
 
     // Skybox
@@ -106,6 +126,11 @@ export const Content: React.FC<ContentProps> = ({ season }) => {
     const walls = smallWallMeshes.find(m => m.name === 'LargeWalls') ?? smallWallMeshes[0];
     walls.position.set(0, -1.4, 0);
     walls.isVisible = true;
+
+    // ─── Snow setup ─────────────────────────
+    const snow = snowMeshes.find(m => m.name === 'Snow') ?? snowMeshes[0];
+    snow.position.set(0, -1.4, 0);
+    snow.isVisible = true;
 
     // Load ground from height map
     const ground = MeshBuilder.CreateGroundFromHeightMap(
@@ -389,12 +414,6 @@ export const Content: React.FC<ContentProps> = ({ season }) => {
       camera
     );
 
-    const ssao = new SSAO2RenderingPipeline("ssao", scene, 0.5, [scene.activeCamera!]);
-    ssao.radius = 2;
-    ssao.samples = 16;
-    ssao.totalStrength = 2.0;
-    ssao.expensiveBlur = true;
-
     return () => {
       scene.onBeforeRenderObservable.remove(windObs);
       allInstances.forEach(i => i.dispose());
@@ -407,12 +426,105 @@ export const Content: React.FC<ContentProps> = ({ season }) => {
       camera.dispose();
       root.dispose();
     };
-  }, [scene, leafMeshes, treeMeshes, currentSeason]);
+  }, [scene, leafMeshes, treeMeshes, hillMeshes, grassEmitter, smallWallMeshes]);
 
-  // placeholder: respond to external `season` prop changes
   useEffect(() => {
-    setCurrentSeason(currentSeason);
-  }, [currentSeason]);
+    if (!scene) return
+
+    console.log("[Content] season update hook — season:", season);
+    const light = scene.lights[0];
+    const leafMat  = scene.getMaterialByName('leafMat') as CustomMaterial;
+    const snowMesh = scene.getMeshByName('Snow')!;
+    if (!snowMesh) return;
+    const grassRoot= scene.getTransformNodeByName('GrassRoot')!;
+    const skybox   = scene.getMeshByName('skyBox')!.material as StandardMaterial;
+    console.log({
+    light,
+      leafMat: !!leafMat,
+      snowMesh: snowMesh ? "FOUND" : "MISSING",
+      grassRoot: grassRoot ? "FOUND" : "MISSING",
+      skyboxMesh: skybox ? "FOUND" : "MISSING",
+    });
+
+    if (!light || !leafMat || !snowMesh || !grassRoot || !skybox) {
+    console.warn("[Content] missing one or more scene objects, skipping season apply");
+    return;
+  };
+
+    switch (season) {
+      case Season.Summer:
+        light.diffuse      = Color3.FromHexString('#FFF8E0').toLinearSpace();
+        light.intensity    = 1.2;
+
+        leafMat.diffuseColor = Color3.Green();
+        leafMat.alphaCutOff  = 0.7;
+
+        snowMesh.isVisible  = false;
+        snowMesh.position.y = -1;
+
+        grassRoot.position.y = 0;
+
+        skybox.reflectionTexture = new CubeTexture(
+          `${basePath}/textures/skybox/sky_summer/skybox`, scene,
+          ["_px.png","_py.png","_pz.png","_nx.png","_ny.png","_nz.png"]
+        );
+        break;
+
+      case Season.Fall:
+        light.diffuse      = Color3.FromHexString('#FFD1A3').toLinearSpace();
+        light.intensity    = 0.8;
+
+        leafMat.diffuseColor = Color3.FromHexString('#A63A0D').toLinearSpace();
+        leafMat.alphaCutOff  = 0.6;
+
+        snowMesh.isVisible  = false;
+        snowMesh.position.y = -1;
+
+        grassRoot.position.y = 0;
+
+        skybox.reflectionTexture = new CubeTexture(
+          `${basePath}/textures/skybox/sky_fall/skybox`, scene,
+          ["_px.png","_py.png","_pz.png","_nx.png","_ny.png","_nz.png"]
+        );
+        break;
+
+      case Season.Winter:
+        light.diffuse      = Color3.FromHexString('#C8E8FF').toLinearSpace();
+        light.intensity    = 0.9;
+
+        leafMat.diffuseColor = Color3.FromHexString('#7A7A7A').toLinearSpace();
+        leafMat.alphaCutOff  = 0.8;
+
+        snowMesh.isVisible  = true;
+        snowMesh.position.y = 1.4;
+
+        grassRoot.position.y = -0.5;
+
+        skybox.reflectionTexture = new CubeTexture(
+          `${basePath}/textures/skybox/sky_winter/skybox`, scene,
+          ["_px.png","_py.png","_pz.png","_nx.png","_ny.png","_nz.png"]
+        );
+        break;
+
+      case Season.Spring:
+        light.diffuse      = Color3.FromHexString('#FAFDE1').toLinearSpace();
+        light.intensity    = 1.1;
+
+        leafMat.diffuseColor = Color3.FromHexString('#8CCF3B').toLinearSpace();
+        leafMat.alphaCutOff  = 0.7;
+
+        snowMesh.isVisible  = false;
+        snowMesh.position.y = -1;
+
+        grassRoot.position.y = 0.2;
+
+        skybox.reflectionTexture = new CubeTexture(
+          `${basePath}/textures/skybox/sky_spring/skybox`, scene,
+          ["_px.png","_py.png","_pz.png","_nx.png","_ny.png","_nz.png"]
+        );
+        break;
+    }
+  }, [season, scene]);
 
   return null;
 
