@@ -465,9 +465,10 @@ export const Content: React.FC<ContentProps> = ({ season }) => {
         grassRoot.position.y = -1;
 
         skybox.reflectionTexture = new CubeTexture(
-          `${basePath}/textures/skybox/sky_summer/skybox`, scene,
+          `${basePath}/textures/skybox/skybox`, scene,
           ["_px.png","_py.png","_pz.png","_nx.png","_ny.png","_nz.png"]
         );
+        skybox.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
         break;
 
       case Season.Fall:
@@ -483,9 +484,10 @@ export const Content: React.FC<ContentProps> = ({ season }) => {
         grassRoot.position.y = -1;
 
         skybox.reflectionTexture = new CubeTexture(
-          `${basePath}/textures/skybox/sky_fall/skybox`, scene,
+          `${basePath}/textures/skybox/sky_fall`, scene,
           ["_px.png","_py.png","_pz.png","_nx.png","_ny.png","_nz.png"]
         );
+        skybox.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
         break;
 
       case Season.Winter:
@@ -501,9 +503,10 @@ export const Content: React.FC<ContentProps> = ({ season }) => {
         grassRoot.position.y = -2;
 
         skybox.reflectionTexture = new CubeTexture(
-          `${basePath}/textures/skybox/sky_winter/skybox`, scene,
+          `${basePath}/textures/skybox/sky_winter`, scene,
           ["_px.png","_py.png","_pz.png","_nx.png","_ny.png","_nz.png"]
         );
+        skybox.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
         break;
 
       case Season.Spring:
@@ -519,9 +522,10 @@ export const Content: React.FC<ContentProps> = ({ season }) => {
         grassRoot.position.y = -1;
 
         skybox.reflectionTexture = new CubeTexture(
-          `${basePath}/textures/skybox/sky_spring/skybox`, scene,
+          `${basePath}/textures/skybox/sky_spring`, scene,
           ["_px.png","_py.png","_pz.png","_nx.png","_ny.png","_nz.png"]
         );
+        skybox.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
         break;
     }
   }, [season, scene]);
