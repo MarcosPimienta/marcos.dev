@@ -462,7 +462,7 @@ export const Content: React.FC<ContentProps> = ({ season }) => {
         snowMesh.isVisible  = false;
         snowMesh.position.y = -1;
 
-        grassRoot.position.y = 0;
+        grassRoot.position.y = -1;
 
         skybox.reflectionTexture = new CubeTexture(
           `${basePath}/textures/skybox/sky_summer/skybox`, scene,
@@ -480,7 +480,7 @@ export const Content: React.FC<ContentProps> = ({ season }) => {
         snowMesh.isVisible  = false;
         snowMesh.position.y = -1;
 
-        grassRoot.position.y = 0;
+        grassRoot.position.y = -1;
 
         skybox.reflectionTexture = new CubeTexture(
           `${basePath}/textures/skybox/sky_fall/skybox`, scene,
@@ -496,9 +496,9 @@ export const Content: React.FC<ContentProps> = ({ season }) => {
         leafMat.alphaCutOff  = 0.8;
 
         snowMesh.isVisible  = true;
-        snowMesh.position.y = 1.4;
+        snowMesh.position.y = -1.24;
 
-        grassRoot.position.y = -0.5;
+        grassRoot.position.y = -2;
 
         skybox.reflectionTexture = new CubeTexture(
           `${basePath}/textures/skybox/sky_winter/skybox`, scene,
@@ -516,7 +516,7 @@ export const Content: React.FC<ContentProps> = ({ season }) => {
         snowMesh.isVisible  = false;
         snowMesh.position.y = -1;
 
-        grassRoot.position.y = 0.2;
+        grassRoot.position.y = -1;
 
         skybox.reflectionTexture = new CubeTexture(
           `${basePath}/textures/skybox/sky_spring/skybox`, scene,
