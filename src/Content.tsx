@@ -116,8 +116,8 @@ export const Content: React.FC<ContentProps> = ({ season }) => {
     const skybox = MeshBuilder.CreateBox("skyBox", {size:500.0}, scene);
     const skyboxMaterial = new StandardMaterial("skyBox", scene);
     skyboxMaterial.backFaceCulling = false;
-    skyboxMaterial.reflectionTexture = new CubeTexture(`${basePath}/textures/skybox/skybox`, scene, ["_px.png", "_py.png", "_pz.png", "_nx.png", "_ny.png", "_nz.png"]);
-    skyboxMaterial.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
+    //skyboxMaterial.reflectionTexture = new CubeTexture(`${basePath}/textures/skybox/skybox`, scene, ["_px.png", "_py.png", "_pz.png", "_nx.png", "_ny.png", "_nz.png"]);
+    //skyboxMaterial.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
     skyboxMaterial.diffuseColor = new Color3(0, 0, 0);
     skyboxMaterial.specularColor = new Color3(0, 0, 0);
     skybox.material = skyboxMaterial;
@@ -429,106 +429,56 @@ export const Content: React.FC<ContentProps> = ({ season }) => {
   }, [scene, leafMeshes, treeMeshes, hillMeshes, grassEmitter, smallWallMeshes]);
 
   useEffect(() => {
-    if (!scene) return
+    if (!scene) return;
+    // — one‑time “apply whatever season you passed in on load” —
+    const applySeason = (s: Season) => {
+      const light  = scene.lights[0]!;
+      const leaf   = scene.getMaterialByName('leafMat') as CustomMaterial;
+      const snow   = scene.getMeshByName('Snow')!;
+      const grass  = scene.getTransformNodeByName('GrassRoot')!;
+      const skyMat = scene.getMeshByName('skyBox')!.material as StandardMaterial;
 
-    console.log("[Content] season update hook — season:", season);
-    const light = scene.lights[0];
-    const leafMat  = scene.getMaterialByName('leafMat') as CustomMaterial;
-    const snowMesh = scene.getMeshByName('Snow')!;
-    if (!snowMesh) return;
-    const grassRoot= scene.getTransformNodeByName('GrassRoot')!;
-    const skybox   = scene.getMeshByName('skyBox')!.material as StandardMaterial;
-    console.log({
-    light,
-      leafMat: !!leafMat,
-      snowMesh: snowMesh ? "FOUND" : "MISSING",
-      grassRoot: grassRoot ? "FOUND" : "MISSING",
-      skyboxMesh: skybox ? "FOUND" : "MISSING",
-    });
+      // match your AnimationCtrl getters for Season → value:
+      const lightColor = {
+        spring: Color3.FromHexString('#FAFDE1').toLinearSpace(),
+        summer: Color3.FromHexString('#FFF8E0').toLinearSpace(),
+        fall:   Color3.FromHexString('#FFD1A3').toLinearSpace(),
+        winter: Color3.FromHexString('#C8E8FF').toLinearSpace(),
+      }[s];
+      const lightInt = { spring:1.1, summer:1.2, fall:0.8, winter:0.9 }[s];
 
-    if (!light || !leafMat || !snowMesh || !grassRoot || !skybox) {
-    console.warn("[Content] missing one or more scene objects, skipping season apply");
-    return;
-  };
+      const leafColor = {
+        spring: Color3.FromHexString('#8CCF3B').toLinearSpace(),
+        summer: Color3.Green(),
+        fall:   Color3.FromHexString('#A63A0D').toLinearSpace(),
+        winter: Color3.FromHexString('#7A7A7A').toLinearSpace(),
+      }[s];
+      const leafAlpha = { spring:0.7, summer:0.7, fall:0.6, winter:0.8 }[s];
 
-    switch (season) {
-      case Season.Summer:
-        light.diffuse      = Color3.FromHexString('#FFF8E0').toLinearSpace();
-        light.intensity    = 1.2;
+      const snowY  = s === Season.Winter ? 1.4 : -1;
+      const grassY = s === Season.Winter ? -2  : -1;
 
-        leafMat.diffuseColor = Color3.Green();
-        leafMat.alphaCutOff  = 0.7;
+      // apply them:
+      light.diffuse   = lightColor;
+      light.intensity = lightInt;
 
-        snowMesh.isVisible  = false;
-        snowMesh.position.y = -1;
+      leaf.diffuseColor = leafColor;
+      leaf.alphaCutOff  = leafAlpha;
 
-        grassRoot.position.y = -1;
+      snow.position.y  = snowY;
+      grass.position.y = grassY;
 
-        skybox.reflectionTexture = new CubeTexture(
-          `${basePath}/textures/skybox/sky_summer`, scene,
-          ["_px.png","_py.png","_pz.png","_nx.png","_ny.png","_nz.png"]
-        );
-        skybox.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
-        break;
+      // load the matching skybox:
+      skyMat.reflectionTexture = new CubeTexture(
+        `${basePath}/textures/skybox/sky_${s}`, scene,
+        ['_px.png','_py.png','_pz.png','_nx.png','_ny.png','_nz.png']
+      );
+      skyMat.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
+    };
 
-      case Season.Fall:
-        light.diffuse      = Color3.FromHexString('#FFD1A3').toLinearSpace();
-        light.intensity    = 0.8;
-
-        leafMat.diffuseColor = Color3.FromHexString('#A63A0D').toLinearSpace();
-        leafMat.alphaCutOff  = 0.6;
-
-        snowMesh.isVisible  = false;
-        snowMesh.position.y = -1;
-
-        grassRoot.position.y = -1;
-
-        skybox.reflectionTexture = new CubeTexture(
-          `${basePath}/textures/skybox/sky_fall`, scene,
-          ["_px.png","_py.png","_pz.png","_nx.png","_ny.png","_nz.png"]
-        );
-        skybox.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
-        break;
-
-      case Season.Winter:
-        light.diffuse      = Color3.FromHexString('#C8E8FF').toLinearSpace();
-        light.intensity    = 0.9;
-
-        leafMat.diffuseColor = Color3.FromHexString('#7A7A7A').toLinearSpace();
-        leafMat.alphaCutOff  = 0.8;
-
-        snowMesh.isVisible  = true;
-        snowMesh.position.y = -1.24;
-
-        grassRoot.position.y = -2;
-
-        skybox.reflectionTexture = new CubeTexture(
-          `${basePath}/textures/skybox/sky_winter`, scene,
-          ["_px.png","_py.png","_pz.png","_nx.png","_ny.png","_nz.png"]
-        );
-        skybox.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
-        break;
-
-      case Season.Spring:
-        light.diffuse      = Color3.FromHexString('#FAFDE1').toLinearSpace();
-        light.intensity    = 1.1;
-
-        leafMat.diffuseColor = Color3.FromHexString('#8CCF3B').toLinearSpace();
-        leafMat.alphaCutOff  = 0.7;
-
-        snowMesh.isVisible  = false;
-        snowMesh.position.y = -1;
-
-        grassRoot.position.y = -1;
-
-        skybox.reflectionTexture = new CubeTexture(
-          `${basePath}/textures/skybox/sky_spring`, scene,
-          ["_px.png","_py.png","_pz.png","_nx.png","_ny.png","_nz.png"]
-        );
-        skybox.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
-        break;
-    }
-  }, [season, scene]);
+    // — on first mount only —
+    applySeason(season);
+  }, [scene]);
 
   return null;
 
