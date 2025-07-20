@@ -1,22 +1,37 @@
-// App.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Content, { Season } from './Content';
+import { AnimationCtrl } from './AnimationCtrl';
 import { Engine } from 'reactylon/web';
 import { Scene } from 'reactylon';
 import { HavokPlugin } from '@babylonjs/core/Physics/v2/Plugins/havokPlugin';
 import '@babylonjs/loaders';
 import '@babylonjs/inspector';
 import { KeyboardEventTypes } from '@babylonjs/core/Events/keyboardEvents';
+import type { Scene as BjsScene } from '@babylonjs/core';
 
 const seasons = [Season.Summer, Season.Fall, Season.Winter, Season.Spring];
 
 const App: React.FC<{ havok: unknown }> = ({ havok }) => {
   const [selectedSeason, setSelectedSeason] = useState<Season>(Season.Summer);
+  const [prevSeason, setPrevSeason]         = useState<Season>(Season.Summer);
+  const [bjsScene, setBjsScene]             = useState<BjsScene | null>(null);
+
+  // whenever the user picks a new season, prevSeason will hold
+  // the one we just animated *from*, and selectedSeason is our
+  // target
+  useEffect(() => {
+    if (bjsScene && prevSeason !== selectedSeason) {
+      // once the animation is done, bump prevSeason forward
+      const onComplete = () => setPrevSeason(selectedSeason);
+
+      // kick off the animation
+      // <AnimationCtrl> is rendered down in the JSX
+      return;
+    }
+  }, [bjsScene, prevSeason, selectedSeason]);
 
   return (
-    // 1) Container with relative positioning and full-viewport size
     <div style={{ position: 'relative', width: '100vw', height: '100vh' }}>
-      {/* 2) Overlayed React buttons */}
       <div
         style={{
           position: 'absolute',
@@ -45,11 +60,11 @@ const App: React.FC<{ havok: unknown }> = ({ havok }) => {
         ))}
       </div>
 
-      {/* 3) Babylon Engine + Scene (no style on Engine) */}
       <Engine antialias>
         <Scene
-          // the Scene will fill its parent <div>
           onSceneReady={scene => {
+            // keep a handle on the raw Babylon scene
+            setBjsScene(scene as BjsScene);
             scene.createDefaultCameraOrLight(true, undefined, true);
             scene.lights.forEach(l => (l.intensity = 1.34));
             scene.onKeyboardObservable.add(kbInfo => {
@@ -57,16 +72,27 @@ const App: React.FC<{ havok: unknown }> = ({ havok }) => {
                 kbInfo.type === KeyboardEventTypes.KEYUP &&
                 kbInfo.event.key === 'i'
               ) {
-                scene.debugLayer.isVisible()
-                  ? scene.debugLayer.hide()
-                  : scene.debugLayer.show({ embedMode: true, overlay: true });
+                if (scene.debugLayer.isVisible()) {
+                  scene.debugLayer.hide();
+                } else {
+                  scene.debugLayer.show({ embedMode: true, overlay: true });
+                }
               }
             });
           }}
           physicsOptions={{ plugin: new HavokPlugin(true, havok) }}
         >
-          {/* 4) Pass selection down to your Content */}
+          {/* This is your static setup */}
           <Content season={selectedSeason} />
+
+          {bjsScene && prevSeason !== selectedSeason && (
+            <AnimationCtrl
+              scene={bjsScene}
+              from={prevSeason}
+              to={selectedSeason}
+              onComplete={() => setPrevSeason(selectedSeason)}
+            />
+          )}
         </Scene>
       </Engine>
     </div>

@@ -465,7 +465,7 @@ export const Content: React.FC<ContentProps> = ({ season }) => {
         grassRoot.position.y = -1;
 
         skybox.reflectionTexture = new CubeTexture(
-          `${basePath}/textures/skybox/skybox`, scene,
+          `${basePath}/textures/skybox/sky_summer`, scene,
           ["_px.png","_py.png","_pz.png","_nx.png","_ny.png","_nz.png"]
         );
         skybox.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
