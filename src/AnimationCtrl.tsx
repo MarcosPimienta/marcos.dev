@@ -135,8 +135,8 @@ export const AnimationCtrl: React.FC<AnimationCtrlProps> = ({
     const leafMat = scene.getMaterialByName('leafMat') as CustomMaterial
     const snow    = scene.getMeshByName('Snow')!
     const grass   = scene.getTransformNodeByName('GrassRoot')!
-    const skyMat1 = scene.getMaterialByName('skyMat1') as StandardMaterial
-    const skyMat2 = scene.getMaterialByName('skyMat2') as StandardMaterial
+    const skyMat1 = scene.getMaterialByName('skyBox1Mat') as StandardMaterial;
+    const skyMat2 = scene.getMaterialByName('skyBox2Mat') as StandardMaterial;
 
     // — preload both skybox textures —
     const urlFrom = `${getBasePath()}/textures/skybox/sky_${from}`

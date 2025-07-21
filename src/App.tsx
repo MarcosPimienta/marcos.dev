@@ -9,11 +9,11 @@ import '@babylonjs/inspector';
 import { KeyboardEventTypes } from '@babylonjs/core/Events/keyboardEvents';
 import type { Scene as BjsScene } from '@babylonjs/core';
 
-const seasons = [Season.Summer, Season.Fall, Season.Winter, Season.Spring];
+const seasons = [Season.Spring, Season.Summer, Season.Fall, Season.Winter];
 
 const App: React.FC<{ havok: unknown }> = ({ havok }) => {
-  const [selectedSeason, setSelectedSeason] = useState<Season>(Season.Summer);
-  const [prevSeason, setPrevSeason]         = useState<Season>(Season.Summer);
+  const [selectedSeason, setSelectedSeason] = useState<Season>(Season.Spring);
+  const [prevSeason, setPrevSeason]         = useState<Season>(Season.Spring);
   const [bjsScene, setBjsScene]             = useState<BjsScene | null>(null);
 
   // whenever the user picks a new season, prevSeason will hold
