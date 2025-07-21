@@ -88,7 +88,7 @@ export const AnimationCtrl: React.FC<AnimationCtrlProps> = ({
     }[s]!)
 
     const snowPos = (s: Season) =>
-      new Vector3(0, s === Season.Winter ? 1.4 : -1, 0)
+      new Vector3(0, s === Season.Winter ? -1.2 : -3, 0)
 
     const grassPos = (s: Season) =>
       new Vector3(0, s === Season.Winter ? -2 : -1, 0)

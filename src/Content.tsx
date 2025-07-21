@@ -154,7 +154,7 @@ export const Content: React.FC<ContentProps> = ({ season }) => {
 
     // ─── Snow setup ─────────────────────────
     const snow = snowMeshes.find(m => m.name === 'Snow') ?? snowMeshes[0];
-    snow.position.set(0, -1.4, 0);
+    snow.position.set(0, -3, 0);
     snow.isVisible = true;
 
     // Load ground from height map
@@ -497,7 +497,7 @@ export const Content: React.FC<ContentProps> = ({ season }) => {
     light.intensity      = lightIntMap[s];
     leafMat.diffuseColor = leafColorMap[s];
     leafMat.alphaCutOff  = leafAlphaMap[s];
-    snow.position.y      = s === Season.Winter ? 1.4 : -1;
+    snow.position.y      = s === Season.Winter ? -1.2 : -3;
     grass.position.y     = s === Season.Winter ? -2   : -1;
 
     // **only** snap which skybox is visible by alpha
