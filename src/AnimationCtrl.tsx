@@ -11,6 +11,7 @@ import {
   Vector3
 } from '@babylonjs/core'
 import { CustomMaterial } from '@babylonjs/materials'
+import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial'
 import { CubeTexture } from '@babylonjs/core'
 import { Season } from './Content'
 import { getBasePath } from './config'
@@ -40,7 +41,7 @@ export const AnimationCtrl: React.FC<AnimationCtrlProps> = ({
   useEffect(() => {
     if (!scene) return
 
-    // figure out how many legs (always forward through the cycle)
+    // — determine how many steps going forward from “from” to “to” —
     const startIdx = order.indexOf(from)
     let steps = 0
     let idx = startIdx
@@ -53,45 +54,46 @@ export const AnimationCtrl: React.FC<AnimationCtrlProps> = ({
     const framesPerLeg = 120
     const totalFrames  = steps * framesPerLeg + 60
 
-    // common ease
+    // — ease for all animations —
     const ease = new CubicEase() as unknown as EasingFunction
     ease.setEasingMode(EasingFunction.EASINGMODE_EASEINOUT)
 
-    // value getters per‑season
-    const lightColor = (s: Season) => {
-      switch (s) {
-        case Season.Spring: return Color3.FromHexString('#FAFDE1').toLinearSpace()
-        case Season.Summer: return Color3.FromHexString('#FFF8E0').toLinearSpace()
-        case Season.Fall:   return Color3.FromHexString('#FFD1A3').toLinearSpace()
-        case Season.Winter: return Color3.FromHexString('#C8E8FF').toLinearSpace()
-      }
-    }
+    // — per‐season value getters —
+    const lightColor = (s: Season) => ({
+      [Season.Spring]: Color3.FromHexString('#FAFDE1').toLinearSpace(),
+      [Season.Summer]: Color3.FromHexString('#FFF8E0').toLinearSpace(),
+      [Season.Fall]:   Color3.FromHexString('#FFD1A3').toLinearSpace(),
+      [Season.Winter]: Color3.FromHexString('#C8E8FF').toLinearSpace(),
+    }[s]!)
+
     const lightInt = (s: Season) => ({
       [Season.Spring]: 1.1,
       [Season.Summer]: 1.2,
       [Season.Fall]:   0.8,
       [Season.Winter]: 0.9,
     }[s]!)
-    const leafTint = (s: Season) => {
-      switch (s) {
-        case Season.Spring: return Color3.FromHexString('#8CCF3B').toLinearSpace()
-        case Season.Summer: return Color3.Green()
-        case Season.Fall:   return Color3.FromHexString('#A63A0D').toLinearSpace()
-        case Season.Winter: return Color3.FromHexString('#7A7A7A').toLinearSpace()
-      }
-    }
+
+    const leafTint = (s: Season) => ({
+      [Season.Spring]: Color3.FromHexString('#8CCF3B').toLinearSpace(),
+      [Season.Summer]: Color3.Green(),
+      [Season.Fall]:   Color3.FromHexString('#A63A0D').toLinearSpace(),
+      [Season.Winter]: Color3.FromHexString('#7A7A7A').toLinearSpace(),
+    }[s]!)
+
     const leafCutoff = (s: Season) => ({
       [Season.Spring]: 0.7,
       [Season.Summer]: 0.7,
       [Season.Fall]:   0.6,
       [Season.Winter]: 0.8,
     }[s]!)
+
     const snowPos = (s: Season) =>
       new Vector3(0, s === Season.Winter ? 1.4 : -1, 0)
+
     const grassPos = (s: Season) =>
       new Vector3(0, s === Season.Winter ? -2 : -1, 0)
 
-    // helper to build a single property‐animation
+    // — helper to build a Babylon Animation from keys —
     function buildAnim<T>(
       property: string,
       dataType: number,
@@ -104,7 +106,7 @@ export const AnimationCtrl: React.FC<AnimationCtrlProps> = ({
       // initial
       keys.push({ frame: 0, value: getter(order[cidx]) })
 
-      // each “leg” through the seasons
+      // each “leg” through the sequence
       for (let i = 0; i < steps; i++) {
         const next = (cidx + 1) % order.length
         keys.push({ frame: cursor + 60,           value: getter(order[cidx]) })
@@ -128,50 +130,77 @@ export const AnimationCtrl: React.FC<AnimationCtrlProps> = ({
       return anim
     }
 
-    // grab everything
+    // — grab all targets —
     const light   = scene.lights[0]!
     const leafMat = scene.getMaterialByName('leafMat') as CustomMaterial
     const snow    = scene.getMeshByName('Snow')!
     const grass   = scene.getTransformNodeByName('GrassRoot')!
-    const skyMat  = (scene.getMeshByName('skyBox')!.material!) as any
+    const skyMat1 = scene.getMaterialByName('skyMat1') as StandardMaterial
+    const skyMat2 = scene.getMaterialByName('skyMat2') as StandardMaterial
 
-    // assign keyframes
+    // — preload both skybox textures —
+    const urlFrom = `${getBasePath()}/textures/skybox/sky_${from}`
+    const urlTo   = `${getBasePath()}/textures/skybox/sky_${to}`
+    const faces   = ['_px.png','_py.png','_pz.png','_nx.png','_ny.png','_nz.png']
+
+    skyMat1.reflectionTexture = new CubeTexture(urlFrom, scene, faces)
+    skyMat1.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE
+    skyMat1.alpha = 1
+
+    skyMat2.reflectionTexture = new CubeTexture(urlTo, scene, faces)
+    skyMat2.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE
+    skyMat2.alpha = 0
+
+    // — build fade animations for sky —
+    const fadeOut = new Animation('fadeOutSky1', 'alpha', 60, Animation.ANIMATIONTYPE_FLOAT, Animation.ANIMATIONLOOPMODE_CONSTANT)
+    fadeOut.setKeys([
+      { frame: 0,           value: 1 },
+      { frame: totalFrames, value: 0 }
+    ])
+    fadeOut.setEasingFunction(ease)
+
+    const fadeIn = new Animation('fadeInSky2', 'alpha', 60, Animation.ANIMATIONTYPE_FLOAT, Animation.ANIMATIONLOOPMODE_CONSTANT)
+    fadeIn.setKeys([
+      { frame: 0,           value: 0 },
+      { frame: totalFrames, value: 1 }
+    ])
+    fadeIn.setEasingFunction(ease)
+
+    skyMat1.animations = [fadeOut]
+    skyMat2.animations = [fadeIn]
+
+    // — optional: trigger onComplete at very end —
+    const evt = new AnimationEvent(
+      totalFrames,
+      () => onComplete?.(),
+      true
+    )
+    fadeIn.addEvent(evt)
+
+    // — assign your four other seasonal anims —
     light.animations  = [
       buildAnim('diffuse',   Animation.ANIMATIONTYPE_COLOR3, lightColor),
-      buildAnim('intensity', Animation.ANIMATIONTYPE_FLOAT,  lightInt)
+      buildAnim('intensity', Animation.ANIMATIONTYPE_FLOAT,  lightInt),
     ]
     leafMat.animations = [
       buildAnim('diffuseColor', Animation.ANIMATIONTYPE_COLOR3, leafTint),
-      buildAnim('alphaCutOff',  Animation.ANIMATIONTYPE_FLOAT,  leafCutoff)
+      buildAnim('alphaCutOff',  Animation.ANIMATIONTYPE_FLOAT,  leafCutoff),
     ]
     snow.animations   = [ buildAnim('position', Animation.ANIMATIONTYPE_VECTOR3, snowPos) ]
     grass.animations  = [ buildAnim('position', Animation.ANIMATIONTYPE_VECTOR3, grassPos) ]
 
-    // schedule our sky‐swap at the very end
-    const swapEvent = new AnimationEvent(
-      totalFrames,
-      () => {
-        const url = `${getBasePath()}/textures/skybox/sky_${to}`
-        skyMat.reflectionTexture = new CubeTexture(url, scene,
-          ['_px.png','_py.png','_pz.png','_nx.png','_ny.png','_nz.png']
-        )
-        skyMat.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE
-        onComplete?.()
-      },
-      true  // onlyOnce
-    )
-    leafMat.animations![1].addEvent(swapEvent)
-
-    // kick them all off (speedRatio=1)
+    // — start *all six* anims and collect disposables —
+    disposables.current.forEach(a => a.stop())
     disposables.current = [
-      scene.beginDirectAnimation(light,   light.animations!,   0, totalFrames, false, 1.0),
-      scene.beginDirectAnimation(leafMat, leafMat.animations!, 0, totalFrames, false, 1.0),
-      scene.beginDirectAnimation(snow,    snow.animations!,    0, totalFrames, false, 1.0),
-      scene.beginDirectAnimation(grass,   grass.animations!,   0, totalFrames, false, 1.0),
+      scene.beginDirectAnimation(skyMat1, skyMat1.animations!, 0, totalFrames, false, 1),
+      scene.beginDirectAnimation(skyMat2, skyMat2.animations!, 0, totalFrames, false, 1),
+      scene.beginDirectAnimation(light,   light.animations!,   0, totalFrames, false, 1),
+      scene.beginDirectAnimation(leafMat, leafMat.animations!, 0, totalFrames, false, 1),
+      scene.beginDirectAnimation(snow,    snow.animations!,    0, totalFrames, false, 1),
+      scene.beginDirectAnimation(grass,   grass.animations!,   0, totalFrames, false, 1),
     ]
 
     return () => {
-      // clean up
       disposables.current.forEach(a => a.stop())
       disposables.current = []
     }

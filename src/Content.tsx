@@ -113,14 +113,25 @@ export const Content: React.FC<ContentProps> = ({ season }) => {
     scene.activeCamera = camera;
 
     // Skybox
-    const skybox = MeshBuilder.CreateBox("skyBox", {size:500.0}, scene);
-    const skyboxMaterial = new StandardMaterial("skyBox", scene);
-    skyboxMaterial.backFaceCulling = false;
-    //skyboxMaterial.reflectionTexture = new CubeTexture(`${basePath}/textures/skybox/skybox`, scene, ["_px.png", "_py.png", "_pz.png", "_nx.png", "_ny.png", "_nz.png"]);
-    //skyboxMaterial.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
-    skyboxMaterial.diffuseColor = new Color3(0, 0, 0);
-    skyboxMaterial.specularColor = new Color3(0, 0, 0);
-    skybox.material = skyboxMaterial;
+    const skyContainer = new TransformNode("skyContainer", scene);
+
+    // first skybox (initial)
+    const skybox1 = MeshBuilder.CreateBox("skyBox1", { size: 500 }, scene);
+    skybox1.parent = skyContainer;
+    const skyMat1 = new StandardMaterial("skyMat1", scene);
+    skyMat1.backFaceCulling = false;
+    skyMat1.disableLighting  = true;
+    skyMat1.alpha = 1;           // fully visible
+    skybox1.material = skyMat1;
+
+    // second skybox (for the fade target)
+    const skybox2 = MeshBuilder.CreateBox("skyBox2", { size: 500 }, scene);
+    skybox2.parent = skyContainer;
+    const skyMat2 = new StandardMaterial("skyMat2", scene);
+    skyMat2.backFaceCulling = false;
+    skyMat2.disableLighting  = true;
+    skyMat2.alpha = 0;           // start invisible
+    skybox2.material = skyMat2;
 
     // ─── Wall setup ─────────────────────────
     const walls = smallWallMeshes.find(m => m.name === 'LargeWalls') ?? smallWallMeshes[0];
@@ -436,7 +447,8 @@ export const Content: React.FC<ContentProps> = ({ season }) => {
       const leaf   = scene.getMaterialByName('leafMat') as CustomMaterial;
       const snow   = scene.getMeshByName('Snow')!;
       const grass  = scene.getTransformNodeByName('GrassRoot')!;
-      const skyMat = scene.getMeshByName('skyBox')!.material as StandardMaterial;
+      const skyMat1 = scene.getMaterialByName('skyMat1') as StandardMaterial;
+      const skyMat2 = scene.getMaterialByName('skyMat2') as StandardMaterial;
 
       // match your AnimationCtrl getters for Season → value:
       const lightColor = {
@@ -468,12 +480,15 @@ export const Content: React.FC<ContentProps> = ({ season }) => {
       snow.position.y  = snowY;
       grass.position.y = grassY;
 
-      // load the matching skybox:
-      skyMat.reflectionTexture = new CubeTexture(
-        `${basePath}/textures/skybox/sky_${s}`, scene,
+      skyMat1.reflectionTexture = new CubeTexture(
+        `${basePath}/textures/skybox/sky_${s}`,
+        scene,
         ['_px.png','_py.png','_pz.png','_nx.png','_ny.png','_nz.png']
       );
-      skyMat.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
+      skyMat1.alpha = 1;
+
+      skyMat2.reflectionTexture = skyMat1.reflectionTexture.clone();
+      skyMat2.alpha = 0;
     };
 
     // — on first mount only —
