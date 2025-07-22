@@ -27,7 +27,6 @@ export enum Season {
   Fall   = 'fall',
   Winter = 'winter',
 };
-
 interface ContentProps {
   season: Season;
 };
@@ -72,6 +71,22 @@ export const Content: React.FC<ContentProps> = ({ season }) => {
       return;
     }
 
+    /* const allLeafInstances = scene.meshes
+      .filter(m => /^b\d+_l/.test(m.name)) as InstancedMesh[];
+    const allFlowerInstances = scene.meshes
+      .filter(m => m.name.startsWith('flw_')) as InstancedMesh[]; */
+
+    const allLeafInstances: InstancedMesh[]   = [];
+    const allFlowerInstances: InstancedMesh[] = [];
+
+    if (season === Season.Spring) {
+      allLeafInstances.forEach(inst => inst.scaling.setAll(0));
+      allFlowerInstances.forEach(inst => inst.scaling.setAll(1));
+    } else {
+      allLeafInstances.forEach(inst => inst.scaling.setAll(1));
+      allFlowerInstances.forEach(inst => inst.scaling.setAll(0));
+    }
+
     const GLOBAL_SCALE = 0.3;
     const root = new TransformNode('SceneRoot', scene);
     root.position.set(0, -1, 0);
@@ -87,6 +102,7 @@ export const Content: React.FC<ContentProps> = ({ season }) => {
       target,
       scene
     );
+
 
     // Orbit constraints
     camera.lowerBetaLimit = Tools.ToRadians(45);   // Prevent going too low
@@ -149,7 +165,7 @@ export const Content: React.FC<ContentProps> = ({ season }) => {
 
     // ─── Wall setup ─────────────────────────
     const walls = smallWallMeshes.find(m => m.name === 'LargeWalls') ?? smallWallMeshes[0];
-    walls.position.set(0, -1.4, 0);
+    walls.position.set(0, -1.8, 0);
     walls.isVisible = true;
 
     // ─── Snow setup ─────────────────────────
@@ -213,6 +229,83 @@ export const Content: React.FC<ContentProps> = ({ season }) => {
     cellMat.computeHighLevel = true;
     treeRoot.material = cellMat;
 
+    // ─── Flower instancing ───────────────────────
+    const flowerPlane = MeshBuilder.CreatePlane("flowerPlane", { size: 1 }, scene);
+    flowerPlane.isVisible = false;
+    flowerPlane.registerInstancedBuffer("faceNormal", 3);
+    flowerPlane.registerInstancedBuffer("shadeOffset", 1);
+
+    const flowerMat = new CustomMaterial("flowerMat", scene);
+    flowerMat.diffuseTexture = new Texture(
+      `${basePath}/textures/sakura_flowers.png`,
+      scene
+    );
+    flowerMat.diffuseTexture.hasAlpha = true;
+    flowerMat.alphaCutOff = 0.5;
+    flowerMat.emissiveTexture = new Texture(
+      `${basePath}/textures/h_pinkRamp.png`, scene
+    );
+
+    // copy over your vertex/fragment blocks (minus emissiveSampler usage)
+    flowerMat.Vertex_Definitions(
+      `#ifdef INSTANCES
+        attribute vec3 faceNormal;
+        attribute float shadeOffset;
+        varying vec3 vFaceNormal;
+        varying float vShadeOffset;
+      #endif
+      varying vec2 vUV;`
+    );
+    flowerMat.Vertex_MainBegin(`vUV = uv;`);
+    flowerMat.Vertex_Before_PositionUpdated(
+      `#ifdef INSTANCES
+        vFaceNormal = normalize((world * vec4(faceNormal, 0.0)).xyz);
+        vShadeOffset = shadeOffset;
+      #endif`
+    );
+    flowerMat.Fragment_Definitions(
+      `varying vec3 vFaceNormal;
+      varying vec2 vUV;
+      varying float vShadeOffset;
+      uniform sampler2D ambientSampler;`
+    );
+    flowerMat.Fragment_Custom_Diffuse(
+      `float a = texture2D(diffuseSampler, vUV).a;
+      if (a < 0.5) discard;
+
+      float ndl = max(dot(normalize(vFaceNormal), normalize(vec3(1.0,1.0,0.5))), 0.0);
+      float u = clamp(ndl + vShadeOffset, 0.0, 1.0);
+      vec3 col = vec3(1.0, 0.8, 0.9); // a soft pink fallback
+      col = texture2D(diffuseSampler, vUV).rgb;
+      float ao = texture2D(ambientSampler, vUV).r;
+      diffuseColor = col * ao;`
+    );
+    flowerMat.Fragment_Custom_Alpha(`alpha = texture2D(diffuseSampler, vUV).a;`);
+
+    flowerPlane.material = flowerMat;
+
+    // now build your instance centers & normals (same as leaves)
+    const emitter = leafMeshes.find(m => m.name === 'LeafEmitter')!;
+    emitter.scaling.scaleInPlace(GLOBAL_SCALE);
+    emitter.isVisible = false;
+
+    const fpos = emitter.getVerticesData("position")!;
+    const find = emitter.getIndices()!;
+    const centers: Vector3[] = [];
+    const normals: Vector3[] = [];
+
+    for (let i = 0; i < find.length; i += 3) {
+      const [i0, i1, i2] = [find[i], find[i + 1], find[i + 2]];
+      const v0 = new Vector3(...fpos.slice(i0 * 3, i0 * 3 + 3));
+      const v1 = new Vector3(...fpos.slice(i1 * 3, i1 * 3 + 3));
+      const v2 = new Vector3(...fpos.slice(i2 * 3, i2 * 3 + 3));
+      centers.push(v0.add(v1).add(v2).scale(1 / 3));
+      normals.push(Vector3.Cross(v1.subtract(v0), v2.subtract(v0)).normalize());
+    }
+
+    // create ~65% as many petals as leaves
+    const flowerInstances: InstancedMesh[] = [];
+
     // ─── Leaf instancing ───────────────────────
     const leafPlane = MeshBuilder.CreatePlane("leafPlane", { size: 1 }, scene);
     leafPlane.isVisible = false;
@@ -227,30 +320,30 @@ export const Content: React.FC<ContentProps> = ({ season }) => {
     leafMat.specularColor = new Color3(0.1, 0.3, 0.1);
     leafMat.specularPower = 128;
 
-    leafMat.Vertex_Definitions(`
-      #ifdef INSTANCES
+    leafMat.Vertex_Definitions(
+      `#ifdef INSTANCES
         attribute vec3 faceNormal;
         attribute float shadeOffset;
         varying vec3 vFaceNormal;
         varying float vShadeOffset;
       #endif
-      varying vec2 vUV;
-    `);
+      varying vec2 vUV;`
+    );
     leafMat.Vertex_MainBegin(`vUV = uv;`);
-    leafMat.Vertex_Before_PositionUpdated(`
-      #ifdef INSTANCES
+    leafMat.Vertex_Before_PositionUpdated(
+      `#ifdef INSTANCES
         vFaceNormal = normalize((world * vec4(faceNormal, 0.0)).xyz);
         vShadeOffset = shadeOffset;
-      #endif
-    `);
-    leafMat.Fragment_Definitions(`
-      varying vec3 vFaceNormal;
+      #endif`
+    );
+    leafMat.Fragment_Definitions(
+      `varying vec3 vFaceNormal;
       varying vec2 vUV;
       varying float vShadeOffset;
-      uniform sampler2D ambientSampler;
-    `);
-    leafMat.Fragment_Custom_Diffuse(`
-      float a = texture2D(diffuseSampler, vUV).a;
+      uniform sampler2D ambientSampler;`
+    );
+    leafMat.Fragment_Custom_Diffuse(
+      `float a = texture2D(diffuseSampler, vUV).a;
       if (a < 0.5) discard;
 
       float ndl = max(dot(normalize(vFaceNormal), normalize(vec3(1.0,1.0,0.5))), 0.0);
@@ -258,12 +351,12 @@ export const Content: React.FC<ContentProps> = ({ season }) => {
       vec3 rampCol = texture2D(emissiveSampler, vec2(u, 0.5)).rgb;
       float ao = texture2D(ambientSampler, vUV).r;
       rampCol *= ao;
-      diffuseColor = rampCol;
-    `);
+      diffuseColor = rampCol;`
+    );
     leafMat.Fragment_Custom_Alpha(`alpha = texture2D(diffuseSampler, vUV).a;`);
     leafPlane.material = leafMat;
 
-    const emitter = leafMeshes.find(m => m.name === 'LeafEmitter') ?? leafMeshes[0];
+    //const emitter = leafMeshes.find(m => m.name === 'LeafEmitter') ?? leafMeshes[0];
     emitter.scaling.scaleInPlace(GLOBAL_SCALE);
     emitter.isVisible = false;
     const positions = emitter.getVerticesData('position')!;
@@ -298,11 +391,38 @@ export const Content: React.FC<ContentProps> = ({ season }) => {
         inst.rotation.z = Math.random() * Math.PI * 2;
         inst.instancedBuffers.faceNormal = [n.x, n.y, n.z];
         inst.instancedBuffers.shadeOffset = [Math.random() * 0.2 - 0.1];
-        allInstances.push(inst);
+        allLeafInstances.push(inst);
+      });
+
+      // ─── Flower instancing (only ~65% as many as leaves) ───
+      faceCenters.forEach((ctr, idx) => {
+        if (Math.random() < 0.1) {
+          const n = faceNormals[idx];
+          const inst = flowerPlane.createInstance(`flw_${bi}_${idx}`);
+          inst.parent = bush;
+          inst.position = ctr.add(n.scale(0.01));
+          inst.billboardMode = Mesh.BILLBOARDMODE_ALL;
+          const s = 0.5 + Math.random() * 0.7;  // smaller than leaves
+          inst.scaling = new Vector3(s, s, s);
+          inst.rotation.z = Math.random() * Math.PI * 2;
+          inst.instancedBuffers.faceNormal = [n.x, n.y, n.z];
+          inst.instancedBuffers.shadeOffset = [Math.random() * 0.1 - 0.05];
+          allFlowerInstances.push(inst);
+        }
       });
 
       return bush;
     });
+
+    if (season === Season.Spring) {
+      // hide leaves, show flowers
+      allLeafInstances.forEach(i => i.scaling.setAll(0));
+      allFlowerInstances.forEach(i => i.scaling.setAll(1));
+    } else {
+      // show leaves, hide flowers
+      allLeafInstances.forEach(i => i.scaling.setAll(1));
+      allFlowerInstances.forEach(i => i.scaling.setAll(0));
+    }
 
     // ─── Grass instancing ─────────────────────────────
     const grassPlane = MeshBuilder.CreatePlane("grassPlane", { size: 1 }, scene);
@@ -322,30 +442,30 @@ export const Content: React.FC<ContentProps> = ({ season }) => {
     grassMat.specularColor = new Color3(0.1, 0.3, 0.1);
     grassMat.specularPower = 128;
 
-    grassMat.Vertex_Definitions(`
-      #ifdef INSTANCES
+    grassMat.Vertex_Definitions(
+      `#ifdef INSTANCES
         attribute vec3 faceNormal;
         attribute float shadeOffset;
         varying vec3 vFaceNormal;
         varying float vShadeOffset;
       #endif
-      varying vec2 vUV;
-    `);
+      varying vec2 vUV;`
+    );
     grassMat.Vertex_MainBegin(`vUV = uv;`);
-    grassMat.Vertex_Before_PositionUpdated(`
-      #ifdef INSTANCES
+    grassMat.Vertex_Before_PositionUpdated(
+      `#ifdef INSTANCES
         vFaceNormal = normalize((world * vec4(faceNormal, 0.0)).xyz);
         vShadeOffset = shadeOffset;
-      #endif
-    `);
-    grassMat.Fragment_Definitions(`
-      varying vec3 vFaceNormal;
+      #endif`
+    );
+    grassMat.Fragment_Definitions(
+      `varying vec3 vFaceNormal;
       varying vec2 vUV;
       varying float vShadeOffset;
-      uniform sampler2D ambientSampler;
-    `);
-    grassMat.Fragment_Custom_Diffuse(`
-      float a = texture2D(diffuseSampler, vUV).a;
+      uniform sampler2D ambientSampler;`
+    );
+    grassMat.Fragment_Custom_Diffuse(
+      `float a = texture2D(diffuseSampler, vUV).a;
       if (a < 0.5) discard;
 
       float ndl = max(dot(normalize(vFaceNormal), normalize(vec3(1.0,1.0,0.5))), 0.0);
@@ -353,8 +473,8 @@ export const Content: React.FC<ContentProps> = ({ season }) => {
       vec3 rampCol = texture2D(emissiveSampler, vec2(u, 0.5)).rgb;
       float ao = texture2D(ambientSampler, vUV).r;
       rampCol *= ao;
-      diffuseColor = rampCol;
-    `);
+      diffuseColor = rampCol;`
+    );
     grassMat.Fragment_Custom_Alpha(`alpha = texture2D(diffuseSampler, vUV).a;`);
     grassPlane.material = grassMat;
 
@@ -416,8 +536,8 @@ export const Content: React.FC<ContentProps> = ({ season }) => {
     });
 
     // PostProcess: Watercolor Shader
-    Effect.ShadersStore["watercolorFragmentShader"] = `
-      precision highp float;
+    Effect.ShadersStore["watercolorFragmentShader"] =
+      `precision highp float;
       varying vec2 vUV;
       uniform sampler2D textureSampler;
 
@@ -427,8 +547,8 @@ export const Content: React.FC<ContentProps> = ({ season }) => {
         gray += (fract(sin(dot(vUV.xy, vec2(12.9898,78.233))) * 43758.5453123) - 0.5) * 0.05;
         vec3 finalColor = mix(color.rgb, vec3(gray), 0.3);
         gl_FragColor = vec4(finalColor, 1.0);
-      }
-    `;
+      }`
+    ;
     console.log("Shader loaded?", "watercolorFragmentShader" in Effect.ShadersStore);
     const watercolorPost = new PostProcess(
       "watercolor",
@@ -447,6 +567,9 @@ export const Content: React.FC<ContentProps> = ({ season }) => {
       leafMat.dispose();
       leafPlane.dispose();
       grassPlane.dispose();
+      flowerInstances.forEach(i => i.dispose());
+      flowerPlane.dispose();
+      flowerMat.dispose();
       watercolorPost.dispose();
       camera.dispose();
       root.dispose();
