@@ -10,7 +10,7 @@ import {
   Texture,
   Vector3
 } from '@babylonjs/core'
-import type { InstancedMesh } from '@babylonjs/core'
+import type { InstancedMesh, ParticleSystem } from '@babylonjs/core'
 import { CustomMaterial } from '@babylonjs/materials'
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial'
 import { CubeTexture } from '@babylonjs/core'
@@ -18,10 +18,14 @@ import { Season } from './Content'
 import { getBasePath } from './config'
 
 interface AnimationCtrlProps {
-  scene: Scene
-  from: Season
-  to: Season
-  onComplete?: () => void
+  scene: Scene;
+  from: Season;
+  to: Season;
+  petalPS: ParticleSystem | null;
+  greenPS: ParticleSystem | null;
+  redPS: ParticleSystem | null;
+  snowPS: ParticleSystem | null;
+  onComplete: () => void;
 }
 
 const order: Season[] = [
@@ -32,9 +36,8 @@ const order: Season[] = [
 ]
 
 export const AnimationCtrl: React.FC<AnimationCtrlProps> = ({
-  scene,
-  from,
-  to,
+  scene, from, to,
+  petalPS, greenPS, redPS, snowPS,
   onComplete
 }) => {
   const disposables = useRef<ReturnType<Scene['beginDirectAnimation']>[]>([])
@@ -42,7 +45,18 @@ export const AnimationCtrl: React.FC<AnimationCtrlProps> = ({
   useEffect(() => {
     if (!scene) return
 
-    // 1) grab leaf & flower instances by naming convention
+    // 1) stop any that might still be running
+    [petalPS, greenPS, redPS, snowPS].forEach(ps => ps?.stop());
+
+    // 2) fire off exactly the one for the new season
+    switch (to) {
+      case Season.Spring: petalPS?.start(); break;
+      case Season.Summer: greenPS?.start(); break;
+      case Season.Fall:   redPS?.start();   break;
+      case Season.Winter: snowPS?.start();  break;
+    }
+
+    // 3) grab leaf & flower instances by naming convention
     const allLeafInstances = scene.meshes
       .filter(m => /^b\d+_l/.test(m.name)) as InstancedMesh[]
     const allFlowerInstances = scene.meshes
@@ -50,7 +64,7 @@ export const AnimationCtrl: React.FC<AnimationCtrlProps> = ({
       const allRedLeafInstances = scene.meshes
       .filter(m => m.name.startsWith('rb_')) as InstancedMesh[]
 
-    // 2) compute how many frames our transition spans
+    // 4) compute how many frames our transition spans
     const startIdx = order.indexOf(from)
     let steps = 0, idx = startIdx
     while (order[idx] !== to) {
@@ -61,11 +75,11 @@ export const AnimationCtrl: React.FC<AnimationCtrlProps> = ({
     const framesPerLeg = 120
     const totalFrames = steps * framesPerLeg + 60
 
-    // 3) easing
+    // 5) easing
     const ease = new CubicEase() as unknown as EasingFunction
     ease.setEasingMode(EasingFunction.EASINGMODE_EASEINOUT)
 
-    // 4) season → value maps
+    // 6) season → value maps
     const lightColorMap: Record<Season, Color3> = {
       [Season.Spring]: Color3.FromHexString('#FAFDE1').toLinearSpace(),
       [Season.Summer]: Color3.FromHexString('#FFF8E0').toLinearSpace(),
@@ -116,7 +130,7 @@ export const AnimationCtrl: React.FC<AnimationCtrlProps> = ({
       [Season.Winter]: 0,
     }
 
-    // 5) helper to build key‑frame animations
+    // 7) helper to build key‑frame animations
     function buildAnim<T>(
       property: string,
       dataType: number,
@@ -146,7 +160,7 @@ export const AnimationCtrl: React.FC<AnimationCtrlProps> = ({
       return anim
     }
 
-    // 6) grab scene targets
+    // 8) grab scene targets
     const light   = scene.lights[0]!
     const leafMat = scene.getMaterialByName('leafMat') as CustomMaterial
     const redLeafMat = scene.getMaterialByName('redLeafMat') as CustomMaterial;
@@ -181,7 +195,7 @@ export const AnimationCtrl: React.FC<AnimationCtrlProps> = ({
     skyMat2.animations = [fadeIn]
     fadeIn.addEvent(new AnimationEvent(totalFrames, () => onComplete?.(), true))
 
-    // 7) apply all the seasonal tweens
+    // 9) apply all the seasonal tweens
     light.animations  = [
       buildAnim('diffuse',   Animation.ANIMATIONTYPE_COLOR3, lightColorMap),
       buildAnim('intensity', Animation.ANIMATIONTYPE_FLOAT,  lightIntMap),
@@ -214,7 +228,7 @@ export const AnimationCtrl: React.FC<AnimationCtrlProps> = ({
       scene.beginDirectAnimation(grass,   grass.animations!,   0, totalFrames, false,1),
     ]
 
-    // 8) petals vs leaves scaling only on Spring transitions
+    // 10) petals vs leaves scaling only on Spring transitions
     const fadeInSpring  = from !== Season.Spring && to === Season.Spring
     const fadeOutSpring = from === Season.Spring && to !== Season.Spring
 

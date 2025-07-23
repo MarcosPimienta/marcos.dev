@@ -1,12 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
+  Scene,
+  ParticleHelper,
+  ParticleSystem,
   Vector3,
   Color3,
+  Color4,
   PostProcess,
   Effect,
   Texture,
   Mesh,
   InstancedMesh,
+  AbstractMesh,
   StandardMaterial,
   CubeTexture,
   MeshBuilder,
@@ -49,7 +54,16 @@ const BUSH_POSITIONS: Vector3[] = [
   new Vector3(-0.56, 1.15, 0.41),
   new Vector3(-0.23, 1.29, 0.25),
 ];
-export const Content: React.FC<ContentProps> = ({ season }) => {
+export const Content: React.FC<ContentProps & {
+  onPetalPS?: (ps: ParticleSystem|null) => void,
+  onGreenPS?: (ps: ParticleSystem|null) => void,
+  onRedPS?: (ps: ParticleSystem|null) => void,
+  onSnowPS?: (ps: ParticleSystem|null) => void,
+}> = ({ season, onPetalPS, onGreenPS, onRedPS, onSnowPS }) => {
+  const [petalPS,  setPetalPS]  = useState<ParticleSystem|null>(null);
+  const [greenPS,  setGreenPS]  = useState<ParticleSystem|null>(null);
+  const [redPS,    setRedPS]    = useState<ParticleSystem|null>(null);
+  const [snowPS,   setSnowPS]   = useState<ParticleSystem|null>(null);
   const scene = useScene();
   const basePath = getBasePath();
   const { meshes: leafMeshes } = useModel(`${basePath}/meshes/leaf_emitter.glb`);
@@ -58,6 +72,84 @@ export const Content: React.FC<ContentProps> = ({ season }) => {
   const { meshes: grassEmitter } = useModel(`${basePath}/meshes/GrassEmitter.glb`);
   const { meshes: smallWallMeshes } = useModel(`${basePath}/meshes/SmallerWalls.glb`);
   const { meshes: snowMeshes } = useModel(`${basePath}/meshes/Snow.glb`);
+  const treeRootRef = useRef<TransformNode|null>(null);
+
+  // 1) Create four particle systems, parented to your tree root (or world origin)
+  // --- PETALS ---
+  async function createPetalFall(scene: Scene, emitter: AbstractMesh, petalTextureUrl: string) {
+    const ps = new ParticleSystem("petalPS", 1000, scene);
+    ps.emitter         = emitter;
+    ps.particleTexture = new Texture(petalTextureUrl, scene);
+    ps.minEmitBox      = new Vector3(-1, 2, -1);
+    ps.maxEmitBox      = new Vector3( 1, 2.5,  1);
+    ps.color1          = new Color4(1, 1, 1, 1);
+    ps.emitRate        = 200;
+    ps.gravity         = new Vector3(0, -1, 0);
+    ps.minSize         = 0.1;
+    ps.maxSize         = 0.3;
+    ps.minLifeTime     = 2;
+    ps.maxLifeTime     = 4;
+    ps.direction1      = new Vector3(-1, -2, -1);
+    ps.direction2      = new Vector3( 1, -2,  1);
+    return ps;
+  }
+
+  // --- GREEN LEAVES ---
+  async function createLeafFall(scene: Scene, emitter: AbstractMesh, leafTextureUrl: string) {
+    const ps = new ParticleSystem("leafPS", 1000, scene);
+    ps.emitter         = emitter;
+    ps.particleTexture = new Texture(leafTextureUrl, scene);
+    ps.minEmitBox      = new Vector3(-1, 2, -1);
+    ps.maxEmitBox      = new Vector3( 1, 2.5,  1);
+    ps.color1          = new Color4(1, 1, 1, 1);
+    ps.emitRate        = 200;
+    ps.gravity         = new Vector3(0, -1, 0);
+    ps.minSize         = 0.1;
+    ps.maxSize         = 0.3;
+    ps.minLifeTime     = 2;
+    ps.maxLifeTime     = 4;
+    ps.direction1      = new Vector3(-1, -2, -1);
+    ps.direction2      = new Vector3( 1, -2,  1);
+    return ps;
+  }
+
+  // --- RED LEAVES ---
+  async function createRedLeafFall(scene: Scene, emitter: AbstractMesh, redLeafTextureUrl: string) {
+    const ps = new ParticleSystem("redLeafPS", 1000, scene);
+    ps.emitter         = emitter;
+    ps.particleTexture = new Texture(redLeafTextureUrl, scene);
+    ps.minEmitBox      = new Vector3(-1, 2, -1);
+    ps.maxEmitBox      = new Vector3( 1, 2.5,  1);
+    ps.color1          = new Color4(1, 1, 1, 1);
+    ps.emitRate        = 200;
+    ps.gravity         = new Vector3(0, -1, 0);
+    ps.minSize         = 0.1;
+    ps.maxSize         = 0.3;
+    ps.minLifeTime     = 2;
+    ps.maxLifeTime     = 4;
+    ps.direction1      = new Vector3(-1, -2, -1);
+    ps.direction2      = new Vector3( 1, -2,  1);
+    return ps;
+  }
+
+  // --- SNOW ---
+  async function createSnowFall(scene: Scene, emitter: AbstractMesh, snowTextureUrl: string) {
+    const ps = new ParticleSystem("snowPS", 1000, scene);
+    ps.emitter         = emitter;
+    ps.particleTexture = new Texture(snowTextureUrl, scene);
+    ps.minEmitBox      = new Vector3(-1, 2, -1);
+    ps.maxEmitBox      = new Vector3( 1, 2.5,  1);
+    ps.color1          = new Color4(1, 1, 1, 1);
+    ps.emitRate        = 200;
+    ps.gravity         = new Vector3(0, -1, 0);
+    ps.minSize         = 0.1;
+    ps.maxSize         = 0.3;
+    ps.minLifeTime     = 2;
+    ps.maxLifeTime     = 4;
+    ps.direction1      = new Vector3(-1, -2, -1);
+    ps.direction2      = new Vector3( 1, -2,  1);
+    return ps;
+  }
 
   useEffect(() => {
     if (
@@ -212,6 +304,7 @@ export const Content: React.FC<ContentProps> = ({ season }) => {
     // ─── Tree setup ─────────────────────────
     const treeRoot = treeMeshes[0];
     treeRoot.parent = root;
+    treeRootRef.current = treeRoot;
     const cellMat = new CellMaterial('treeCell', scene);
     const origMat = treeRoot.material!;
     if (origMat instanceof PBRMaterial) {
@@ -409,7 +502,6 @@ export const Content: React.FC<ContentProps> = ({ season }) => {
 
     redLeafPlane.material = redLeafMat;
 
-    //const emitter = leafMeshes.find(m => m.name === 'LeafEmitter') ?? leafMeshes[0];
     emitter.scaling.scaleInPlace(GLOBAL_SCALE);
     emitter.isVisible = false;
     const positions = emitter.getVerticesData('position')!;
@@ -449,13 +541,13 @@ export const Content: React.FC<ContentProps> = ({ season }) => {
 
       // ─── Flower instancing (only ~65% as many as leaves) ───
       faceCenters.forEach((ctr, idx) => {
-        if (Math.random() < 0.1) {
+        if (Math.random() < 0.125) {
           const n = faceNormals[idx];
           const inst = flowerPlane.createInstance(`flw_${bi}_${idx}`);
           inst.parent = bush;
           inst.position = ctr.add(n.scale(0.01));
           inst.billboardMode = Mesh.BILLBOARDMODE_ALL;
-          const s = 0.3 + Math.random() * 0.5;  // smaller than leaves
+          const s = 0.05 + Math.random() * 0.18;  // smaller than leaves
           inst.scaling = new Vector3(s, s, s);
           inst.rotation.z = Math.random() * Math.PI * 2;
           inst.instancedBuffers.faceNormal = [n.x, n.y, n.z];
@@ -486,7 +578,7 @@ export const Content: React.FC<ContentProps> = ({ season }) => {
     if (season === Season.Spring) {
       // hide leaves, show flowers
       allLeafInstances.forEach(i => i.scaling.setAll(0));
-      allFlowerInstances.forEach(i => i.scaling.setAll(1));
+      allFlowerInstances.forEach(i => i.scaling.setAll(0.85));
     } else {
       // show leaves, hide flowers
       allLeafInstances.forEach(i => i.scaling.setAll(1));
@@ -650,6 +742,30 @@ export const Content: React.FC<ContentProps> = ({ season }) => {
       root.dispose();
     };
   }, [scene, leafMeshes, treeMeshes, hillMeshes, grassEmitter, smallWallMeshes]);
+
+  useEffect(() => {
+    const realTreeMesh = treeMeshes[0];
+    if (!scene || !realTreeMesh) return;
+    let alive = true;
+
+    createPetalFall(scene, realTreeMesh,   `${basePath}/textures/particles/petal.png`)
+      .then(ps => alive && setPetalPS(ps));
+    createLeafFall(scene, realTreeMesh,    `${basePath}/textures/particles/leaf.png`)
+      .then(ps => alive && setGreenPS(ps));
+    createRedLeafFall(scene, realTreeMesh, `${basePath}/textures/particles/redLeaf.png`)
+      .then(ps => alive && setRedPS(ps));
+    createSnowFall(scene, realTreeMesh,    `${basePath}/textures/particles/snowflake.png`)
+      .then(ps => alive && setSnowPS(ps));
+
+    return () => { alive = false };
+  }, [scene, basePath]);
+
+  useEffect(() => {
+    onPetalPS?.(petalPS);
+    onGreenPS?.(greenPS);
+    onRedPS?.(redPS);
+    onSnowPS?.(snowPS);
+  }, [petalPS, greenPS, redPS, snowPS]);
 
   useEffect(() => {
   if (!scene) return;

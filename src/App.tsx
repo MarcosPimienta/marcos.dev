@@ -7,7 +7,7 @@ import { HavokPlugin } from '@babylonjs/core/Physics/v2/Plugins/havokPlugin';
 import '@babylonjs/loaders';
 import '@babylonjs/inspector';
 import { KeyboardEventTypes } from '@babylonjs/core/Events/keyboardEvents';
-import type { Scene as BjsScene } from '@babylonjs/core';
+import type { Scene as BjsScene, ParticleSystem } from '@babylonjs/core';
 
 const seasons = [Season.Spring, Season.Summer, Season.Fall, Season.Winter];
 
@@ -15,6 +15,10 @@ const App: React.FC<{ havok: unknown }> = ({ havok }) => {
   const [selectedSeason, setSelectedSeason] = useState<Season>(Season.Spring);
   const [prevSeason, setPrevSeason]         = useState<Season>(Season.Spring);
   const [bjsScene, setBjsScene]             = useState<BjsScene | null>(null);
+  const [petalPS,  setPetalPS]  = useState<ParticleSystem | null>(null);
+  const [greenPS,  setGreenPS]  = useState<ParticleSystem | null>(null);
+  const [redPS,    setRedPS]    = useState<ParticleSystem | null>(null);
+  const [snowPS,   setSnowPS]   = useState<ParticleSystem | null>(null);
 
   // whenever the user picks a new season, prevSeason will hold
   // the one we just animated *from*, and selectedSeason is our
@@ -83,13 +87,23 @@ const App: React.FC<{ havok: unknown }> = ({ havok }) => {
           physicsOptions={{ plugin: new HavokPlugin(true, havok) }}
         >
           {/* This is your static setup */}
-          <Content season={selectedSeason} />
+          <Content
+            season={selectedSeason}
+            onPetalPS={setPetalPS}
+            onGreenPS={setGreenPS}
+            onRedPS={setRedPS}
+            onSnowPS={setSnowPS}
+          />
 
           {bjsScene && prevSeason !== selectedSeason && (
             <AnimationCtrl
               scene={bjsScene}
               from={prevSeason}
               to={selectedSeason}
+              petalPS={petalPS}
+              greenPS={greenPS}
+              redPS={redPS}
+              snowPS={snowPS}
               onComplete={() => setPrevSeason(selectedSeason)}
             />
           )}
