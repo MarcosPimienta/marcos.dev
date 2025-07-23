@@ -101,12 +101,11 @@ export const Content: React.FC<ContentProps> = ({ season }) => {
       scene
     );
 
-
     // Orbit constraints
     camera.lowerBetaLimit = Tools.ToRadians(45);   // Prevent going too low
     camera.upperBetaLimit = Tools.ToRadians(98);   // Prevent flipping over
     camera.lowerRadiusLimit = 3;                  // Zoom-in limit
-    camera.upperRadiusLimit = 7.2;                // Zoom-out limit
+    camera.upperRadiusLimit = 7;                // Zoom-out limit
     camera.allowUpsideDown = false;
     camera.panningSensibility = 0;                // ❌ Disable panning
 
@@ -456,7 +455,7 @@ export const Content: React.FC<ContentProps> = ({ season }) => {
           inst.parent = bush;
           inst.position = ctr.add(n.scale(0.01));
           inst.billboardMode = Mesh.BILLBOARDMODE_ALL;
-          const s = 0.5 + Math.random() * 0.7;  // smaller than leaves
+          const s = 0.3 + Math.random() * 0.5;  // smaller than leaves
           inst.scaling = new Vector3(s, s, s);
           inst.rotation.z = Math.random() * Math.PI * 2;
           inst.instancedBuffers.faceNormal = [n.x, n.y, n.z];
@@ -599,6 +598,12 @@ export const Content: React.FC<ContentProps> = ({ season }) => {
       const t = performance.now() * 0.001;
       allInstances.forEach((i, x) => {
         i.rotation.z = Math.sin(t + x * 0.15) * 0.05;
+      });
+      allFlowerInstances.forEach((i, x) => {
+        i.rotation.z = Math.sin(t + x * 0.15) * 0.05;
+      });
+      allRedLeafInstances.forEach((i, x) => {
+        i.rotation.z = Math.sin(t + x * 0.15) * 0.1;
       });
       grassInstances.forEach((g, x) => {
         g.rotation.z = Math.cos(t + x * 0.11) * 0.08;

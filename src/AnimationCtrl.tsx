@@ -249,12 +249,14 @@ export const AnimationCtrl: React.FC<AnimationCtrlProps> = ({
     }
 
   if (fadeInSpring) {
-  // bloom petals
+    // bloom petals
     animateGroup(allFlowerInstances, 0, 1)
 
-    // only shrink leaves if they started visible (i.e. we were in Spring)
+    // only grow leaves if we're *not* coming out of Winter
     if (from !== Season.Winter) {
-      animateGroup(allLeafInstances, 1, 0)
+      // if you want them to snap in (instead of animating from 0), you
+      // could do animateGroup(allLeafInstances, 1, 1)
+      animateGroup(allLeafInstances, 0, 1)
     }
   }
   else if (fadeInWinter) {
@@ -267,15 +269,13 @@ export const AnimationCtrl: React.FC<AnimationCtrlProps> = ({
     animateGroup(allFlowerInstances, 1, 0)
     animateGroup(allLeafInstances,   0, 1)
   }
-  if (fadeInFall) {
-  animateGroup(allLeafInstances,    1, 0);
-  animateGroup(allRedLeafInstances, 0, 1);
-  //animateGroup(allFlowerInstances,  1, 0);
+  else if (fadeInFall) {
+    animateGroup(allLeafInstances,    1, 0)
+    animateGroup(allRedLeafInstances, 0, 1)
   }
-  // leaving Fall:
   else if (fadeOutFall) {
-    animateGroup(allRedLeafInstances, 1, 0);
-    animateGroup(allLeafInstances,    0, 1);
+    animateGroup(allRedLeafInstances, 1, 0)
+    animateGroup(allLeafInstances,    0, 1)
   }
 
     return () => {
