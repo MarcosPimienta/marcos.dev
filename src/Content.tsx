@@ -71,17 +71,15 @@ export const Content: React.FC<ContentProps> = ({ season }) => {
       return;
     }
 
-    /* const allLeafInstances = scene.meshes
-      .filter(m => /^b\d+_l/.test(m.name)) as InstancedMesh[];
-    const allFlowerInstances = scene.meshes
-      .filter(m => m.name.startsWith('flw_')) as InstancedMesh[]; */
-
     const allLeafInstances: InstancedMesh[]   = [];
     const allFlowerInstances: InstancedMesh[] = [];
+    const allRedLeafInstances: InstancedMesh[] = [];
+
 
     if (season === Season.Spring) {
       allLeafInstances.forEach(inst => inst.scaling.setAll(0));
       allFlowerInstances.forEach(inst => inst.scaling.setAll(1));
+      allRedLeafInstances.forEach(inst => { if (inst.material) inst.material.alpha = 0; });
     } else {
       allLeafInstances.forEach(inst => inst.scaling.setAll(1));
       allFlowerInstances.forEach(inst => inst.scaling.setAll(0));
@@ -316,6 +314,7 @@ export const Content: React.FC<ContentProps> = ({ season }) => {
     leafMat.diffuseTexture = new Texture(`${basePath}/textures/alphaleaf.png`, scene);
     leafMat.diffuseTexture.hasAlpha = true;
     leafMat.alphaCutOff = 0.7;
+    leafMat.alpha = 1;
     leafMat.emissiveTexture = new Texture(`${basePath}/textures/grass_ramp.png`, scene);
     leafMat.specularColor = new Color3(0.1, 0.3, 0.1);
     leafMat.specularPower = 128;
@@ -353,8 +352,63 @@ export const Content: React.FC<ContentProps> = ({ season }) => {
       rampCol *= ao;
       diffuseColor = rampCol;`
     );
-    leafMat.Fragment_Custom_Alpha(`alpha = texture2D(diffuseSampler, vUV).a;`);
+    leafMat.Fragment_Custom_Alpha(`alpha = texture2D(diffuseSampler, vUV).a * alpha;`);
     leafPlane.material = leafMat;
+
+    // ─── Red‐leaf instancing (fall tint) ────────────────────
+    const redLeafPlane = leafPlane.clone("redLeafPlane")!;
+    redLeafPlane.isVisible = false;
+
+    // **CRUCIAL** register the same instancedBuffers on the clone:
+    redLeafPlane.registerInstancedBuffer('faceNormal', 3);
+    redLeafPlane.registerInstancedBuffer('shadeOffset', 1);
+
+    // build a new material but *reuse* the same shader blocks:
+    const redLeafMat = new CustomMaterial('redLeafMat', scene);
+    redLeafMat.diffuseTexture  = leafMat.diffuseTexture;
+    redLeafMat.diffuseTexture.hasAlpha = true;
+    redLeafMat.alphaCutOff     = leafMat.alphaCutOff;
+    redLeafMat.alpha = 0;
+    redLeafMat.emissiveTexture = new Texture(`${basePath}/textures/h_redRamp.png`, scene);
+    redLeafMat.specularColor   = leafMat.specularColor.clone();
+    redLeafMat.specularPower   = leafMat.specularPower;
+
+    // **copy exactly** the same overrides you did for leafMat:
+    redLeafMat.Vertex_Definitions(
+      `#ifdef INSTANCES
+        attribute vec3 faceNormal;
+        attribute float shadeOffset;
+        varying vec3 vFaceNormal;
+        varying float vShadeOffset;
+      #endif
+      varying vec2 vUV;`
+    );
+    redLeafMat.Vertex_MainBegin(`vUV = uv;`);
+    redLeafMat.Vertex_Before_PositionUpdated(
+      `#ifdef INSTANCES
+        vFaceNormal = normalize((world * vec4(faceNormal, 0.0)).xyz);
+        vShadeOffset = shadeOffset;
+      #endif`
+    );
+    redLeafMat.Fragment_Definitions(
+      `varying vec3 vFaceNormal;
+      varying vec2 vUV;
+      varying float vShadeOffset;
+      uniform sampler2D ambientSampler;`
+    );
+    redLeafMat.Fragment_Custom_Diffuse(
+      `float a = texture2D(diffuseSampler, vUV).a;
+      if (a < 0.5) discard;
+      float ndl = max(dot(normalize(vFaceNormal), normalize(vec3(1.0,1.0,0.5))), 0.0);
+      float u = clamp(ndl + vShadeOffset, 0.0, 1.0);
+      vec3 rampCol = texture2D(emissiveSampler, vec2(u, 0.5)).rgb;
+      float ao = texture2D(ambientSampler, vUV).r;
+      rampCol *= ao;
+      diffuseColor = rampCol;`
+    );
+    redLeafMat.Fragment_Custom_Alpha(`alpha = texture2D(diffuseSampler, vUV).a * alpha;`);
+
+    redLeafPlane.material = redLeafMat;
 
     //const emitter = leafMeshes.find(m => m.name === 'LeafEmitter') ?? leafMeshes[0];
     emitter.scaling.scaleInPlace(GLOBAL_SCALE);
@@ -409,6 +463,22 @@ export const Content: React.FC<ContentProps> = ({ season }) => {
           inst.instancedBuffers.shadeOffset = [Math.random() * 0.1 - 0.05];
           allFlowerInstances.push(inst);
         }
+      });
+
+      // ─── Red Leaf instancing (only ~65% as many as leaves) ───
+      faceCenters.forEach((ctr, idx) => {
+        if (Math.random() > 0.2) return;
+        const n = faceNormals[idx];
+        const inst = redLeafPlane.createInstance(`rb${bi}_l${idx}`);
+        inst.parent = bush;
+        inst.position = ctr.add(n.scale(0.01));
+        inst.billboardMode = Mesh.BILLBOARDMODE_ALL;
+        const s = 0.5 + Math.random() * 0.7;
+        inst.scaling = new Vector3(s, s, s);
+        inst.rotation.z = Math.random() * Math.PI * 2;
+        inst.instancedBuffers.faceNormal = [n.x, n.y, n.z];
+        inst.instancedBuffers.shadeOffset = [Math.random() * 0.2 - 0.1];
+        allRedLeafInstances.push(inst);
       });
 
       return bush;
@@ -581,8 +651,9 @@ export const Content: React.FC<ContentProps> = ({ season }) => {
 
   const applySeason = (s: Season) => {
     // grab your existing scene objects
+    const leafMat    = scene.getMaterialByName('leafMat')    as CustomMaterial;
+    const redLeafMat = scene.getMaterialByName('redLeafMat') as CustomMaterial;
     const light   = scene.lights[0]! as any;
-    const leafMat = scene.getMaterialByName('leafMat') as CustomMaterial;
     const snow    = scene.getMeshByName('Snow')!;
     const grass   = scene.getTransformNodeByName('GrassRoot')!;
     // **look up the right material names**:
@@ -614,6 +685,9 @@ export const Content: React.FC<ContentProps> = ({ season }) => {
       [Season.Fall]:   0.6,
       [Season.Winter]: 0.8,
     };
+
+    leafMat   .alpha = (season === Season.Fall ? 0 : 1);
+    redLeafMat.alpha = (season === Season.Fall ? 1 : 0);
 
     // apply light, leaves, snow & grass
     light.diffuse        = lightColorMap[s];

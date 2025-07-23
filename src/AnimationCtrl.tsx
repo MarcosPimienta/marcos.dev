@@ -47,6 +47,8 @@ export const AnimationCtrl: React.FC<AnimationCtrlProps> = ({
       .filter(m => /^b\d+_l/.test(m.name)) as InstancedMesh[]
     const allFlowerInstances = scene.meshes
       .filter(m => m.name.startsWith('flw_')) as InstancedMesh[]
+      const allRedLeafInstances = scene.meshes
+      .filter(m => m.name.startsWith('rb_')) as InstancedMesh[]
 
     // 2) compute how many frames our transition spans
     const startIdx = order.indexOf(from)
@@ -101,6 +103,19 @@ export const AnimationCtrl: React.FC<AnimationCtrlProps> = ({
       [Season.Winter]: new Vector3(0, -2, 0),
     }
 
+    const greenAlphaMap: Record<Season, number> = {
+      [Season.Spring]: 1,
+      [Season.Summer]: 1,
+      [Season.Fall]:   0,
+      [Season.Winter]: 0,
+    }
+    const redAlphaMap: Record<Season, number> = {
+      [Season.Spring]: 0,
+      [Season.Summer]: 0,
+      [Season.Fall]:   1,
+      [Season.Winter]: 0,
+    }
+
     // 5) helper to build key‑frame animations
     function buildAnim<T>(
       property: string,
@@ -134,10 +149,15 @@ export const AnimationCtrl: React.FC<AnimationCtrlProps> = ({
     // 6) grab scene targets
     const light   = scene.lights[0]!
     const leafMat = scene.getMaterialByName('leafMat') as CustomMaterial
+    const redLeafMat = scene.getMaterialByName('redLeafMat') as CustomMaterial;
     const snow    = scene.getMeshByName('Snow')!
     const grass   = scene.getTransformNodeByName('GrassRoot')!
     const skyMat1 = scene.getMaterialByName('skyBox1Mat') as StandardMaterial
     const skyMat2 = scene.getMaterialByName('skyBox2Mat') as StandardMaterial
+
+    // ensure correct initial alpha
+    leafMat.alpha    = 1
+    redLeafMat.alpha = 0
 
     // preload & assign skyboxes
     const urlFrom = `${getBasePath()}/textures/skybox/sky_${from}`
@@ -176,6 +196,16 @@ export const AnimationCtrl: React.FC<AnimationCtrlProps> = ({
     // start them
     disposables.current.forEach(d => d.stop())
     disposables.current = [
+      scene.beginDirectAnimation(
+        leafMat,
+        [ buildAnim('alpha', Animation.ANIMATIONTYPE_FLOAT, greenAlphaMap) ],
+        0, totalFrames, false, 1
+      ),
+      scene.beginDirectAnimation(
+        redLeafMat,
+        [ buildAnim('alpha', Animation.ANIMATIONTYPE_FLOAT, redAlphaMap) ],
+        0, totalFrames, false, 1
+      ),
       scene.beginDirectAnimation(skyMat1, skyMat1.animations!, 0, totalFrames, false,1),
       scene.beginDirectAnimation(skyMat2, skyMat2.animations!, 0, totalFrames, false,1),
       scene.beginDirectAnimation(light,   light.animations!,   0, totalFrames, false,1),
@@ -190,6 +220,9 @@ export const AnimationCtrl: React.FC<AnimationCtrlProps> = ({
 
     const fadeInWinter  = from !== Season.Winter && to === Season.Winter
     const fadeOutWinter = from === Season.Winter && to !== Season.Winter
+
+    const fadeInFall  = from !== Season.Fall && to === Season.Fall
+    const fadeOutFall = from === Season.Fall && to !== Season.Fall
 
     function animateGroup(
       instances: InstancedMesh[],
@@ -233,6 +266,16 @@ export const AnimationCtrl: React.FC<AnimationCtrlProps> = ({
   else if (fadeOutSpring) {
     animateGroup(allFlowerInstances, 1, 0)
     animateGroup(allLeafInstances,   0, 1)
+  }
+  if (fadeInFall) {
+  animateGroup(allLeafInstances,    1, 0);
+  animateGroup(allRedLeafInstances, 0, 1);
+  //animateGroup(allFlowerInstances,  1, 0);
+  }
+  // leaving Fall:
+  else if (fadeOutFall) {
+    animateGroup(allRedLeafInstances, 1, 0);
+    animateGroup(allLeafInstances,    0, 1);
   }
 
     return () => {
