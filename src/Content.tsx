@@ -92,29 +92,23 @@ export const Content: React.FC<ContentProps & {
     scene: Scene,
     emitter: AbstractMesh
   ): Promise<ParticleSystem> {
-    // build the URL to your petals.json in public/particlesettings
-    const url = `${getBasePath()}/particlesettings/petals.json`;
-    console.log(`get path: ${url}`);
-    console.log(`base path: ${basePath}`);
-
-    // ParseFromFileAsync(name, url, scene, rootUrl?)
-    const ps = await ParticleHelper.ParseFromFileAsync(
-      "petals",    // a name for your system
-      url,         // tell Babylon to fetch & parse this file
-      scene,
-      undefined    // no extra rootUrl needed
+    const url       = `${basePath}/particlesettings/petals.json`;
+    // force the “string rootUrl” overload
+    const ps = await (ParticleHelper.ParseFromFileAsync as any)(
+      "petals",     // system name
+      url,         // JSON file URL
+      scene,       // your scene
+      basePath     // <<< correct rootUrl so that "/textures/..." in the JSON resolves under your /anime‑foliage
     ) as ParticleSystem;
 
-    // now override the emitter and make sure your texture path is correct:
     ps.emitter = emitter;
-    ps.particleTexture = new Texture(
-      `${basePath}/textures/particles/petal.png`,
-      scene
-    );
-
-    // start/stop based on your season
-    if (season === Season.Spring) {
+    if (season === Season.Summer) {
       ps.start();
+      // reassign texture now that the JSON has loaded
+      ps.particleTexture = new Texture(
+        `${basePath}/textures/particles/petal.png`,
+        scene
+      );
     } else {
       ps.stop();
     }
@@ -126,26 +120,22 @@ export const Content: React.FC<ContentProps & {
     scene: Scene,
     emitter: AbstractMesh
   ): Promise<ParticleSystem> {
-    // build the URL to your petals.json in public/particlesettings
-    const url = `${getBasePath()}/particlesettings/leafs.json`;
-
-    // ParseFromFileAsync(name, url, scene, rootUrl?)
-    const ps = await ParticleHelper.ParseFromFileAsync(
-      "leafs",    // a name for your system
-      url,         // tell Babylon to fetch & parse this file
-      scene,
-      undefined    // no extra rootUrl needed
+    const url       = `${basePath}/particlesettings/leafs.json`;
+    // force the “string rootUrl” overload
+    const ps = await (ParticleHelper.ParseFromFileAsync as any)(
+      "leafs",     // system name
+      url,         // JSON file URL
+      scene,       // your scene
+      basePath     // <<< correct rootUrl so that "/textures/..." in the JSON resolves under your /anime‑foliage
     ) as ParticleSystem;
 
-    // now override the emitter and make sure your texture path is correct:
     ps.emitter = emitter;
-
-    // start/stop based on your season
     if (season === Season.Summer) {
       ps.start();
+      // reassign texture now that the JSON has loaded
       ps.particleTexture = new Texture(
-      `${basePath}/textures/particles/leaf.png`,
-      scene
+        `${basePath}/textures/particles/leaf.png`,
+        scene
       );
     } else {
       ps.stop();
@@ -153,31 +143,26 @@ export const Content: React.FC<ContentProps & {
 
     return ps;
   }
-
   async function createRedLeafFallFromJSON(
     scene: Scene,
     emitter: AbstractMesh
   ): Promise<ParticleSystem> {
-    // build the URL to your petals.json in public/particlesettings
-    const url = `${getBasePath()}/particlesettings/redLeafs.json`;
-
-    // ParseFromFileAsync(name, url, scene, rootUrl?)
-    const ps = await ParticleHelper.ParseFromFileAsync(
-      "redleafs",    // a name for your system
-      url,         // tell Babylon to fetch & parse this file
-      scene,
-      undefined    // no extra rootUrl needed
+    const url       = `${basePath}/particlesettings/redLeafs.json`;
+    // force the “string rootUrl” overload
+    const ps = await (ParticleHelper.ParseFromFileAsync as any)(
+      "leafs",     // system name
+      url,         // JSON file URL
+      scene,       // your scene
+      basePath     // <<< correct rootUrl so that "/textures/..." in the JSON resolves under your /anime‑foliage
     ) as ParticleSystem;
 
-    // now override the emitter and make sure your texture path is correct:
     ps.emitter = emitter;
-
-    // start/stop based on your season
-    if (season === Season.Fall) {
+    if (season === Season.Summer) {
       ps.start();
+      // reassign texture now that the JSON has loaded
       ps.particleTexture = new Texture(
-      `${basePath}/textures/particles/redLeaf.png`,
-      scene
+        `${basePath}/textures/particles/redLeaf.png`,
+        scene
       );
     } else {
       ps.stop();
@@ -190,26 +175,22 @@ export const Content: React.FC<ContentProps & {
     scene: Scene,
     emitter: AbstractMesh
   ): Promise<ParticleSystem> {
-    // build the URL to your petals.json in public/particlesettings
-    const url = `${getBasePath()}/particlesettings/snow.json`;
-
-    // ParseFromFileAsync(name, url, scene, rootUrl?)
-    const ps = await ParticleHelper.ParseFromFileAsync(
-      "snowflakes",    // a name for your system
-      url,         // tell Babylon to fetch & parse this file
-      scene,
-      undefined    // no extra rootUrl needed
+    const url       = `${basePath}/particlesettings/snow.json`;
+    // force the “string rootUrl” overload
+    const ps = await (ParticleHelper.ParseFromFileAsync as any)(
+      "leafs",     // system name
+      url,         // JSON file URL
+      scene,       // your scene
+      basePath     // <<< correct rootUrl so that "/textures/..." in the JSON resolves under your /anime‑foliage
     ) as ParticleSystem;
 
-    // now override the emitter and make sure your texture path is correct:
     ps.emitter = emitter;
-
-    // start/stop based on your season
-    if (season === Season.Winter) {
+    if (season === Season.Summer) {
       ps.start();
+      // reassign texture now that the JSON has loaded
       ps.particleTexture = new Texture(
-      `${basePath}/textures/particles/snowflake.png`,
-      scene
+        `${basePath}/textures/particles/snowflake.png`,
+        scene
       );
     } else {
       ps.stop();
