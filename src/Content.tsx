@@ -94,6 +94,8 @@ export const Content: React.FC<ContentProps & {
   ): Promise<ParticleSystem> {
     // build the URL to your petals.json in public/particlesettings
     const url = `${getBasePath()}/particlesettings/petals.json`;
+    console.log(`get path: ${url}`);
+    console.log(`base path: ${basePath}`);
 
     // ParseFromFileAsync(name, url, scene, rootUrl?)
     const ps = await ParticleHelper.ParseFromFileAsync(
