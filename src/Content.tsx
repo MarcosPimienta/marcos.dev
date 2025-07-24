@@ -102,13 +102,13 @@ export const Content: React.FC<ContentProps & {
     ) as ParticleSystem;
 
     ps.emitter = emitter;
-    if (season === Season.Summer) {
-      ps.start();
-      // reassign texture now that the JSON has loaded
+    if (season === Season.Spring) {
+      // because scene starts in Spring, we need to start it manually
       ps.particleTexture = new Texture(
         `${basePath}/textures/particles/petal.png`,
         scene
       );
+      ps.start();
     } else {
       ps.stop();
     }
@@ -129,14 +129,15 @@ export const Content: React.FC<ContentProps & {
       basePath     // <<< correct rootUrl so that "/textures/..." in the JSON resolves under your /anime‑foliage
     ) as ParticleSystem;
 
-    ps.emitter = emitter;
-    if (season === Season.Summer) {
-      ps.start();
-      // reassign texture now that the JSON has loaded
+    // reassign texture now that the JSON has loaded
       ps.particleTexture = new Texture(
         `${basePath}/textures/particles/leaf.png`,
         scene
       );
+
+    ps.emitter = emitter;
+    if (season === Season.Summer) {
+      ps.start();
     } else {
       ps.stop();
     }
@@ -156,14 +157,15 @@ export const Content: React.FC<ContentProps & {
       basePath     // <<< correct rootUrl so that "/textures/..." in the JSON resolves under your /anime‑foliage
     ) as ParticleSystem;
 
-    ps.emitter = emitter;
-    if (season === Season.Summer) {
-      ps.start();
-      // reassign texture now that the JSON has loaded
+    // reassign texture now that the JSON has loaded
       ps.particleTexture = new Texture(
         `${basePath}/textures/particles/redLeaf.png`,
         scene
       );
+
+    ps.emitter = emitter;
+    if (season === Season.Fall) {
+      ps.start();
     } else {
       ps.stop();
     }
@@ -184,14 +186,15 @@ export const Content: React.FC<ContentProps & {
       basePath     // <<< correct rootUrl so that "/textures/..." in the JSON resolves under your /anime‑foliage
     ) as ParticleSystem;
 
-    ps.emitter = emitter;
-    if (season === Season.Summer) {
-      ps.start();
-      // reassign texture now that the JSON has loaded
+    // reassign texture now that the JSON has loaded
       ps.particleTexture = new Texture(
         `${basePath}/textures/particles/snowflake.png`,
         scene
       );
+
+    ps.emitter = emitter;
+    if (season === Season.Winter) {
+      ps.start();
     } else {
       ps.stop();
     }
