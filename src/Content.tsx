@@ -17,7 +17,8 @@ import {
   MeshBuilder,
   ArcRotateCamera,
   PBRMaterial,
-  Tools
+  Tools,
+  IParticleSystem
 } from '@babylonjs/core';
 import { CustomMaterial, CellMaterial } from '@babylonjs/materials';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode';
@@ -87,45 +88,34 @@ export const Content: React.FC<ContentProps & {
 
   // 1) Create four particle systems, parented to your tree root (or world origin)
   // --- PETALS ---
-  async function createPetalFall(
+  async function createPetalFallFromJSON(
     scene: Scene,
-    emitter: AbstractMesh,
-    textureUrl: string,
-    capacity = 2000
+    emitter: AbstractMesh
   ): Promise<ParticleSystem> {
-    const ps = new ParticleSystem("petals", capacity, scene);
-    ps.emitter        = emitter;
-    ps.particleTexture = new Texture(textureUrl, scene);
-    ps.blendMode      = ParticleSystem.BLENDMODE_STANDARD;
+    // build the URL to your petals.json in public/particlesettings
+    const url = `${getBasePath()}/particlesettings/petals.json`;
 
-    // color ramp
-    ps.color1    = new Color4(1.0, 0.8, 0.9, 1.0);
-    ps.color2    = new Color4(1.0, 0.8, 0.9, 1.0);
-    ps.colorDead = new Color4(1.0, 0.8, 0.9, 0.0);
+    // ParseFromFileAsync(name, url, scene, rootUrl?)
+    const ps = await ParticleHelper.ParseFromFileAsync(
+      "petals",    // a name for your system
+      url,         // tell Babylon to fetch & parse this file
+      scene,
+      undefined    // no extra rootUrl needed
+    ) as ParticleSystem;
 
-    // world offset & gravity
-    ps.worldOffset   = new Vector3(0, -2.5, 0);
-    ps.gravity       = new Vector3(0, -0.25, 0);
+    // now override the emitter and make sure your texture path is correct:
+    ps.emitter = emitter;
+    ps.particleTexture = new Texture(
+      `${basePath}/textures/particles/petal.png`,
+      scene
+    );
 
-    // emission
-    ps.emitRate      = 5;
-    ps.minEmitPower  = 0.5;
-    ps.maxEmitPower  = 0.5;
-
-    // size & scale
-    ps.minSize       = 0.02;
-    ps.maxSize       = 0.08;
-    ps.minScaleX     = 2;
-    ps.maxScaleX     = 2;
-    ps.minScaleY     = 2;
-    ps.maxScaleY     = 2;
-
-    // lifetime
-    ps.minLifeTime   = 4;
-    ps.maxLifeTime   = 8;
-
-    // a little spin
-    ps.addAngularSpeedGradient(1, 3);
+    // start/stop based on your season
+    if (season === Season.Spring) {
+      ps.start();
+    } else {
+      ps.stop();
+    }
 
     return ps;
   }
@@ -820,7 +810,7 @@ export const Content: React.FC<ContentProps & {
     let alive = true;
 
     Promise.all([
-      createPetalFall(scene, otherEmitter,  `${basePath}/textures/particles/petal.png`),
+      createPetalFallFromJSON(scene, otherEmitter),
       createLeafFall(scene, otherEmitter,   `${basePath}/textures/particles/leaf.png`),
       createRedLeafFall(scene, otherEmitter,`${basePath}/textures/particles/redLeaf.png`),
       createSnowFall(scene, winterEmitter,  `${basePath}/textures/particles/snowflake.png`)
@@ -838,12 +828,6 @@ export const Content: React.FC<ContentProps & {
   useEffect(() => {
 
     if (!petalPS || !greenPS || !redPS || !snowPS) return;
-
-    if (season === Season.Spring) {
-      petalPS.start();
-    } else {
-      petalPS.stop();
-    }
 
     onPetalPS?.(petalPS);
     onGreenPS?.(greenPS);
