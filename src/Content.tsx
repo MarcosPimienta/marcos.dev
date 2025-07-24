@@ -120,96 +120,98 @@ export const Content: React.FC<ContentProps & {
     return ps;
   }
 
-  async function createLeafFall(
+  async function createLeafFallFromJSON(
     scene: Scene,
-    emitter: AbstractMesh,
-    textureUrl: string,
-    capacity = 2000
+    emitter: AbstractMesh
   ): Promise<ParticleSystem> {
-    const ps = new ParticleSystem("greenLeafs", capacity, scene);
+    // build the URL to your petals.json in public/particlesettings
+    const url = `${getBasePath()}/particlesettings/leafs.json`;
+
+    // ParseFromFileAsync(name, url, scene, rootUrl?)
+    const ps = await ParticleHelper.ParseFromFileAsync(
+      "leafs",    // a name for your system
+      url,         // tell Babylon to fetch & parse this file
+      scene,
+      undefined    // no extra rootUrl needed
+    ) as ParticleSystem;
+
+    // now override the emitter and make sure your texture path is correct:
     ps.emitter = emitter;
 
-    ps.particleTexture = new Texture(textureUrl, scene);
-    ps.blendMode = ParticleSystem.BLENDMODE_STANDARD;
-    // ––––– alpha ramp so PNG looks crisp, not washed out –––––
-    ps.color1     = new Color4(1, 1, 1, 1);
-    ps.color2     = new Color4(1, 1, 1, 1);
-    ps.colorDead  = new Color4(1, 1, 1, 0);
-
-    ps.minEmitBox = new Vector3(-1, 2, -1);
-    ps.maxEmitBox = new Vector3( 1, 2.5,  1);
-
-    ps.minSize     = 0.1;
-    ps.maxSize     = 0.25;
-    ps.minLifeTime = 2;
-    ps.maxLifeTime = 5;
-    ps.emitRate    = 200;
-    ps.gravity     = new Vector3(0, -1, 0);
-
-    // gentler spin
-    ps.addAngularSpeedGradient(1, 3);
+    // start/stop based on your season
+    if (season === Season.Summer) {
+      ps.start();
+      ps.particleTexture = new Texture(
+      `${basePath}/textures/particles/leaf.png`,
+      scene
+      );
+    } else {
+      ps.stop();
+    }
 
     return ps;
   }
 
-  async function createRedLeafFall(
+  async function createRedLeafFallFromJSON(
     scene: Scene,
-    emitter: AbstractMesh,
-    textureUrl: string,
-    capacity = 2000
+    emitter: AbstractMesh
   ): Promise<ParticleSystem> {
-    const ps = new ParticleSystem("redLeafs", capacity, scene);
+    // build the URL to your petals.json in public/particlesettings
+    const url = `${getBasePath()}/particlesettings/redLeafs.json`;
+
+    // ParseFromFileAsync(name, url, scene, rootUrl?)
+    const ps = await ParticleHelper.ParseFromFileAsync(
+      "redleafs",    // a name for your system
+      url,         // tell Babylon to fetch & parse this file
+      scene,
+      undefined    // no extra rootUrl needed
+    ) as ParticleSystem;
+
+    // now override the emitter and make sure your texture path is correct:
     ps.emitter = emitter;
 
-    ps.particleTexture = new Texture(textureUrl, scene);
-    ps.blendMode = ParticleSystem.BLENDMODE_STANDARD;
-    ps.color1    = new Color4(0.6, 0.2, 0.1, 1.0);
-    ps.color2    = new Color4(0.8, 0.3, 0.15, 1.0);
-    ps.colorDead = new Color4(0.8, 0.3, 0.15, 0.0);
-
-    ps.minEmitBox = new Vector3(-1, 2, -1);
-    ps.maxEmitBox = new Vector3( 1, 2.5,  1);
-
-    ps.minSize     = 0.1;
-    ps.maxSize     = 0.25;
-    ps.minLifeTime = 2;
-    ps.maxLifeTime = 5;
-    ps.emitRate    = 200;
-    ps.gravity     = new Vector3(0, -1, 0);
-
-    // gentler spin
-    ps.addAngularSpeedGradient(1, 3);
+    // start/stop based on your season
+    if (season === Season.Fall) {
+      ps.start();
+      ps.particleTexture = new Texture(
+      `${basePath}/textures/particles/redLeaf.png`,
+      scene
+      );
+    } else {
+      ps.stop();
+    }
 
     return ps;
   }
 
-  async function createSnowFall(
+  async function createSnowFallFromJSON(
     scene: Scene,
-    emitter: AbstractMesh,
-    textureUrl: string,
-    capacity = 2000
+    emitter: AbstractMesh
   ): Promise<ParticleSystem> {
-    const ps = new ParticleSystem("snow", capacity, scene);
+    // build the URL to your petals.json in public/particlesettings
+    const url = `${getBasePath()}/particlesettings/snow.json`;
+
+    // ParseFromFileAsync(name, url, scene, rootUrl?)
+    const ps = await ParticleHelper.ParseFromFileAsync(
+      "snowflakes",    // a name for your system
+      url,         // tell Babylon to fetch & parse this file
+      scene,
+      undefined    // no extra rootUrl needed
+    ) as ParticleSystem;
+
+    // now override the emitter and make sure your texture path is correct:
     ps.emitter = emitter;
 
-    ps.particleTexture = new Texture(textureUrl, scene);
-    ps.blendMode = ParticleSystem.BLENDMODE_STANDARD;
-    ps.color1    = new Color4(0.9, 0.95, 1.0, 1);
-    ps.color2    = new Color4(0.9, 0.95, 1.0, 1);
-    ps.colorDead = new Color4(0.9, 0.95, 1.0, 0);
-
-    ps.minEmitBox = new Vector3(-1, 2, -1);
-    ps.maxEmitBox = new Vector3( 1, 2.5,  1);
-
-    ps.minSize     = 0.05;
-    ps.maxSize     = 0.1;
-    ps.minLifeTime = 3;
-    ps.maxLifeTime = 6;
-    ps.emitRate    = 100;
-    ps.gravity     = new Vector3(0, -1, 0);
-
-    // very slow spin
-    ps.addAngularSpeedGradient(0.2, 1);
+    // start/stop based on your season
+    if (season === Season.Winter) {
+      ps.start();
+      ps.particleTexture = new Texture(
+      `${basePath}/textures/particles/snowflake.png`,
+      scene
+      );
+    } else {
+      ps.stop();
+    }
 
     return ps;
   }
@@ -811,9 +813,9 @@ export const Content: React.FC<ContentProps & {
 
     Promise.all([
       createPetalFallFromJSON(scene, otherEmitter),
-      createLeafFall(scene, otherEmitter,   `${basePath}/textures/particles/leaf.png`),
-      createRedLeafFall(scene, otherEmitter,`${basePath}/textures/particles/redLeaf.png`),
-      createSnowFall(scene, winterEmitter,  `${basePath}/textures/particles/snowflake.png`)
+      createLeafFallFromJSON(scene, otherEmitter),
+      createRedLeafFallFromJSON(scene, otherEmitter),
+      createSnowFallFromJSON(scene, winterEmitter)
     ]).then(([petals, green, red, snow]) => {
       if (!alive) return;
       setPetalPS(petals);
