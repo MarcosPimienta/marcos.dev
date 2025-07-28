@@ -313,6 +313,36 @@ export const Content: React.FC<ContentProps & {
     snow.position.set(0, -3, 0);
     snow.isVisible = true;
 
+    // 2) Create a PBRMaterial
+    const snowGlitterMat = new PBRMaterial("snowGlitter", scene);
+
+    // 3) Base snow color/texture
+    snowGlitterMat.albedoColor = Color3.FromHexString('#C0EAFF').toLinearSpace();
+    const snowAlbedoTex = new Texture(`${basePath}/textures/sand_diffuse.png`, scene);
+    snowAlbedoTex.uScale = 25;
+    snowAlbedoTex.vScale = 25;
+    snowGlitterMat.albedoTexture = snowAlbedoTex;
+
+    const snowNormalTex = new Texture(`${basePath}/textures/sand_normal.png`, scene);
+    snowNormalTex.uScale = 25;
+    snowNormalTex.vScale = 25;
+    snowGlitterMat.bumpTexture = snowNormalTex;
+
+    // 4) Metallic/roughness—keep metallic=0, but drive microSurface with the mask
+    snowGlitterMat.metallic = 0;
+    snowGlitterMat.roughness = 0.9;
+    snowGlitterMat.microSurface = 0.7;
+
+    // 5) Plug your sparkle mask into the microSurface channel
+    //    white areas → high microSurface → sharp specular “glints”
+    //    black areas → low microSurface → diffuse snow
+    //snowGlitterMat.microSurfaceTexture = sparkleMask;
+
+    // 6) Tweak specular color/intensity if you want colored glints:
+    snowGlitterMat.reflectivityColor = new Color3(1,1,1);
+    snowGlitterMat.environmentIntensity = 1.2; // make glints brighter
+    snow.material = snowGlitterMat;
+
     // Load ground from height map
     const ground = MeshBuilder.CreateGroundFromHeightMap(
       "sandGround",
