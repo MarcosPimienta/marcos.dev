@@ -740,6 +740,9 @@ export const Content: React.FC<ContentProps & {
     const groundLeafsMat = new StandardMaterial('groundLeafCell', scene);
     groundLeafsMat.diffuseColor = Color3.FromHexString('#9e3200').toLinearSpace();
     groundLeafsMat.specularColor = new Color3(0, 0, 0);
+    groundLeafsMat.alpha = 0;
+    groundLeafsMat.transparencyMode = StandardMaterial.MATERIAL_ALPHABLEND;
+    groundLeafsMat.backFaceCulling = false;
     groundLeafs.material = groundLeafsMat;
 
     const baseEmitter = grassEmitter.find(m => m.name === 'GrassEmitt') ?? grassEmitter[0];

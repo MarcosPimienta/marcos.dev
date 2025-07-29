@@ -130,6 +130,13 @@ export const AnimationCtrl: React.FC<AnimationCtrlProps> = ({
       [Season.Winter]: 0,
     }
 
+    const groundLeafAlphaMap: Record<Season, number> = {
+      [Season.Spring]: 0,
+      [Season.Summer]: 0,
+      [Season.Fall]:   1,
+      [Season.Winter]: 0,
+    };
+
     // 7) helper to build key‑frame animations
     function buildAnim<T>(
       property: string,
@@ -168,6 +175,7 @@ export const AnimationCtrl: React.FC<AnimationCtrlProps> = ({
     const grass   = scene.getTransformNodeByName('GrassRoot')!
     const skyMat1 = scene.getMaterialByName('skyBox1Mat') as StandardMaterial
     const skyMat2 = scene.getMaterialByName('skyBox2Mat') as StandardMaterial
+    const groundLeafMat = scene.getMaterialByName('groundLeafCell') as StandardMaterial;
 
     // ensure correct initial alpha
     leafMat.alpha    = 1
@@ -206,6 +214,9 @@ export const AnimationCtrl: React.FC<AnimationCtrlProps> = ({
     ]
     snow.animations  = [ buildAnim('position', Animation.ANIMATIONTYPE_VECTOR3, snowPosMap) ]
     grass.animations = [ buildAnim('position', Animation.ANIMATIONTYPE_VECTOR3, grassPosMap) ]
+    groundLeafMat.animations = [
+      buildAnim('alpha', Animation.ANIMATIONTYPE_FLOAT, groundLeafAlphaMap)
+    ];
 
     // start them
     disposables.current.forEach(d => d.stop())
@@ -218,6 +229,11 @@ export const AnimationCtrl: React.FC<AnimationCtrlProps> = ({
       scene.beginDirectAnimation(
         redLeafMat,
         [ buildAnim('alpha', Animation.ANIMATIONTYPE_FLOAT, redAlphaMap) ],
+        0, totalFrames, false, 1
+      ),
+      scene.beginDirectAnimation(
+        groundLeafMat,
+        groundLeafMat.animations!,
         0, totalFrames, false, 1
       ),
       scene.beginDirectAnimation(skyMat1, skyMat1.animations!, 0, totalFrames, false,1),
