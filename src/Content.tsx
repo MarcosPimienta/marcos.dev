@@ -73,6 +73,7 @@ export const Content: React.FC<ContentProps & {
   const { meshes: grassEmitter } = useModel(`${basePath}/meshes/GrassEmitter.glb`);
   const { meshes: smallWallMeshes } = useModel(`${basePath}/meshes/SmallerWalls.glb`);
   const { meshes: snowMeshes } = useModel(`${basePath}/meshes/Snow.glb`);
+  const { meshes: groundLeafMeshes } = useModel(`${basePath}/meshes/GroundLeafs.glb`);
   // somewhere up top of your component, build both boxes:
 
   const winterEmitter = MeshBuilder.CreateBox("winterEmitter", { size: 5 }, scene);
@@ -729,6 +730,17 @@ export const Content: React.FC<ContentProps & {
     hillMat.diffuseTexture = new Texture(`${basePath}/textures/HillBase.png`, scene);
     hillMat.emissiveTexture = new Texture(`${basePath}/textures/HillBase.png`, scene);
     hillMat.specularColor = new Color3(0, 0, 0);
+
+    const groundLeafs = groundLeafMeshes.find(m => m.name === 'GroundLeafs') ?? hillMeshes[0];
+    groundLeafs.position.set(0, 0.47, 0);
+    //groundLeafs.roitation.set(0, 0, 0);
+    groundLeafs.scaling.set(0.025, 0.03, 0.025);
+    groundLeafs.parent = root;
+    groundLeafs.isVisible = true;
+    const groundLeafsMat = new StandardMaterial('groundLeafCell', scene);
+    groundLeafsMat.diffuseColor = Color3.FromHexString('#9e3200').toLinearSpace();
+    groundLeafsMat.specularColor = new Color3(0, 0, 0);
+    groundLeafs.material = groundLeafsMat;
 
     const baseEmitter = grassEmitter.find(m => m.name === 'GrassEmitt') ?? grassEmitter[0];
     baseEmitter.parent = root;
