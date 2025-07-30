@@ -751,14 +751,7 @@ export const Content: React.FC<ContentProps & {
     const hillLeafs = hillLeafMeshes.find(m => m.name === 'HillLeafs') ?? hillMeshes[0];
     hillLeafs.isVisible = true;
 
-    const hillLeafsMat = new StandardMaterial('hillLeafCell', scene);
-    hillLeafsMat.diffuseColor = Color3.FromHexString('#ff4d00').toLinearSpace();
-    hillLeafsMat.specularColor = Color3.Black();
-    hillLeafsMat.alpha = 0;
-    hillLeafsMat.transparencyMode = StandardMaterial.MATERIAL_ALPHABLEND;
-    hillLeafsMat.backFaceCulling = false;
-
-    hillLeafs.material = hillLeafsMat;
+    hillLeafs.material = groundLeafsMat;
 
     const baseEmitter = grassEmitter.find(m => m.name === 'GrassEmitt') ?? grassEmitter[0];
     baseEmitter.parent = root;
