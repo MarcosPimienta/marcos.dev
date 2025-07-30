@@ -74,6 +74,7 @@ export const Content: React.FC<ContentProps & {
   const { meshes: smallWallMeshes } = useModel(`${basePath}/meshes/SmallerWalls.glb`);
   const { meshes: snowMeshes } = useModel(`${basePath}/meshes/Snow.glb`);
   const { meshes: groundLeafMeshes } = useModel(`${basePath}/meshes/GroundLeafs.glb`);
+  const { meshes: hillLeafMeshes } = useModel(`${basePath}/meshes/HillLeafs.glb`);
   // somewhere up top of your component, build both boxes:
 
   const winterEmitter = MeshBuilder.CreateBox("winterEmitter", { size: 5 }, scene);
@@ -210,7 +211,9 @@ export const Content: React.FC<ContentProps & {
       treeMeshes.length   === 0 ||
       hillMeshes.length   === 0 ||
       grassEmitter.length === 0 ||
-      smallWallMeshes.length === 0
+      smallWallMeshes.length === 0 ||
+      groundLeafMeshes.length === 0 ||
+      hillLeafMeshes.length   === 0
     ) {
       return;
     }
@@ -731,19 +734,31 @@ export const Content: React.FC<ContentProps & {
     hillMat.emissiveTexture = new Texture(`${basePath}/textures/HillBase.png`, scene);
     hillMat.specularColor = new Color3(0, 0, 0);
 
+
     const groundLeafs = groundLeafMeshes.find(m => m.name === 'GroundLeafs') ?? hillMeshes[0];
     groundLeafs.position.set(0, 0.47, 0);
-    //groundLeafs.roitation.set(0, 0, 0);
     groundLeafs.scaling.set(0.025, 0.03, 0.025);
     groundLeafs.parent = root;
     groundLeafs.isVisible = true;
     const groundLeafsMat = new StandardMaterial('groundLeafCell', scene);
-    groundLeafsMat.diffuseColor = Color3.FromHexString('#9e3200').toLinearSpace();
+    groundLeafsMat.diffuseColor = Color3.FromHexString('#ff4d00').toLinearSpace();
     groundLeafsMat.specularColor = new Color3(0, 0, 0);
     groundLeafsMat.alpha = 0;
     groundLeafsMat.transparencyMode = StandardMaterial.MATERIAL_ALPHABLEND;
     groundLeafsMat.backFaceCulling = false;
     groundLeafs.material = groundLeafsMat;
+
+    const hillLeafs = hillLeafMeshes.find(m => m.name === 'HillLeafs') ?? hillMeshes[0];
+    hillLeafs.isVisible = true;
+
+    const hillLeafsMat = new StandardMaterial('hillLeafCell', scene);
+    hillLeafsMat.diffuseColor = Color3.FromHexString('#ff4d00').toLinearSpace();
+    hillLeafsMat.specularColor = Color3.Black();
+    hillLeafsMat.alpha = 0;
+    hillLeafsMat.transparencyMode = StandardMaterial.MATERIAL_ALPHABLEND;
+    hillLeafsMat.backFaceCulling = false;
+
+    hillLeafs.material = hillLeafsMat;
 
     const baseEmitter = grassEmitter.find(m => m.name === 'GrassEmitt') ?? grassEmitter[0];
     baseEmitter.parent = root;
@@ -837,7 +852,7 @@ export const Content: React.FC<ContentProps & {
       camera.dispose();
       root.dispose();
     };
-  }, [scene, leafMeshes, treeMeshes, hillMeshes, grassEmitter, smallWallMeshes]);
+  }, [scene, leafMeshes, treeMeshes, hillMeshes, grassEmitter, smallWallMeshes, groundLeafMeshes, hillLeafMeshes]);
 
   useEffect(() => {
     let alive = true;

@@ -113,10 +113,9 @@ export const AnimationCtrl: React.FC<AnimationCtrlProps> = ({
     const grassPosMap: Record<Season, Vector3> = {
       [Season.Spring]: new Vector3(0, -1, 0),
       [Season.Summer]: new Vector3(0, -1, 0),
-      [Season.Fall]:   new Vector3(0, -1, 0),
+      [Season.Fall]:   new Vector3(0, -1.08, 0),
       [Season.Winter]: new Vector3(0, -2, 0),
     }
-
     const greenAlphaMap: Record<Season, number> = {
       [Season.Spring]: 1,
       [Season.Summer]: 1,
@@ -129,14 +128,18 @@ export const AnimationCtrl: React.FC<AnimationCtrlProps> = ({
       [Season.Fall]:   1,
       [Season.Winter]: 0,
     }
-
     const groundLeafAlphaMap: Record<Season, number> = {
       [Season.Spring]: 0,
       [Season.Summer]: 0,
       [Season.Fall]:   1,
       [Season.Winter]: 0,
     };
-
+    const hillLeafAlphaMap: Record<Season, number> = {
+      [Season.Spring]: 0,
+      [Season.Summer]: 0,
+      [Season.Fall]:   1,
+      [Season.Winter]: 0,
+    };
     // 7) helper to build key‑frame animations
     function buildAnim<T>(
       property: string,
@@ -176,6 +179,7 @@ export const AnimationCtrl: React.FC<AnimationCtrlProps> = ({
     const skyMat1 = scene.getMaterialByName('skyBox1Mat') as StandardMaterial
     const skyMat2 = scene.getMaterialByName('skyBox2Mat') as StandardMaterial
     const groundLeafMat = scene.getMaterialByName('groundLeafCell') as StandardMaterial;
+    const hillLeafMat = scene.getMaterialByName('hillLeafCell') as StandardMaterial;
 
     // ensure correct initial alpha
     leafMat.alpha    = 1
@@ -217,7 +221,9 @@ export const AnimationCtrl: React.FC<AnimationCtrlProps> = ({
     groundLeafMat.animations = [
       buildAnim('alpha', Animation.ANIMATIONTYPE_FLOAT, groundLeafAlphaMap)
     ];
-
+    hillLeafMat.animations = [
+      buildAnim('alpha', Animation.ANIMATIONTYPE_FLOAT, hillLeafAlphaMap)
+    ];
     // start them
     disposables.current.forEach(d => d.stop())
     disposables.current = [
@@ -231,11 +237,8 @@ export const AnimationCtrl: React.FC<AnimationCtrlProps> = ({
         [ buildAnim('alpha', Animation.ANIMATIONTYPE_FLOAT, redAlphaMap) ],
         0, totalFrames, false, 1
       ),
-      scene.beginDirectAnimation(
-        groundLeafMat,
-        groundLeafMat.animations!,
-        0, totalFrames, false, 1
-      ),
+      scene.beginDirectAnimation(groundLeafMat, groundLeafMat.animations!, 0, totalFrames, false, 1),
+      scene.beginDirectAnimation(hillLeafMat,   hillLeafMat.animations!,   0, totalFrames, false, 1),
       scene.beginDirectAnimation(skyMat1, skyMat1.animations!, 0, totalFrames, false,1),
       scene.beginDirectAnimation(skyMat2, skyMat2.animations!, 0, totalFrames, false,1),
       scene.beginDirectAnimation(light,   light.animations!,   0, totalFrames, false,1),
