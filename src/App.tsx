@@ -10,6 +10,12 @@ import { KeyboardEventTypes } from '@babylonjs/core/Events/keyboardEvents';
 import type { Scene as BjsScene, ParticleSystem } from '@babylonjs/core';
 
 const seasons = [Season.Spring, Season.Summer, Season.Fall, Season.Winter];
+const seasonLabels: Record<Season, string> = {
+  [Season.Spring]: 'Services',
+  [Season.Summer]: 'Works',
+  [Season.Fall]:   'About',
+  [Season.Winter]: 'Contact',
+};
 
 const App: React.FC<{ havok: unknown }> = ({ havok }) => {
   const [selectedSeason, setSelectedSeason] = useState<Season>(Season.Spring);
@@ -20,13 +26,28 @@ const App: React.FC<{ havok: unknown }> = ({ havok }) => {
   const [redPS,    setRedPS]    = useState<ParticleSystem | null>(null);
   const [snowPS,   setSnowPS]   = useState<ParticleSystem | null>(null);
 
+  function renderPanelContent() {
+  switch (selectedSeason) {
+    case Season.Spring:
+      return <div style={{ margin: '0.5em', display: 'flex', flexDirection: 'column'}}><h2>Services</h2><p>Details about what we offer.</p></div>;
+    case Season.Summer:
+      return <div><h2>Works</h2><p>Portfolio, case studies, etc.</p></div>;
+    case Season.Fall:
+      return <div><h2>About</h2><p>Team, mission, vision.</p></div>;
+    case Season.Winter:
+      return <div><h2>Contact</h2><p>Email, form, socials.</p></div>;
+    default:
+      return null;
+  }
+}
+
   // whenever the user picks a new season, prevSeason will hold
   // the one we just animated *from*, and selectedSeason is our
   // target
   useEffect(() => {
     if (bjsScene && prevSeason !== selectedSeason) {
       // once the animation is done, bump prevSeason forward
-      const onComplete = () => setPrevSeason(selectedSeason);
+      const onComplete = () => setPrevSeason(selectedSeason)
 
       // kick off the animation
       // <AnimationCtrl> is rendered down in the JSX
@@ -36,34 +57,35 @@ const App: React.FC<{ havok: unknown }> = ({ havok }) => {
 
   return (
     <div style={{ position: 'relative', width: '100vw', height: '100vh' }}>
-      <div
-        style={{
-          position: 'absolute',
-          top: 20,
-          left: 20,
-          display: 'flex',
-          gap: '8px',
-          zIndex: 5,
-        }}
-      >
-        {seasons.map(s => (
-          <button
-            key={s}
-            onClick={() => setSelectedSeason(s)}
-            style={{
-              padding: '8px 12px',
-              fontSize: '14px',
-              background: selectedSeason === s ? '#4cafef' : '#fff',
-              border: '1px solid #ccc',
-              borderRadius: '4px',
-              cursor: 'pointer',
-            }}
-          >
-            {s.charAt(0).toUpperCase() + s.slice(1)}
-          </button>
-        ))}
+      <div style={{ position: 'absolute', display: 'flex', flexDirection: 'column', right: '0.5em', width: '40%', height: '98%', border: '2px solid #ffffff', borderRadius: '0.5em' }}>
+        <div
+          style={{
+            margin: '0.5em',
+            display: 'flex',
+            gap: '8px',
+          }}
+        >
+          {seasons.map(s => (
+            <button
+              key={s}
+              onClick={() => setSelectedSeason(s)}
+              style={{
+                padding: '8px 12px',
+                fontSize: '14px',
+                background: selectedSeason === s ? '#4cafef' : '#fff',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                cursor: 'pointer',
+              }}
+            >
+              {seasonLabels[s]}
+            </button>
+          ))}
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', marginLeft: '0.5em'}}>
+          {renderPanelContent()}
+        </div>
       </div>
-
       <Engine antialias>
         <Scene
           onSceneReady={scene => {
