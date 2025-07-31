@@ -8,6 +8,10 @@ import '@babylonjs/loaders';
 import '@babylonjs/inspector';
 import { KeyboardEventTypes } from '@babylonjs/core/Events/keyboardEvents';
 import type { Scene as BjsScene, ParticleSystem } from '@babylonjs/core';
+import ServicesPanel from './ServicesPanel';
+import WorksPanel from './WorksPanel';
+import AboutPanel from './AboutPanel';
+import ContactPanel from './ContactPanel';
 
 const seasons = [Season.Spring, Season.Summer, Season.Fall, Season.Winter];
 const seasonLabels: Record<Season, string> = {
@@ -29,13 +33,13 @@ const App: React.FC<{ havok: unknown }> = ({ havok }) => {
   function renderPanelContent() {
   switch (selectedSeason) {
     case Season.Spring:
-      return <div style={{ margin: '0.5em', display: 'flex', flexDirection: 'column'}}><h2>Services</h2><p>Details about what we offer.</p></div>;
+      return <ServicesPanel />;
     case Season.Summer:
-      return <div><h2>Works</h2><p>Portfolio, case studies, etc.</p></div>;
+      return <WorksPanel />;
     case Season.Fall:
-      return <div><h2>About</h2><p>Team, mission, vision.</p></div>;
+      return <AboutPanel />;
     case Season.Winter:
-      return <div><h2>Contact</h2><p>Email, form, socials.</p></div>;
+      return <ContactPanel />;
     default:
       return null;
   }
