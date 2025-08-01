@@ -35,7 +35,7 @@ const ServicesPanel: React.FC = () => {
 
       <Section
         id="interactive"
-        title="02 3D & Interactive Web Experiences"
+        title="02 Interactive Web Experiences & 3D"
         teaser="Immersive interfaces that blend data and visuals"
         isOpen={openSection === 'interactive'}
         onToggle={toggleSection}

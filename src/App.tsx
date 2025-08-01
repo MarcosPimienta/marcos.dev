@@ -61,39 +61,25 @@ const App: React.FC<{ havok: unknown }> = ({ havok }) => {
 
   return (
     <div style={{ position: 'relative', width: '100vw', height: '100vh' }}>
-      <div style={{ position: 'absolute', display: 'flex', flexDirection: 'column', right: '0.5em', width: '45%', maxHeight: 'calc(100vh - 1em)', border: '2px solid #ffffff', borderRadius: '0.5em' }}>
-        <div
-          style={{
-            margin: '0.5em',
-            display: 'flex',
-            gap: '8px',
-          }}
-        >
+      <div className="panel-frame">
+        <div className="season-tabs">
           {seasons.map(s => (
             <button
               key={s}
               onClick={() => setSelectedSeason(s)}
-              style={{
-                padding: '8px 12px',
-                fontSize: '14px',
-                background: selectedSeason === s ? '#4cafef' : '#fff',
-                border: '1px solid #ccc',
-                borderRadius: '4px',
-                cursor: 'pointer',
-              }}
+              className={`season-tab ${selectedSeason === s ? 'selected' : ''}`}
+              aria-pressed={selectedSeason === s}
             >
               {seasonLabels[s]}
             </button>
           ))}
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', marginLeft: '0.5em', overflowY: 'auto'}}>
-          {renderPanelContent()}
-        </div>
+        <div className="panel-content">{renderPanelContent()}</div>
       </div>
+
       <Engine antialias>
         <Scene
           onSceneReady={scene => {
-            // keep a handle on the raw Babylon scene
             setBjsScene(scene as BjsScene);
             scene.createDefaultCameraOrLight(true, undefined, true);
             scene.lights.forEach(l => (l.intensity = 1.34));
@@ -112,7 +98,6 @@ const App: React.FC<{ havok: unknown }> = ({ havok }) => {
           }}
           physicsOptions={{ plugin: new HavokPlugin(true, havok) }}
         >
-          {/* This is your static setup */}
           <Content
             season={selectedSeason}
             onPetalPS={setPetalPS}

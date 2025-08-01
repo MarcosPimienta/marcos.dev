@@ -6,6 +6,7 @@
   max-height: calc(100vh - 6em);
   padding-right: 0.5em;
   overflow: auto;
+  color: white;
 }
 
 .works-panel h2 {
@@ -14,15 +15,16 @@
 }
 
 .project-card {
-  background-color: var(--bg);
+  background-color: transparent;
   padding: 1em;
   border-radius: var(--radius);
-  border: 1px solid var(--border);
-  box-shadow: var(--card-shadow);
+  border: 1px solid white;
+  box-shadow: none;
 }
 
 .project-card h3 {
   margin-top: 0;
+  color: white;
 }
 
 .project-media {
@@ -34,17 +36,23 @@
 
 .project-description {
   margin-top: 0.75em;
+  color: white;
 }
 
 .project-link {
   margin-top: 0.5em;
 }
 
+.project-link a {
+  color: #aeddff;
+  text-decoration: underline;
+}
+
 .feature-list {
   margin-top: 0.75em;
   padding-left: 1.2em;
   list-style-type: disc;
-  color: #333;
+  color: white;
 }
 
 .tag-container {
@@ -55,8 +63,10 @@
 }
 
 .tag {
-  background-color: #e0f2ff;
+  background-color: rgba(224, 242, 255, 0.1);
   padding: 0.3em 0.6em;
   border-radius: var(--radius-pill);
   font-size: 0.85em;
+  color: white;
+  border: 1px solid rgba(255,255,255,0.4);
 }

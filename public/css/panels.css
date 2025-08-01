@@ -1,0 +1,86 @@
+@font-face {
+  font-family: 'Inter';
+  font-weight: 700;
+  src: url('/fonts/Inter-Bold.woff2') format('woff2');
+  font-display: swap;
+}
+
+.panel-frame {
+  position: absolute;
+  top: 0.5em;
+  right: 0.5em;
+  display: flex;
+  flex-direction: column;
+  width: 45%;
+  max-height: calc(100vh - 1em);
+  background: rgba(0, 0, 0, 0.4);
+  border: 2px solid #ffffff;
+  border-radius: 0.5em;
+  overflow: hidden;
+  color: #fff;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.season-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 0 0.5em;
+  flex-wrap: wrap;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.season-tab {
+  background: none;
+  border: none;
+  padding: 6px 10px;
+  font-weight: 700;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  color: white;
+  cursor: pointer;
+  position: relative;
+  font-size: 0.9rem;
+  letter-spacing: 0.5px;
+  outline: none;
+  transition: opacity 0.2s;
+}
+
+.season-tab:not(.selected):hover {
+  opacity: 0.85;
+}
+
+.season-tab.selected::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 2px;
+  background: white;
+  border-radius: 1px;
+}
+
+.season-tab.selected {
+  position: relative;
+}
+
+.season-tab.selected::before {
+  content: '';
+  position: absolute;
+  left: 0; /* start at the left edge of the underline */
+  bottom: -2px; /* align vertically with the underline */
+  width: 10px;
+  height: 10px;
+  background: white;
+  border-radius: 50%;
+  transform: translate(-50%, 50%); /* shift half-width left and drop it onto the underline */
+}
+
+.panel-content {
+  display: flex;
+  flex-direction: column;
+  margin-left: 0.5em;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+  padding: 0.5em;
+}

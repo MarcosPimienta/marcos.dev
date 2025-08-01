@@ -111,13 +111,13 @@ const experience: ExperienceEntry[] = [
 const AboutPanel: React.FC = () => {
   return (
     <div className="about-panel">
-      <h1>About</h1>
+      <h1>MARCOS PIMIENTA</h1>
       <div className="scroll-container">
         {/* Profile */}
         <section className="section">
           <h2 className="section-title">Profile</h2>
           <div className="profile-container">
-            <div className="avatar-placeholder">👤</div>
+            {/* <div className="avatar-placeholder">👤</div> */}
             <div style={{ flex: 1 }}>
               <p className="paragraph">
                 Software Engineer with a proven track record of creating scalable, efficient solutions
