@@ -110,17 +110,16 @@ const experience: ExperienceEntry[] = [
 
 const AboutPanel: React.FC = () => {
   return (
-    <div style={container}>
-      <h1 style={header}>About</h1>
-
-      <div style={scrollContainer}>
+    <div className="about-panel">
+      <h1>About</h1>
+      <div className="scroll-container">
         {/* Profile */}
-        <section style={section}>
-          <h2 style={sectionTitle}>Profile</h2>
-          <div style={profileContainer}>
-            <div style={avatarPlaceholder}>👤</div>
+        <section className="section">
+          <h2 className="section-title">Profile</h2>
+          <div className="profile-container">
+            <div className="avatar-placeholder">👤</div>
             <div style={{ flex: 1 }}>
-              <p style={paragraph}>
+              <p className="paragraph">
                 Software Engineer with a proven track record of creating scalable, efficient solutions
                 across web and cross-platform applications. Deeply experienced in full-stack development,
                 real-time 3D rendering, and building performance-sensitive systems. Comfortable bridging
@@ -134,52 +133,52 @@ const AboutPanel: React.FC = () => {
         </section>
 
         {/* Skills */}
-        <section style={section}>
-          <h2 style={sectionTitle}>Skills</h2>
-          <div style={skillsGrid}>
-            <div style={skillColumn}>
-              <h3 style={skillHeader}>Languages & Tools</h3>
-              <ul style={skillList}>
+        <section className="section">
+          <h2 className="section-title">Skills</h2>
+          <div className="skills-grid">
+            <div className="skill-column">
+              <h3 className="skill-header">Languages & Tools</h3>
+              <ul className="skill-list">
                 {languagesAndTools.map(s => (
-                  <li key={s} style={skillItem}>{s}</li>
+                  <li key={s} className="skill-item">{s}</li>
                 ))}
               </ul>
             </div>
-            <div style={skillColumn}>
-              <h3 style={skillHeader}>Libraries & Frameworks</h3>
-              <ul style={skillList}>
+            <div className="skill-column">
+              <h3 className="skill-header">Libraries & Frameworks</h3>
+              <ul className="skill-list">
                 {librariesAndFrameworks.map(s => (
-                  <li key={s} style={skillItem}>{s}</li>
+                  <li key={s} className="skill-item">{s}</li>
                 ))}
               </ul>
             </div>
-            <div style={skillColumn}>
-              <h3 style={skillHeader}>Core CS Concepts</h3>
-              <ul style={skillList}>
+            <div className="skill-column">
+              <h3 className="skill-header">Core CS Concepts</h3>
+              <ul className="skill-list">
                 {coreCSConcepts.map(s => (
-                  <li key={s} style={skillItem}>{s}</li>
+                  <li key={s} className="skill-item">{s}</li>
                 ))}
               </ul>
             </div>
           </div>
         </section>
 
-        {/* Professional Experience */}
-        <section style={section}>
-          <h2 style={sectionTitle}>Professional Experience</h2>
+        {/* Experience */}
+        <section className="section">
+          <h2 className="section-title">Professional Experience</h2>
           {experience.map(exp => (
-            <div key={`${exp.company}-${exp.title}`} style={experienceEntry}>
-              <div style={expHeader}>
+            <div key={`${exp.company}-${exp.title}`} className="experience-entry">
+              <div className="exp-header">
                 <div>
                   <strong>{exp.title}</strong> @ {exp.company}
                 </div>
-                <div style={expMeta}>
+                <div className="exp-meta">
                   <span>{exp.period}</span>
                   <span style={{ margin: '0 6px' }}>•</span>
                   <span>{exp.location}</span>
                 </div>
               </div>
-              <ul style={bulletList}>
+              <ul className="bullet-list">
                 {exp.bullets.map((b, i) => (
                   <li key={i}>{b}</li>
                 ))}
@@ -189,9 +188,9 @@ const AboutPanel: React.FC = () => {
         </section>
 
         {/* Education */}
-        <section style={section}>
-          <h2 style={sectionTitle}>Education</h2>
-          <div style={educationEntry}>
+        <section className="section">
+          <h2 className="section-title">Education</h2>
+          <div className="education-entry">
             <div>
               <strong>Media Arts & Animation BSc</strong>, The Art Institute of Fort Lauderdale
             </div>
@@ -200,117 +199,6 @@ const AboutPanel: React.FC = () => {
       </div>
     </div>
   );
-};
-
-// Styles
-const container: React.CSSProperties = {
-  padding: '1rem 1.25rem',
-  maxWidth: '900px',
-  height: '100vh',
-  margin: '0 auto',
-  fontFamily: 'system-ui,-apple-system,BlinkMacSystemFont,sans-serif',
-  color: '#1f2937',
-  lineHeight: 1.5,
-  display: 'flex',
-  flexDirection: 'column',
-};
-
-const header: React.CSSProperties = {
-  fontSize: '2rem',
-  marginBottom: '1rem',
-  flexShrink: 0,
-};
-
-const scrollContainer: React.CSSProperties = {
-  flexGrow: 1,
-  paddingRight: '0.5rem',
-};
-
-const section: React.CSSProperties = {
-  marginBottom: '2rem',
-};
-
-const sectionTitle: React.CSSProperties = {
-  fontSize: '1.5rem',
-  marginBottom: '0.75rem',
-  borderBottom: '2px solid #e2e8f0',
-  paddingBottom: '4px',
-};
-
-const profileContainer: React.CSSProperties = {
-  display: 'flex',
-  gap: '1rem',
-  alignItems: 'flex-start',
-};
-
-const avatarPlaceholder: React.CSSProperties = {
-  minWidth: '72px',
-  minHeight: '72px',
-  borderRadius: '50%',
-  backgroundColor: '#f0f4f8',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  fontSize: '1.5rem',
-};
-
-const paragraph: React.CSSProperties = {
-  margin: 0,
-};
-
-const skillsGrid: React.CSSProperties = {
-  display: 'flex',
-  gap: '2rem',
-  flexWrap: 'wrap',
-};
-
-const skillColumn: React.CSSProperties = {
-  flex: '1 1 220px',
-  minWidth: '180px',
-};
-
-const skillHeader: React.CSSProperties = {
-  marginBottom: '0.5rem',
-  fontSize: '1.1rem',
-};
-
-const skillList: React.CSSProperties = {
-  paddingLeft: '1rem',
-  margin: 0,
-};
-
-const skillItem: React.CSSProperties = {
-  marginBottom: '4px',
-};
-
-const experienceEntry: React.CSSProperties = {
-  marginBottom: '1.5rem',
-};
-
-const expHeader: React.CSSProperties = {
-  display: 'flex',
-  justifyContent: 'space-between',
-  flexWrap: 'wrap',
-  gap: '4px',
-  fontSize: '1rem',
-};
-
-const expMeta: React.CSSProperties = {
-  fontSize: '0.85rem',
-  color: '#6b7280',
-  display: 'flex',
-  gap: '4px',
-  alignItems: 'center',
-  marginTop: '2px',
-};
-
-const bulletList: React.CSSProperties = {
-  marginTop: '6px',
-  paddingLeft: '1.2em',
-};
-
-const educationEntry: React.CSSProperties = {
-  fontSize: '1rem',
 };
 
 export default AboutPanel;

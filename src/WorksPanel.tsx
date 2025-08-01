@@ -104,17 +104,10 @@ const projects = [
 
 const WorksPanel: React.FC = () => {
   return (
-    <div style={{
-      margin: '0.5em',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '1.5em',
-      maxHeight: 'calc(100vh - 6em)',
-      paddingRight: '0.5em',
-    }}>
+    <div className="works-panel">
       <h2>Works</h2>
       {projects.map((project, index) => (
-        <div key={index} style={cardStyle}>
+        <div key={index} className="project-card">
           <h3>{project.title}</h3>
 
           {project.mediaType === 'video' ? (
@@ -124,19 +117,19 @@ const WorksPanel: React.FC = () => {
               muted
               playsInline
               loop
-              style={{ width: '100%', borderRadius: '0.5em', marginTop: '0.5em' }}
+              className="project-media"
             />
           ) : (
             <img
               src={project.src}
               alt={project.title}
-              style={{ width: '100%', borderRadius: '0.5em', marginTop: '0.5em' }}
+              className="project-media"
             />
           )}
 
-          <p style={{ marginTop: '0.75em' }}>{project.description}</p>
+          <p className="project-description">{project.description}</p>
           {project.url && (
-            <p style={{ marginTop: '0.5em' }}>
+            <p className="project-link">
               <strong>Link:</strong>{' '}
               <a
                 href={project.url}
@@ -148,50 +141,21 @@ const WorksPanel: React.FC = () => {
               </a>
             </p>
           )}
-          <ul style={featureListStyle}>
+          <ul className="feature-list">
             {project.features.map((feature, i) => (
               <li key={i}>{feature}</li>
             ))}
           </ul>
 
-          <div style={tagContainerStyle}>
+          <div className="tag-container">
             {project.stack.map((tech, i) => (
-              <span key={i} style={tagStyle}>{tech}</span>
+              <span key={i} className="tag">{tech}</span>
             ))}
           </div>
         </div>
       ))}
     </div>
   );
-};
-
-const cardStyle: React.CSSProperties = {
-  backgroundColor: '#fff',
-  padding: '1em',
-  borderRadius: '0.5em',
-  border: '1px solid #ddd',
-  boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
-};
-
-const featureListStyle: React.CSSProperties = {
-  marginTop: '0.75em',
-  paddingLeft: '1.2em',
-  listStyleType: 'none',
-  color: '#333',
-};
-
-const tagContainerStyle: React.CSSProperties = {
-  display: 'flex',
-  flexWrap: 'wrap',
-  gap: '0.5em',
-  marginTop: '0.75em',
-};
-
-const tagStyle: React.CSSProperties = {
-  backgroundColor: '#e0f2ff',
-  padding: '0.3em 0.6em',
-  borderRadius: '999px',
-  fontSize: '0.85em',
 };
 
 export default WorksPanel;

@@ -2,13 +2,10 @@ import React, { useState } from 'react';
 
 const ServicesPanel: React.FC = () => {
   const [openSection, setOpenSection] = useState<string | null>('fullstack');
-
-  const toggleSection = (key: string) => {
-    setOpenSection(prev => (prev === key ? null : key));
-  };
+  const toggleSection = (key: string) => setOpenSection(prev => (prev === key ? null : key));
 
   return (
-    <div style={{ margin: '0.5em', display: 'flex', flexDirection: 'column', gap: '1em', minHeight: 0 }}>
+    <div className="services-panel">
       <h2>Services</h2>
       <p>
         I specialize in building high-impact digital systems by combining robust engineering,
@@ -16,7 +13,6 @@ const ServicesPanel: React.FC = () => {
         The focus is on scalable, maintainable products that delight users and solve real problems.
       </p>
 
-      {/* Full-Stack Web Engineering */}
       <Section
         id="fullstack"
         title="01 Full-Stack Web Engineering"
@@ -37,7 +33,6 @@ const ServicesPanel: React.FC = () => {
         </ul>
       </Section>
 
-      {/* 3D & Interactive Web Experiences */}
       <Section
         id="interactive"
         title="02 3D & Interactive Web Experiences"
@@ -58,7 +53,6 @@ const ServicesPanel: React.FC = () => {
         </ul>
       </Section>
 
-      {/* UI/UX & Frontend Engineering */}
       <Section
         id="frontend"
         title="03 Frontend & UX Engineering"
@@ -79,7 +73,6 @@ const ServicesPanel: React.FC = () => {
         </ul>
       </Section>
 
-      {/* Software Engineering */}
       <Section
         id="engineering"
         title="04 Software Engineering"
@@ -100,7 +93,6 @@ const ServicesPanel: React.FC = () => {
         </ul>
       </Section>
 
-      {/* DevOps & Infrastructure */}
       <Section
         id="devops"
         title="05 DevOps & Infrastructure"
@@ -135,40 +127,13 @@ interface SectionProps {
 
 const Section: React.FC<SectionProps> = ({ id, title, teaser, isOpen, onToggle, children }) => {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-      <div
-        onClick={() => onToggle(id)}
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          cursor: 'pointer',
-          background: '#f0f0f0',
-          padding: '0.5em 1em',
-          border: '1px solid #ccc',
-          borderRadius: '4px',
-        }}
-      >
-        <div style={{ fontWeight: 'bold' }}>{title}</div>
-        <div style={{ fontSize: '1.2em' }}>{isOpen ? '−' : '+'}</div>
+    <div className="section">
+      <div className="section-toggle" onClick={() => onToggle(id)}>
+        <div>{title}</div>
+        <div>{isOpen ? '−' : '+'}</div>
       </div>
-      {!isOpen && (
-        <div style={{ fontSize: '0.9em', color: '#555', margin: '0.3em 0 0.5em 0.8em' }}>
-          {teaser}
-        </div>
-      )}
-      {isOpen && (
-        <div
-          style={{
-            padding: '0.75em 1em',
-            borderLeft: '3px solid #4cafef',
-            background: '#fff',
-            marginTop: '0.5em',
-          }}
-        >
-          {children}
-        </div>
-      )}
+      {!isOpen && <div className="section-teaser">{teaser}</div>}
+      {isOpen && <div className="section-content">{children}</div>}
     </div>
   );
 };
