@@ -61,7 +61,7 @@ const App: React.FC<{ havok: unknown }> = ({ havok }) => {
 
   return (
     <div style={{ position: 'relative', width: '100vw', height: '100vh' }}>
-      <div style={{ position: 'absolute', display: 'flex', flexDirection: 'column', right: '0.5em', width: '45%', height: '98%', border: '2px solid #ffffff', borderRadius: '0.5em' }}>
+      <div style={{ position: 'absolute', display: 'flex', flexDirection: 'column', right: '0.5em', width: '45%', maxHeight: 'calc(100vh - 1em)', border: '2px solid #ffffff', borderRadius: '0.5em' }}>
         <div
           style={{
             margin: '0.5em',
