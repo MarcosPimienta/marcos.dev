@@ -15,7 +15,7 @@ const config: Configuration = {
     path: path.resolve(__dirname, "dist"),
     filename: "main.js",
     clean: true,
-    publicPath: process.env.NODE_ENV === 'production' ? '/anime-foliage/' : '/',
+    publicPath: process.env.NODE_ENV === 'production' ? '/marcos.dev/' : '/',
   },
   resolve: {
     extensions: [".tsx", ".ts", ".js"],
@@ -55,11 +55,11 @@ const config: Configuration = {
   plugins: [
     new webpack.DefinePlugin({
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
-      'process.env.PUBLIC_URL': JSON.stringify('/anime-foliage')
+      'process.env.PUBLIC_URL': JSON.stringify('/marcos.dev')
     }),
     new HtmlWebpackPlugin({
       template: "public/index.html",
-      publicPath: process.env.NODE_ENV === 'production' ? '/anime-foliage/' : '/'
+      publicPath: process.env.NODE_ENV === 'production' ? '/marcos.dev/' : '/'
     }),
     new ForkTsCheckerWebpackPlugin()
   ],
