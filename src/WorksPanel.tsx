@@ -5,25 +5,11 @@ const basePath = getBasePath();
 
 const projects = [
   {
-    title: 'Anime Foliage – Seasonal Interactive 3D Scene',
-    mediaType: 'gif', // or 'gif' if you have a recording
-    src: `${basePath}/gifs/3D-Sabelotodo.gif`,
-    description: 'An immersive WebGL/React application that simulates seasonal foliage transitions—spring blossoms, summer greens, fall red leaves, and winter snow—using instanced geometry, particle systems, and custom shading to create a stylized, animated environment.',
-    features: [
-      '🌸 Spring petal bloom powered by JSON-configured particle systems',
-      '🍁 Fall red and green leaf instancing with smooth transitions',
-      '❄️ Winter snow with customizable particle effects and glittery PBR material',
-      '🌿 Procedural instancing of leaves, flowers, and grass based on mesh face centers and normals',
-      '🎨 Custom materials: cell-shaded tree, watercolor post-process, and snow glitter/shimmer effects',
-      '⛅ Dynamic skybox and lighting that tween between seasons',
-    ],
-    stack: [ 'React', 'Reactylon', 'TypeScript', 'Babylon.js', 'Blender', 'GLSL', 'WebGL' ],
-  },
-  {
     title: 'GomitasAngel – 3D Candy E-commerce Simulator',
     mediaType: 'gif',
     src: `${basePath}/gifs/GomitasAngel.gif`,
     description: 'An interactive app designed to enhance online shopping by merging 3D visualizations with a user-friendly shopping cart and checkout experience. The goal was to create an immersive way for users to select and customize their candy boxes, giving them a more hands-on feel of the product before making a purchase.',
+    url: 'https://marcospimienta.github.io/GomitasAngel/',
     features: [
       '🎮 Interactive 3D Visuals',
       '🎨 Customizable Checkout',
@@ -37,6 +23,7 @@ const projects = [
     mediaType: 'gif',
     src: `${basePath}/gifs/3D-Sabelotodo.gif`,
     description: 'A fun and interactive game where players move around a board by answering trivia questions from various categories based on software technologies. The goal is to answer questions from all categories correctly and reach the end of the board to win the game.',
+    url: 'https://marcospimienta.github.io/sabelotodo/',
     features: [
       '🎮 Multiplayer gameplay',
       '❓ Trivia questions from multiple software development categories',
@@ -47,9 +34,10 @@ const projects = [
   },
   {
     title: 'Legal Process Lookup Tool – Civil Case Search App',
-    mediaType: 'video', // or 'gif' if you have a recording
+    mediaType: 'gif', // or 'gif' if you have a recording
     src: `${basePath}/gifs/LawsuitTracker.gif`,
     description: 'A web application designed to help individuals identify whether civil lawsuits have been filed against them by the organizers behind a misleading coding bootcamp. The tool aims to improve access to legal information for affected parties, especially in cases where official notifications have been poorly delivered or overlooked.',
+    url: 'https://marcospimienta.github.io/lawsuit-tracker/',
     features: [
       '🔍 Quick search by legal subject name',
       '🗂 Advanced filtering by filing and last activity dates',
@@ -60,7 +48,7 @@ const projects = [
   },
   {
     title: "UPC Product Weight Fetcher – Multi-API Batch Lookup Tool",
-    mediaType: "video",
+    mediaType: "gif",
     src: `${basePath}/gifs/UPCWeightFetcher.gif`,
     description: "A command-line Python tool designed to fetch and enrich product data such as shipping weight, title, brand, and more, using various APIs including RedCircle, UPCItemDB, and Go-UPC. The app is tailored for users who need to process bulk UPC or product data from Excel files and export enriched results with clear annotations.",
     features: [
@@ -95,7 +83,23 @@ const projects = [
       'Auth0',
       'Ant Design',
     ]
-  }
+  },
+  {
+    title: 'Anime Foliage – Seasonal Interactive 3D Scene',
+    mediaType: 'gif', // or 'gif' if you have a recording
+    src: `${basePath}/gifs/AnimeFoliage.gif`,
+    url: 'https://marcospimienta.github.io/anime-foliage/',
+    description: 'An immersive WebGL/React application that simulates seasonal foliage transitions—spring blossoms, summer greens, fall red leaves, and winter snow—using instanced geometry, particle systems, and custom shading to create a stylized, animated environment.',
+    features: [
+      '🌸 Spring petal bloom powered by JSON-configured particle systems',
+      '🍁 Fall red and green leaf instancing with smooth transitions',
+      '❄️ Winter snow with customizable particle effects and glittery PBR material',
+      '🌿 Procedural instancing of leaves, flowers, and grass based on mesh face centers and normals',
+      '🎨 Custom materials: cell-shaded tree, watercolor post-process, and snow glitter/shimmer effects',
+      '⛅ Dynamic skybox and lighting that tween between seasons',
+    ],
+    stack: [ 'React', 'Reactylon', 'TypeScript', 'Babylon.js', 'Blender', 'GLSL', 'WebGL' ],
+  },
 ];
 
 const WorksPanel: React.FC = () => {
@@ -106,7 +110,6 @@ const WorksPanel: React.FC = () => {
       flexDirection: 'column',
       gap: '1.5em',
       maxHeight: 'calc(100vh - 6em)',
-      overflowY: 'auto',
       paddingRight: '0.5em',
     }}>
       <h2>Works</h2>
@@ -132,7 +135,19 @@ const WorksPanel: React.FC = () => {
           )}
 
           <p style={{ marginTop: '0.75em' }}>{project.description}</p>
-
+          {project.url && (
+            <p style={{ marginTop: '0.5em' }}>
+              <strong>Link:</strong>{' '}
+              <a
+                href={project.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: '#0066cc', textDecoration: 'underline' }}
+              >
+                View deployed version
+              </a>
+            </p>
+          )}
           <ul style={featureListStyle}>
             {project.features.map((feature, i) => (
               <li key={i}>{feature}</li>

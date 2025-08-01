@@ -61,7 +61,7 @@ const App: React.FC<{ havok: unknown }> = ({ havok }) => {
 
   return (
     <div style={{ position: 'relative', width: '100vw', height: '100vh' }}>
-      <div style={{ position: 'absolute', display: 'flex', flexDirection: 'column', right: '0.5em', width: '40%', height: '98%', border: '2px solid #ffffff', borderRadius: '0.5em' }}>
+      <div style={{ position: 'absolute', display: 'flex', flexDirection: 'column', right: '0.5em', width: '45%', height: '98%', border: '2px solid #ffffff', borderRadius: '0.5em' }}>
         <div
           style={{
             margin: '0.5em',
@@ -86,7 +86,7 @@ const App: React.FC<{ havok: unknown }> = ({ havok }) => {
             </button>
           ))}
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', marginLeft: '0.5em'}}>
+        <div style={{ display: 'flex', flexDirection: 'column', marginLeft: '0.5em', overflowY: 'auto'}}>
           {renderPanelContent()}
         </div>
       </div>
