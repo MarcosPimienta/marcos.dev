@@ -1,0 +1,122 @@
+.about-panel {
+  padding: 1rem 1.25rem;
+  max-width: 900px;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  font-family: inherit;
+  color: white; /* all text white */
+  line-height: 1.5;
+  min-height: 0;
+}
+
+.about-panel h1 {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  flex-shrink: 0;
+}
+
+.scroll-container {
+  overflow-y: auto;
+  flex-grow: 1;
+  padding-right: 0.5rem;
+  min-height: 0;
+}
+
+.section {
+  margin-bottom: 2rem;
+}
+
+.section-title {
+  font-size: 1.5rem;
+  margin-bottom: 0.75rem;
+  border-bottom: 2px solid rgba(255,255,255,0.2);
+  padding-bottom: 4px;
+  color: white;
+}
+
+.profile-container {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.avatar-placeholder {
+  min-width: 72px;
+  min-height: 72px;
+  border-radius: 50%;
+  background-color: rgba(240, 244, 248, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.paragraph {
+  margin: 0;
+  color: white;
+}
+
+.skills-grid {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.skill-column {
+  flex: 1 1 220px;
+  min-width: 180px;
+}
+
+.skill-header {
+  margin-bottom: 0.5rem;
+  font-size: 1.1rem;
+  color: white;
+}
+
+.skill-list {
+  padding-left: 1rem;
+  margin: 0;
+}
+
+.skill-item {
+  margin-bottom: 4px;
+  color: white;
+}
+
+.experience-entry {
+  margin-bottom: 1.5rem;
+}
+
+.exp-header {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px;
+  font-size: 1rem;
+}
+
+.exp-meta {
+  font-size: 0.85rem;
+  color: rgba(255,255,255,0.7);
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  margin-top: 2px;
+}
+
+.bullet-list {
+  margin-top: 6px;
+  padding-left: 1.2em;
+  list-style-type: disc;
+}
+
+.bullet-list li {
+  color: white;
+}
+
+.education-entry {
+  font-size: 1rem;
+  color: white;
+}
