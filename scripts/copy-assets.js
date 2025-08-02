@@ -10,6 +10,8 @@ async function copyAssets() {
     await fs.ensureDir(path.join(targetPath, 'meshes'));
     await fs.ensureDir(path.join(targetPath, 'textures'));
     await fs.ensureDir(path.join(targetPath, 'particlesettings'));
+    await fs.ensureDir(path.join(targetPath, 'css'));
+    await fs.ensureDir(path.join(targetPath, 'gifs'));
 
     // Copy meshes and textures
     await fs.copy(
@@ -24,6 +26,8 @@ async function copyAssets() {
       path.join(sourcePath, 'particlesettings'),
       path.join(targetPath, 'particlesettings')
     );
+    await fs.copy(path.join(sourcePath, 'css'), path.join(targetPath, 'css'));
+    await fs.copy(path.join(sourcePath, 'gifs'), path.join(targetPath, 'gifs'));
 
     console.log('Assets copied successfully');
   } catch (err) {
