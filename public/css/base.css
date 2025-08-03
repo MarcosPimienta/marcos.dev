@@ -7,7 +7,7 @@
   --muted: #555;
   --card-shadow: 0 2px 4px rgba(0,0,0,0.05);
   --radius-pill: 999px;
-  font-family: 'YourFont', system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 * {
@@ -19,20 +19,5 @@ body {
   color: var(--text);
   background: #f9fbfc;
   line-height: 1.4;
-}
-
-/* font-face (replace with your real font files) */
-@font-face {
-  font-family: 'YourFont';
-  src: url('/fonts/YourFont-Regular.woff2') format('woff2');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'YourFont';
-  src: url('/fonts/YourFont-Bold.woff2') format('woff2');
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
+  font-family: inherit;
 }

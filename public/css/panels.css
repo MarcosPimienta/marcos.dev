@@ -1,8 +1,13 @@
-@font-face {
-  font-family: 'Inter';
-  font-weight: 700;
-  src: url('/fonts/Inter-Bold.woff2') format('woff2');
-  font-display: swap;
+:root {
+  --bg: #fff;
+  --border: #ddd;
+  --radius: .5em;
+  --primary: #4cafef;
+  --text: #1f2937;
+  --muted: #555;
+  --card-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  --radius-pill: 999px;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 .panel-frame {
