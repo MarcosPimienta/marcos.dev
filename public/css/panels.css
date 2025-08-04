@@ -1,15 +1,3 @@
-:root {
-  --bg: #fff;
-  --border: #ddd;
-  --radius: .5em;
-  --primary: #4cafef;
-  --text: #1f2937;
-  --muted: #555;
-  --card-shadow: 0 2px 4px rgba(0,0,0,0.05);
-  --radius-pill: 999px;
-  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-}
-
 .panel-frame {
   position: absolute;
   top: 0.5em;
@@ -18,21 +6,30 @@
   flex-direction: column;
   width: 45%;
   max-height: calc(100vh - 1em);
+  background: rgba(0, 0, 0, 0.4);
+  border: 2px solid #ffffff;
+  border-radius: 0.5em;
   overflow: hidden;
   color: #fff;
   font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  backface-visibility: hidden;
 }
 
 .season-tabs {
   display: flex;
-  align-content: left;
+  align-items: center;
   gap: 8px;
-  padding: 0 0.5em;
+  padding: 0.5em;
   flex-wrap: wrap;
-  background: rgba(0, 0, 0, 0.65); /* 65% opacity */
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-radius: 0.5em;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.name-title {
+  font-weight: 700;
+  font-size: 1.25rem;
+  flex: 0 0 auto;
+  color: white;
+  white-space: nowrap;
 }
 
 .season-tab {
@@ -40,7 +37,7 @@
   border: none;
   padding: 6px 10px;
   font-weight: 700;
-  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: inherit;
   color: white;
   cursor: pointer;
   position: relative;
@@ -65,62 +62,105 @@
   border-radius: 1px;
 }
 
-.season-tab.selected {
-  position: relative;
-}
-
 .season-tab.selected::before {
   content: '';
   position: absolute;
-  left: 0; /* start at the left edge of the underline */
-  bottom: -2px; /* align vertically with the underline */
+  left: 0;
+  bottom: -2px;
   width: 10px;
   height: 10px;
   background: white;
   border-radius: 50%;
-  transform: translate(-50%, 50%); /* shift half-width left and drop it onto the underline */
-}
-
-.name-title {
-  font-size: 1.2rem;
-  font-weight: 600;
-  margin: 0.5em 0;
-  color: #fff;
-  padding-right: 20%;
+  transform: translate(-50%, 50%);
 }
 
 .panel-content {
   display: flex;
   flex-direction: column;
+  margin-left: 0.5em;
   overflow-y: auto;
   flex: 1;
   min-height: 0;
+  padding: 0.75em 0.5em;
 }
 
+/* ===== Mobile-Only Overrides ===== */
 @media (max-width: 1000px) {
-  .panel-frame {
+  /* Top bar */
+  .mobile-topbar {
     position: fixed;
-    top: 0.5em;
-    bottom: 0;
-    width: 60vw;              /* 60% of viewport width */
-    max-width: 60%;
-    min-width: 300px;         /* optional floor so it doesn’t get too narrow on small phones */
-    border-radius: 0.5em;
-    padding-top: 0.5em;
-    padding-bottom: env(safe-area-inset-bottom);
-    max-height: none;
+    top: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    padding: 6px 12px;
+    gap: 12px;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    z-index: 30;
   }
 
-  .season-tabs {
-    gap: 6px;
-    padding: 0.5em;
-  }
-
-  .season-tab {
-    flex: 1 1 auto;
-    text-align: center;
+  /* Reuse name-title within topbar if needed */
+  .mobile-topbar .name-title {
     font-size: 1.1rem;
-    padding: 10px 12px;
   }
 
+  /* Season tabs inline in topbar */
+  .mobile-topbar .season-tabs {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    flex: 1;
+  }
+
+  /* Hide desktop panel-frame */
+  .panel-frame {
+    display: none;
+  }
+
+  /* Bottom drawer panel */
+  .mobile-bottom-panel {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    overflow: hidden;
+    transition: max-height 0.25s ease;
+    max-height: 30px; /* collapsed state */
+    z-index: 25;
+  }
+
+  .mobile-bottom-panel.expanded {
+    max-height: 60vh; /* expanded state */
+  }
+
+  .mobile-bottom-panel .expand-handle {
+    align-self: center;
+    width: 60px;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 3px;
+    margin: 6px auto;
+    cursor: pointer;
+  }
+
+  .mobile-bottom-panel .panel-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 6px 10px;
+    display: block;
+  }
+
+  /* Make each section full width in the drawer */
+  .mobile-bottom-panel .section {
+    width: 100%;
+  }
 }
