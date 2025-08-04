@@ -17,11 +17,16 @@
 
 .season-tabs {
   display: flex;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 0.5em;
   align-items: center;
   gap: 8px;
+  background: 0, 0, 0, 65;
   padding: 0.5em;
   flex-wrap: wrap;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  justify-content: space-between;
 }
 
 .name-title {
@@ -162,5 +167,13 @@
   /* Make each section full width in the drawer */
   .mobile-bottom-panel .section {
     width: 100%;
+  }
+}
+
+@media (min-width: 1001px) {
+  .panel-frame {
+    background: none !important;
+    border: none !important;
+    /* keep border if you still want that outline look */
   }
 }
