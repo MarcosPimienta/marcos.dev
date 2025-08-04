@@ -5,6 +5,11 @@
   gap: 1em;
   color: white;
   font-family: inherit;
+  background: rgba(0, 0, 0, 0.65); /* 65% opacity */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 2px solid #ffffff;
+  border-radius: 0.5em;
 }
 
 .contact-panel h2 {
