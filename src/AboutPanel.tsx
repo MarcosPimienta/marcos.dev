@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import Section from './Section';
 
 const languagesAndTools = [
   'C/C++',
@@ -109,37 +110,60 @@ const experience: ExperienceEntry[] = [
 ];
 
 const AboutPanel: React.FC = () => {
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({
+    profile: true,
+    skills: false,
+    experience: false,
+    education: false,
+  });
+
+  const toggleSection = (key: string) =>
+    setOpenSections(prev => ({ ...prev, [key]: !prev[key] }));
+
   return (
     <div className="about-panel">
       <div className="scroll-container scrollable-custom">
-        {/* Profile */}
-        <section className="section">
-          <h2 className="section-title">Profile</h2>
+        <Section
+          id="profile"
+          title="Profile"
+          isOpen={openSections.profile}
+          onToggle={toggleSection}
+          teaser={
+            <div className="paragraph">
+              Full-Stack Developer & 3D Web Enthusiast bringing together innovation and efficiency.
+            </div>
+          }
+        >
           <div className="profile-container">
-            {/* <div className="avatar-placeholder">👤</div> */}
             <div style={{ flex: 1 }}>
               <p className="paragraph">
-                Software Engineer with a proven track record of creating scalable, efficient solutions
-                across web and cross-platform applications. Deeply experienced in full-stack development,
-                real-time 3D rendering, and building performance-sensitive systems. Comfortable bridging
-                design and engineering—holding a BSc in Media Arts & Animation—bringing both technical rigor
-                and a refined aesthetic sensibility to product-focused software. Skilled at architecting
-                systems for reliability, observability, and smooth user experiences, from cloud deployments
-                to interactive graphics.
+                Full-Stack Developer & 3D Web Enthusiast Bringing together innovation and
+                efficiency to craft high-impact web applications, immersive 3D experiences, and
+                scalable digital solutions.
               </p>
             </div>
           </div>
-        </section>
+        </Section>
 
-        {/* Skills */}
-        <section className="section">
-          <h2 className="section-title">Skills</h2>
+        <Section
+          id="skills"
+          title="Skills"
+          isOpen={openSections.skills}
+          onToggle={toggleSection}
+          teaser={
+            <div>
+              Languages, frameworks, and core computer science concepts.
+            </div>
+          }
+        >
           <div className="skills-grid">
             <div className="skill-column">
               <h3 className="skill-header">Languages & Tools</h3>
               <ul className="skill-list">
                 {languagesAndTools.map(s => (
-                  <li key={s} className="skill-item">{s}</li>
+                  <li key={s} className="skill-item">
+                    {s}
+                  </li>
                 ))}
               </ul>
             </div>
@@ -147,7 +171,9 @@ const AboutPanel: React.FC = () => {
               <h3 className="skill-header">Libraries & Frameworks</h3>
               <ul className="skill-list">
                 {librariesAndFrameworks.map(s => (
-                  <li key={s} className="skill-item">{s}</li>
+                  <li key={s} className="skill-item">
+                    {s}
+                  </li>
                 ))}
               </ul>
             </div>
@@ -155,16 +181,22 @@ const AboutPanel: React.FC = () => {
               <h3 className="skill-header">Core CS Concepts</h3>
               <ul className="skill-list">
                 {coreCSConcepts.map(s => (
-                  <li key={s} className="skill-item">{s}</li>
+                  <li key={s} className="skill-item">
+                    {s}
+                  </li>
                 ))}
               </ul>
             </div>
           </div>
-        </section>
+        </Section>
 
-        {/* Experience */}
-        <section className="section">
-          <h2 className="section-title">Professional Experience</h2>
+        <Section
+          id="experience"
+          title="Professional Experience"
+          isOpen={openSections.experience}
+          onToggle={toggleSection}
+          teaser={<div>Work history across roles and domains.</div>}
+        >
           {experience.map(exp => (
             <div key={`${exp.company}-${exp.title}`} className="experience-entry">
               <div className="exp-header">
@@ -184,17 +216,21 @@ const AboutPanel: React.FC = () => {
               </ul>
             </div>
           ))}
-        </section>
+        </Section>
 
-        {/* Education */}
-        <section className="section">
-          <h2 className="section-title">Education</h2>
+        <Section
+          id="education"
+          title="Education"
+          isOpen={openSections.education}
+          onToggle={toggleSection}
+          teaser={<div>Academic background.</div>}
+        >
           <div className="education-entry">
             <div>
               <strong>Media Arts & Animation BSc</strong>, The Art Institute of Fort Lauderdale
             </div>
           </div>
-        </section>
+        </Section>
       </div>
     </div>
   );

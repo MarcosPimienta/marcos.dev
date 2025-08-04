@@ -60,7 +60,7 @@
 
 /* Expanded content */
 .section-content {
-  padding: 0.75em 1em;
+  padding: 0.75em;
   border-left: 3px solid var(--primary); /* retain accent */
   background: transparent; /* no background */
   margin-top: 0.5em;

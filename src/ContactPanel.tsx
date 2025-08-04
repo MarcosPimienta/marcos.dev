@@ -95,7 +95,6 @@ const ContactPanel: React.FC = () => {
 
   return (
     <div className="contact-panel">
-      <h2>Contact</h2>
       <p>If you have any questions or just want to connect, please do not hesitate and reach out!.</p>
       <div className="contact-grid">
         {contacts.map(c => (
