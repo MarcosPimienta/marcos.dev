@@ -25,7 +25,7 @@ const ContactPanel: React.FC = () => {
     },
     {
       name: 'Phone',
-      display: '7542003163',
+      display: '+1 754 200 3163',
       href: 'tel:+17542003163',
       icon: (
         <svg

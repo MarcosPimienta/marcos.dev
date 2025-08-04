@@ -111,8 +111,7 @@ const experience: ExperienceEntry[] = [
 const AboutPanel: React.FC = () => {
   return (
     <div className="about-panel">
-      <h1>MARCOS PIMIENTA</h1>
-      <div className="scroll-container">
+      <div className="scroll-container scrollable-custom">
         {/* Profile */}
         <section className="section">
           <h2 className="section-title">Profile</h2>

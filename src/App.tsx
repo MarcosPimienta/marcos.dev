@@ -63,6 +63,7 @@ const App: React.FC<{ havok: unknown }> = ({ havok }) => {
     <div style={{ position: 'relative', width: '100vw', height: '100vh' }}>
       <div className="panel-frame">
         <div className="season-tabs">
+          <div className="name-title">Marcos Pimienta</div>
           {seasons.map(s => (
             <button
               key={s}
@@ -74,7 +75,7 @@ const App: React.FC<{ havok: unknown }> = ({ havok }) => {
             </button>
           ))}
         </div>
-        <div className="panel-content">{renderPanelContent()}</div>
+        <div className="panel-content scrollable-custom">{renderPanelContent()}</div>
       </div>
 
       <Engine antialias>
