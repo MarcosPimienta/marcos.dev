@@ -16,6 +16,12 @@ const languagesAndTools = [
   'Docker',
   'Kubernetes',
   'GCP',
+  'Unity',
+  'Unreal Engine',
+  'Blender',
+  '3D Studio Max',
+  'Maya',
+  'Adobe Creative Suite',
 ];
 
 const librariesAndFrameworks = [
@@ -107,6 +113,69 @@ const experience: ExperienceEntry[] = [
       'Leveraged React.js and Vue.js to build interactive, maintainable web applications.',
     ],
   },
+  {
+    title: 'Software Engineer',
+    company: 'Tangible Design',
+    location: 'Medellin, Colombia',
+    period: 'September 2019 – November 2019',
+    bullets: [
+      'Programmed and enhanced features in existing AR/VR interior design apps, implementing interactive elements and refining user workflows for more intuitive spatial visualization.',
+      'Collaborated with designers and 3D artists to integrate high-quality models and textures, optimizing performance for mobile and standalone VR platforms.',
+      'Maintained AR/VR applications by upgrading frameworks/SDKs, resolving integration and compatibility issues, and preserving stable performance across target devices.',
+      'Produced and organized clear technical documentation, including architecture overviews, integration guides, and update/onboarding procedures for developers and stakeholder.',
+    ],
+  },
+  {
+    title: 'Project Manager & Blockchain Consultant',
+    company: 'Hexocoin',
+    location: 'Medellin, Colombia',
+    period: 'Octuber 2017 – September 2019',
+    bullets: [
+      'Oversaw deployment, tuning, and maintenance of ASIC/GPU rigs, managing cooling, power, uptime, firmware updates, and physical/network security.',
+      'Negotiated and managed power procurement and usage, implemented load balancing and efficiency improvements, and forecasted capacity to maximize hash rate per watt and ROI.',
+      'Advised clients on blockchain architecture, protocol selection, smart contracts, tokenomics, and governance, conducting due diligence to align implementations with regulatory and business objectives.',
+    ],
+  },
+  {
+    title: 'Game Developer & 3D/2D Animator',
+    company: 'Linea de Conexión',
+    location: 'Medellin, Colombia',
+    period: 'January 2016 – December 2017',
+    bullets: [
+      'Programmed and enhanced features in existing AR/VR interior design apps, implementing interactive elements and refining user workflows for more intuitive spatial visualization.',
+      'Maintained AR/VR applications by upgrading frameworks/SDKs, resolving integration and compatibility issues, and preserving stable performance across target devices.',
+      'Produced and organized clear technical documentation, including architecture overviews, integration guides, and update/onboarding procedures for developers and stakeholder.',
+      'Developed 3D models, textures, animations, and visual effects for games and interactive media using Blender, 3D Studio Max, and Maya.',
+      'Collaborated with designers and developers to integrate assets into Unity and Unreal Engine, optimizing performance and ensuring visual fidelity across platforms.',
+      'Created 2D animations and motion graphics for promotional materials, UI elements, and in-game effects using Adobe After Effects and Photoshop.',
+      'Participated in brainstorming sessions to conceptualize game mechanics, storylines, and user experiences, contributing to the overall creative direction of projects.',
+    ],
+  },
+  {
+    title: 'Animation Instructor',
+    company: 'Academia Superior de Artes',
+    location: 'Medellin, Colombia',
+    period: 'July 2014 – June 2017',
+    bullets: [
+      'Developed and delivered curriculum for 2D/3D animation and digital media using Photoshop, Illustrator, Flash, After Effects, Premiere, and Maya, blending theory with hands-on projects.',
+      'Mentored and evaluated student work, giving actionable feedback to improve technical execution, storytelling, and portfolio readiness.',
+      'Maintained and configured lab environments and software installations to ensure reliable access to animation tools during instruction.',
+      'Coordinated student showcases and cross-disciplinary projects to simulate real-world production workflows and support career preparation.',
+    ],
+  },
+  {
+    title: '3D Animator & Motion Designer',
+    company: 'Moviola',
+    location: 'Los Angeles, California',
+    period: 'September 2013 – April 2014',
+    bullets: [
+      'Created and refined 3D character models with accurate topology optimized for animation.',
+      'Rigged characters and props in NewTek LightWave for realistic and responsive movement.',
+      'Cleaned and polished motion capture data in Autodesk MotionBuilder to achieve fluid, lifelike animations.',
+      'Developed cinematic scenes in Luxology Modo, optimizing lighting, materials, and camera work for final renders.',
+      'Composited and edited animated sequences in Adobe After Effects and Premiere, ensuring seamless integration of 3D and live-action footage.'
+    ],
+  }
 ];
 
 const AboutPanel: React.FC = () => {
