@@ -25,7 +25,7 @@ const languagesAndTools = [
 ];
 
 const librariesAndFrameworks = [
-  'Next.js'
+  'Next.js',
   'Express.js',
   'Flask',
   'React',
