@@ -25,6 +25,7 @@ const languagesAndTools = [
 ];
 
 const librariesAndFrameworks = [
+  'Next.js'
   'Express.js',
   'Flask',
   'React',
@@ -32,6 +33,8 @@ const librariesAndFrameworks = [
   'Babylon.js',
   'Three.js',
   'Bootstrap',
+  'PyQt',
+  'PySide',
   'WebGL',
   'MySQL',
   'PostgreSQL',
@@ -58,15 +61,15 @@ interface ExperienceEntry {
 
 const experience: ExperienceEntry[] = [
   {
-    title: 'Senior Software Engineer',
-    company: 'AgroInnova',
+    title: 'Software Engineer',
+    company: 'Free Lancing',
     location: 'Miami, Florida',
     period: 'July 2023 – Present',
     bullets: [
-      'Architected & developed a scalable web application for managing agricultural projects and investments.',
-      'Integrated real-time weather data from WeatherAPI (temperature, humidity, etc.) to optimize farm productivity.',
-      'Implemented financial analytics dashboards to track investments, expenses, and revenue across projects.',
-      'Developed interactive 3D mapping features, allowing users to define and manage farm plots.',
+      'Developed interactive dashboards and customer-facing interfaces for web platforms, leveraging React, TypeScript, and modern state management.',
+      'Built and optimized 2D/3D data visualizations using Three.js, Babylon.js and WebGL, including rendering of meshes, and geospatial layers.',
+      'Designed and consumed RESTful APIs to manage real-time data synchronization between front-end interfaces and back-end services.',
+      'Explored AR/VR integrations for immersive web-based visualization projects, extending 3D content into interactive environments',
     ],
   },
   {
