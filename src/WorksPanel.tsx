@@ -18,6 +18,7 @@ const projects = [
       "📊 Insight Dashboard: Glassmorphism UI panel with regional statistics and active alerts",
       "💾 Historical Tracking: SQLite storage for analyzing weather trends",
     ],
+    url: "https://amantti-weather-service.vercel.app/",
     stack: [
       "Vue 3",
       "CesiumJS",
