@@ -6,6 +6,37 @@ const basePath = getBasePath();
 
 const projects = [
   {
+    title: "React Holographic Cube",
+    mediaType: "gif",
+    src: `${basePath}/gifs/HoloCube.gif`, // Placeholder
+    description:
+      "A high-performance, cyberpunk-styled 3D spinning cube for React. Features physics-based friction, holographic visuals, and a floating drift animation when idle. Now supports dynamic colors per item, custom physics, full style overrides, and configurable environments!",
+    url: "https://www.npmjs.com/package/react-holographic-cube", // Placeholder
+    features: [
+      "🎨 Dynamic Item Colors",
+      "🕹️ Physics Control",
+      "🏗️ Configurable Environment",
+      "🖼️ Transparent Background",
+      "⚛️ React Component Integration",
+    ],
+    stack: ["React", "Three.js", "TypeScript", "Npm"],
+  },
+  {
+    title: "Hexxo Bingo – Bingo Live Event Configurator",
+    mediaType: "gif",
+    src: `${basePath}/gifs/NumbersBoardDisplay.gif`,
+    description:
+      "An Electron-based platform designed to professionalize Bingo game hosting. It separates concerns between the Host (operator), Director (flow control), and Audience (projector/TV displays). The app manages the entire lifecycle of an event: from configuring asset packages (.hexxo files) to running the game logic, validating winning cards, and handling tie-breaks.",
+    features: [
+      "🎛️ Multi-Window Architecture",
+      "📜 Playbook Flow Engine",
+      "📦 .hexxo Package System",
+      "🔍 Automated Verification",
+      "🎰 Integrated Interactive Tools",
+    ],
+    stack: ["Electron", "React", "TypeScript", "Node.js", "Vite", "CSS"],
+  },
+  {
     title: "Hexxo Bingo – Bingo Live Event Configurator",
     mediaType: "gif",
     src: `${basePath}/gifs/NumbersBoardDisplay.gif`,
