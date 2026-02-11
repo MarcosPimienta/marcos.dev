@@ -6,6 +6,28 @@ const basePath = getBasePath();
 
 const projects = [
   {
+    title: "Amantti Weather Insight – 3D Geospatial Weather Monitoring",
+    mediaType: "image",
+    src: `${basePath}/gifs/WeatherDisplayApp.gif`,
+    description:
+      "A full-stack visualization platform for real-time weather monitoring of coffee-sourcing regions in Antioquia. The system combines a robust Python microservice for data analysis with an immersive CesiumJS 3D frontend to render rainfall, humidity, and cloud cover directly on the terrain.",
+    features: [
+      "🌍 3D Interactive Map: CesiumJS & Vue 3 with switchable layers and town-level zoom",
+      "⛈️ Real-Time Visualization: Dynamic overlays for Rain, Humidity, and Cloud Cover",
+      "🚀 High-Performance Backend: FastAPI + Asyncio service for anomaly detection",
+      "📊 Insight Dashboard: Glassmorphism UI panel with regional statistics and active alerts",
+      "💾 Historical Tracking: SQLite storage for analyzing weather trends",
+    ],
+    stack: [
+      "Vue 3",
+      "CesiumJS",
+      "TypeScript",
+      "Python",
+      "FastAPI",
+      "SQLAlchemy",
+    ],
+  },
+  {
     title: "React Holographic Cube",
     mediaType: "gif",
     src: `${basePath}/gifs/HoloCube.gif`, // Placeholder
