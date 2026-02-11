@@ -37,21 +37,6 @@ const projects = [
     stack: ["Electron", "React", "TypeScript", "Node.js", "Vite", "CSS"],
   },
   {
-    title: "Hexxo Bingo – Bingo Live Event Configurator",
-    mediaType: "gif",
-    src: `${basePath}/gifs/NumbersBoardDisplay.gif`,
-    description:
-      "An Electron-based platform designed to professionalize Bingo game hosting. It separates concerns between the Host (operator), Director (flow control), and Audience (projector/TV displays). The app manages the entire lifecycle of an event: from configuring asset packages (.hexxo files) to running the game logic, validating winning cards, and handling tie-breaks.",
-    features: [
-      "🎛️ Multi-Window Architecture",
-      "📜 Playbook Flow Engine",
-      "📦 .hexxo Package System",
-      "🔍 Automated Verification",
-      "🎰 Integrated Interactive Tools",
-    ],
-    stack: ["Electron", "React", "TypeScript", "Node.js", "Vite", "CSS"],
-  },
-  {
     title: "GomitasAngel – 3D Candy E-commerce Simulator",
     mediaType: "gif",
     src: `${basePath}/gifs/GomitasAngel.gif`,
