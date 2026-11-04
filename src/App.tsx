@@ -5,7 +5,6 @@ import { Engine } from 'reactylon/web';
 import { Scene } from 'reactylon';
 import { HavokPlugin } from '@babylonjs/core/Physics/v2/Plugins/havokPlugin';
 import '@babylonjs/loaders';
-import '@babylonjs/inspector';
 import { KeyboardEventTypes } from '@babylonjs/core/Events/keyboardEvents';
 import type { Scene as BjsScene, ParticleSystem } from '@babylonjs/core';
 import ServicesPanel from './ServicesPanel';
@@ -138,7 +137,10 @@ const App: React.FC<{ havok: unknown }> = ({ havok }) => {
                 if (scene.debugLayer.isVisible()) {
                   scene.debugLayer.hide();
                 } else {
-                  scene.debugLayer.show({ embedMode: true, overlay: true });
+                  // Inspector is large; load it only when first requested.
+                  import('@babylonjs/inspector').then(() =>
+                    scene.debugLayer.show({ embedMode: true, overlay: true })
+                  );
                 }
               }
             });

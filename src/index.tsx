@@ -1,6 +1,4 @@
 import ReactDOM from 'react-dom/client';
-import '@babylonjs/inspector';      // registers BABYLON.Inspector
-import '@babylonjs/node-editor';    // registers BABYLON.NodeEditor
 import HavokPhysics from '@babylonjs/havok';
 import App from './App';
 import './index.css';
