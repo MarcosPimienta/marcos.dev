@@ -181,7 +181,7 @@ export const AnimationCtrl: React.FC<AnimationCtrlProps> = ({
     // preload & assign skyboxes
     const urlFrom = `${getBasePath()}/textures/skybox/sky_${from}`
     const urlTo   = `${getBasePath()}/textures/skybox/sky_${to}`
-    const faces   = ['_px.png','_py.png','_pz.png','_nx.png','_ny.png','_nz.png']
+    const faces   = ['_px.jpg','_py.jpg','_pz.jpg','_nx.jpg','_ny.jpg','_nz.jpg']
     skyMat1.reflectionTexture = new CubeTexture(urlFrom, scene, faces)
     skyMat1.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE
     skyMat1.alpha = 1

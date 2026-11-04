@@ -203,7 +203,7 @@ export const Content: React.FC<ContentProps & {
     const { sky: skybox2, mat: skyMat2 } = makeSky("skyBox2", 0);
 
     // 2) assign each its cube texture *before* you set coordinatesMode
-    const faces = ["_px.png","_py.png","_pz.png","_nx.png","_ny.png","_nz.png"];
+    const faces = ["_px.jpg","_py.jpg","_pz.jpg","_nx.jpg","_ny.jpg","_nz.jpg"];
 
     skyMat1.reflectionTexture = new CubeTexture(
       `${basePath}/textures/skybox/sky_spring`, scene, faces
@@ -230,12 +230,12 @@ export const Content: React.FC<ContentProps & {
 
     // 3) Base snow color/texture
     snowGlitterMat.albedoColor = Color3.FromHexString('#C0EAFF').toLinearSpace();
-    const snowAlbedoTex = new Texture(`${basePath}/textures/sand_diffuse.png`, scene);
+    const snowAlbedoTex = new Texture(`${basePath}/textures/sand_diffuse.jpg`, scene);
     snowAlbedoTex.uScale = 25;
     snowAlbedoTex.vScale = 25;
     snowGlitterMat.albedoTexture = snowAlbedoTex;
 
-    const snowNormalTex = new Texture(`${basePath}/textures/sand_normal.png`, scene);
+    const snowNormalTex = new Texture(`${basePath}/textures/sand_normal.jpg`, scene);
     snowNormalTex.uScale = 25;
     snowNormalTex.vScale = 25;
     snowGlitterMat.bumpTexture = snowNormalTex;
@@ -262,7 +262,7 @@ export const Content: React.FC<ContentProps & {
       {
         width: 15,             // Width of ground
         height: 15,            // Height of ground
-        subdivisions: 1000,     // More subdivisions = smoother
+        subdivisions: 500,      // 500 keeps the ripples visible; 1000 (4x the vertices) looked the same
         minHeight: 0,          // Lowest height
         maxHeight: 0.15          // Highest height
       },
@@ -276,13 +276,13 @@ export const Content: React.FC<ContentProps & {
     const sandPBRMat = new PBRMaterial("sandPBRMat", scene);
 
     // Albedo (diffuse) texture for sand color
-    const albedoTex = new Texture(`${basePath}/textures/sand_diffuse.png`, scene);
+    const albedoTex = new Texture(`${basePath}/textures/sand_diffuse.jpg`, scene);
     albedoTex.uScale = 10; // Tile
     albedoTex.vScale = 10;
     sandPBRMat.albedoTexture = albedoTex;
 
     // Macro height details
-    const normalTex = new Texture(`${basePath}/textures/sand_normal.png`, scene);
+    const normalTex = new Texture(`${basePath}/textures/sand_normal.jpg`, scene);
     normalTex.uScale = 10;
     normalTex.vScale = 10;
     sandPBRMat.bumpTexture = normalTex;

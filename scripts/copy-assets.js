@@ -1,3 +1,5 @@
+// Copy every static asset in public/ into dist/ after the webpack build.
+// index.html is skipped: HtmlWebpackPlugin generates dist/index.html from it.
 const fs = require('fs-extra');
 const path = require('path');
 
@@ -6,29 +8,9 @@ const targetPath = path.join(__dirname, '../dist');
 
 async function copyAssets() {
   try {
-    // Ensure meshes and textures directories exist
-    await fs.ensureDir(path.join(targetPath, 'meshes'));
-    await fs.ensureDir(path.join(targetPath, 'textures'));
-    await fs.ensureDir(path.join(targetPath, 'particlesettings'));
-    await fs.ensureDir(path.join(targetPath, 'css'));
-    await fs.ensureDir(path.join(targetPath, 'gifs'));
-
-    // Copy meshes and textures
-    await fs.copy(
-      path.join(sourcePath, 'meshes'),
-      path.join(targetPath, 'meshes')
-    );
-    await fs.copy(
-      path.join(sourcePath, 'textures'),
-      path.join(targetPath, 'textures')
-    );
-    await fs.copy(
-      path.join(sourcePath, 'particlesettings'),
-      path.join(targetPath, 'particlesettings')
-    );
-    await fs.copy(path.join(sourcePath, 'css'), path.join(targetPath, 'css'));
-    await fs.copy(path.join(sourcePath, 'gifs'), path.join(targetPath, 'gifs'));
-
+    await fs.copy(sourcePath, targetPath, {
+      filter: src => path.relative(sourcePath, src) !== 'index.html',
+    });
     console.log('Assets copied successfully');
   } catch (err) {
     console.error('Error copying assets:', err);
