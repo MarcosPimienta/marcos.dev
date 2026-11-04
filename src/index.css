@@ -18,3 +18,15 @@ body {
   height: 100%;
   display: block;
 }
+
+/* Phones: the page scrolls natively over a fixed 3D scene (see MobileLayout). */
+@media (max-width: 1000px) {
+  html,
+  body,
+  #root {
+    height: auto;
+    min-height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+}

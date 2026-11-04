@@ -9,19 +9,20 @@ export interface SectionProps {
   children: React.ReactNode;
 }
 
+// Collapsible section. The toggle is a real <button> so it works with keyboard and screen readers.
 const Section: React.FC<SectionProps> = ({ id, title, teaser, isOpen, onToggle, children }) => {
   return (
     <div className="section">
-      <div
+      <button
+        type="button"
         className="section-toggle"
         onClick={() => onToggle(id)}
         aria-expanded={isOpen}
-        role="button"
         aria-controls={`${id}-content`}
       >
-        <div>{title}</div>
-        <div>{isOpen ? '−' : '+'}</div>
-      </div>
+        <span>{title}</span>
+        <span aria-hidden="true">{isOpen ? '−' : '+'}</span>
+      </button>
       {!isOpen && teaser && <div className="section-teaser">{teaser}</div>}
       {isOpen && (
         <div className="section-content" id={`${id}-content`}>

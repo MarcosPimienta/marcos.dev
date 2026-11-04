@@ -1,40 +1,43 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react';
-import {
-  Scene,
-  ParticleHelper,
-  ParticleSystem,
-  Vector3,
-  Color3,
-  Color4,
-  PostProcess,
-  Effect,
-  Texture,
-  Mesh,
-  InstancedMesh,
-  AbstractMesh,
-  StandardMaterial,
-  CubeTexture,
-  MeshBuilder,
-  ArcRotateCamera,
-  PBRMaterial,
-  Tools,
-  IParticleSystem
-} from '@babylonjs/core';
-import { CustomMaterial, CellMaterial } from '@babylonjs/materials';
+import type { Scene } from '@babylonjs/core/scene';
+import { ParticleHelper } from '@babylonjs/core/Particles/particleHelper';
+import type { ParticleSystem } from '@babylonjs/core/Particles/particleSystem';
+import '@babylonjs/core/Particles/particleSystemComponent';
+import { Vector3 } from '@babylonjs/core/Maths/math.vector';
+import { Color3 } from '@babylonjs/core/Maths/math.color';
+import { PostProcess } from '@babylonjs/core/PostProcesses/postProcess';
+import { Effect } from '@babylonjs/core/Materials/effect';
+import { Texture } from '@babylonjs/core/Materials/Textures/texture';
+import { CubeTexture } from '@babylonjs/core/Materials/Textures/cubeTexture';
+import { Mesh } from '@babylonjs/core/Meshes/mesh';
+import type { InstancedMesh } from '@babylonjs/core/Meshes/instancedMesh';
+import type { AbstractMesh } from '@babylonjs/core/Meshes/abstractMesh';
+import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode';
-import { useScene, useModel, register } from 'reactylon';
+import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial';
+import { PBRMaterial } from '@babylonjs/core/Materials/PBR/pbrMaterial';
+import { ArcRotateCamera } from '@babylonjs/core/Cameras/arcRotateCamera';
+import { Camera } from '@babylonjs/core/Cameras/camera';
+import { Tools } from '@babylonjs/core/Misc/tools';
 import { SSAO2RenderingPipeline } from '@babylonjs/core/PostProcesses/RenderPipeline/Pipelines/ssao2RenderingPipeline';
-import '@babylonjs/loaders';
+// Scene components SSAO2 relies on (registered as side effects; the full-package import used to pull them in).
+import '@babylonjs/core/PostProcesses/RenderPipeline/postProcessRenderPipelineManagerSceneComponent';
+import '@babylonjs/core/Rendering/geometryBufferRendererSceneComponent';
+import '@babylonjs/core/Rendering/prePassRendererSceneComponent';
+import '@babylonjs/core/Rendering/depthRendererSceneComponent';
+import { CustomMaterial } from '@babylonjs/materials/custom/customMaterial';
+import { useScene, useModel } from 'reactylon';
+import '@babylonjs/loaders/glTF/2.0';
 import { getBasePath } from './config';
 
-export enum Season {
-  Spring = 'spring',
-  Summer = 'summer',
-  Fall   = 'fall',
-  Winter = 'winter',
-};
+import { Season } from './season';
+export { Season };
 interface ContentProps {
   season: Season;
+  // Phone layout: portrait framing, no touch orbit (swipes scroll the page), lighter effects.
+  isMobile?: boolean;
+  // Called once the scene is built and ready to render (used to fade out the loading poster).
+  onReady?: () => void;
 };
 
 const BUSH_POSITIONS: Vector3[] = [
@@ -60,7 +63,7 @@ export const Content: React.FC<ContentProps & {
   onGreenPS?: (ps: ParticleSystem|null) => void,
   onRedPS?: (ps: ParticleSystem|null) => void,
   onSnowPS?: (ps: ParticleSystem|null) => void,
-}> = ({ season, onPetalPS, onGreenPS, onRedPS, onSnowPS }) => {
+}> = ({ season, isMobile = false, onReady, onPetalPS, onGreenPS, onRedPS, onSnowPS }) => {
   const [petalPS,  setPetalPS]  = useState<ParticleSystem|null>(null);
   const [greenPS,  setGreenPS]  = useState<ParticleSystem|null>(null);
   const [redPS,    setRedPS]    = useState<ParticleSystem|null>(null);
@@ -107,6 +110,7 @@ export const Content: React.FC<ContentProps & {
     )) as ParticleSystem;
 
     ps.emitter = emitter;
+    if (isMobile) ps.emitRate *= 0.5;
     if (season === activeIn) ps.start();
     else ps.stop();
     return ps;
@@ -164,10 +168,26 @@ export const Content: React.FC<ContentProps & {
     camera.allowUpsideDown = false;
     camera.panningSensibility = 0;                // ❌ Disable panning
 
-    camera.attachControl(undefined, true);
+    if (isMobile) {
+      // Portrait screens: fix the horizontal field of view so the whole tree fits the width,
+      // and aim lower so the tree sits in the upper part of the screen above the text.
+      camera.fovMode = Camera.FOVMODE_HORIZONTAL_FIXED;
+      camera.fov = 1.05;
+      camera.radius = 7;
+      camera.target = new Vector3(0, 0.9, 0);
+      // No touch orbit on phones: a swipe should scroll the page. Turn slowly instead.
+      camera.useAutoRotationBehavior = true;
+      if (camera.autoRotationBehavior) {
+        camera.autoRotationBehavior.idleRotationSpeed = 0.06;
+        camera.autoRotationBehavior.idleRotationWaitTime = 0;
+        camera.autoRotationBehavior.idleRotationSpinupTime = 0;
+      }
+    } else {
+      camera.attachControl(undefined, true);
+    }
     // ─── Defer SSAO until scene is fully initialized ─────────────────────────
       try {
-        if (scene.activeCamera) {
+        if (scene.activeCamera && !isMobile) {
           new SSAO2RenderingPipeline(
             "ssao",
             scene,
@@ -176,7 +196,7 @@ export const Content: React.FC<ContentProps & {
           );
         }
       } catch (e) {
-        console.warn("SSAO pipeline failed to initialize:", e);
+        console.warn("SSAO pipeline failed to initialize:", (e as Error)?.message ?? e);
       }
     scene.activeCamera = camera;
 
@@ -298,19 +318,7 @@ export const Content: React.FC<ContentProps & {
     const treeRoot = treeMeshes[0];
     treeRoot.parent = root;
 
-    const cellMat = new CellMaterial('treeCell', scene);
-    const origMat = treeRoot.material!;
-    if (origMat instanceof PBRMaterial) {
-      cellMat.diffuseTexture = origMat.albedoTexture as Texture;
-      cellMat.diffuseColor = origMat.albedoColor.clone();
-    } else if (origMat instanceof StandardMaterial) {
-      cellMat.diffuseTexture = origMat.diffuseTexture as Texture;
-      cellMat.diffuseColor = origMat.diffuseColor.clone();
-    } else {
-      cellMat.diffuseColor = new Color3(0.8, 0.8, 0.8);
-    }
-    cellMat.computeHighLevel = true;
-    treeRoot.material = cellMat;
+    // The tree renders with its own glTF PBR material.
 
     // ─── Flower instancing ───────────────────────
     const flowerPlane = MeshBuilder.CreatePlane("flowerPlane", { size: 1 }, scene);
@@ -728,7 +736,6 @@ export const Content: React.FC<ContentProps & {
         gl_FragColor = vec4(finalColor, 1.0);
       }`
     ;
-    console.log("Shader loaded?", "watercolorFragmentShader" in Effect.ShadersStore);
     const watercolorPost = new PostProcess(
       "watercolor",
       "watercolor",
@@ -737,6 +744,8 @@ export const Content: React.FC<ContentProps & {
       1.0,
       camera
     );
+
+    scene.executeWhenReady(() => onReady?.());
 
     return () => {
       scene.onBeforeRenderObservable.remove(windObs);

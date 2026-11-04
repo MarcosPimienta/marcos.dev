@@ -1,19 +1,18 @@
 import React, { useEffect, useRef } from 'react'
-import {
-  Animation,
-  AnimationEvent,
-  Color3,
-  CubicEase,
-  EasingFunction,
-  IAnimationKey,
-  Scene,
-  Texture,
-  Vector3
-} from '@babylonjs/core'
-import type { InstancedMesh, ParticleSystem } from '@babylonjs/core'
-import { CustomMaterial } from '@babylonjs/materials'
-import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial'
-import { CubeTexture } from '@babylonjs/core'
+import { Animation } from '@babylonjs/core/Animations/animation'
+import { AnimationEvent } from '@babylonjs/core/Animations/animationEvent'
+import { CubicEase, EasingFunction } from '@babylonjs/core/Animations/easing'
+import type { IAnimationKey } from '@babylonjs/core/Animations/animationKey'
+import '@babylonjs/core/Animations/animatable'
+import type { Scene } from '@babylonjs/core/scene'
+import { Color3 } from '@babylonjs/core/Maths/math.color'
+import { Vector3 } from '@babylonjs/core/Maths/math.vector'
+import { Texture } from '@babylonjs/core/Materials/Textures/texture'
+import { CubeTexture } from '@babylonjs/core/Materials/Textures/cubeTexture'
+import type { InstancedMesh } from '@babylonjs/core/Meshes/instancedMesh'
+import type { ParticleSystem } from '@babylonjs/core/Particles/particleSystem'
+import type { CustomMaterial } from '@babylonjs/materials/custom/customMaterial'
+import type { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial'
 import { Season } from './Content'
 import { getBasePath } from './config'
 

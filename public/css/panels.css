@@ -1,40 +1,252 @@
+/* ===== Shared ===== */
+.scene-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+}
+
+.open-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(46, 160, 67, 0.92);
+  color: #fff;
+  white-space: nowrap;
+}
+
+.cv-button,
+.cta-button {
+  display: inline-block;
+  font-weight: 700;
+  text-decoration: none;
+  color: #111;
+  background: #fff;
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+.cta-button {
+  border-radius: 10px;
+  padding: 12px 0;
+  text-align: center;
+  font-size: 1rem;
+}
+
+/* Collapsible section header is a real <button>: reset browser button styles */
+button.section-toggle {
+  width: 100%;
+  background: none;
+  border: 0;
+  font: inherit;
+  font-weight: 600;
+  color: #fff;
+  text-align: left;
+  gap: 1em;
+}
+button.section-toggle:focus-visible,
+.season-tab:focus-visible,
+.details-toggle:focus-visible {
+  outline: 2px solid #aeddff;
+  outline-offset: 2px;
+}
+
+/* ===== Loading poster ===== */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  background: #c9cfc4 center / cover no-repeat;
+  transition: opacity 0.8s ease;
+  pointer-events: none;
+}
+.loading-overlay.fade {
+  opacity: 0;
+}
+.loading-pill-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none;
+}
+.loading-pill {
+  position: absolute;
+  left: 24px;
+  bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #fff;
+  font: 600 0.8rem 'Inter', system-ui, sans-serif;
+  border: 0;
+}
+.loading-pill.load-3d {
+  pointer-events: auto;
+  cursor: pointer;
+}
+.loading-bar {
+  width: 160px;
+  height: 3px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.25);
+  overflow: hidden;
+}
+.loading-bar span {
+  display: block;
+  width: 40%;
+  height: 100%;
+  background: #fff;
+  border-radius: 3px;
+  animation: loading-slide 1.2s ease-in-out infinite;
+}
+@keyframes loading-slide {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(250%); }
+}
+
+/* ===== Project cards (Works) ===== */
+.panel-heading {
+  margin: 0.25em 0 0;
+  font-size: 1.15rem !important;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+.project-card {
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 2px solid #fff;
+  border-radius: 0.6em;
+  overflow: hidden;
+}
+.project-card .project-media {
+  margin: 0;
+  border-radius: 0;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  background: #000;
+}
+.project-card-body {
+  padding: 0.8em 1em 1em;
+}
+.project-card h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+.project-subtitle {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-top: 2px;
+}
+.project-summary {
+  margin: 0.5em 0 0;
+  font-size: 0.92rem;
+  color: rgba(255, 255, 255, 0.88);
+}
+.project-meta {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75em;
+}
+.project-meta .tag-container {
+  margin-top: 0.6em;
+}
+.live-link {
+  color: #aeddff;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.live-link:hover {
+  text-decoration: underline;
+}
+.details-toggle {
+  margin-top: 0.7em;
+  padding: 0;
+  background: none;
+  border: 0;
+  color: #aeddff;
+  font: 600 0.85rem 'Inter', system-ui, sans-serif;
+  cursor: pointer;
+  text-align: left;
+}
+.project-media {
+  width: 100%;
+  display: block;
+}
+
+/* ===== Desktop ===== */
+.desktop-root {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+}
+
 .panel-frame {
   position: absolute;
+  z-index: 2;
   top: 0.5em;
   right: 0.5em;
   display: flex;
   flex-direction: column;
   width: 45%;
+  max-width: 760px;
   max-height: calc(100vh - 1em);
-  background: rgba(0, 0, 0, 0.4);
-  border: 2px solid #ffffff;
-  border-radius: 0.5em;
   overflow: hidden;
   color: #fff;
   font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  backface-visibility: hidden;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0.6em 0.8em 0.4em;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 0.5em 0.5em 0 0;
+}
+.identity {
+  min-width: 0;
+}
+.name-title {
+  margin: 0;
+  font-weight: 800;
+  font-size: 1.25rem;
+  color: #fff;
+  white-space: nowrap;
+}
+.tagline {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.8);
+  white-space: nowrap;
+}
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .season-tabs {
   display: flex;
+  gap: 8px;
+  padding: 0.3em 0.8em 0.55em;
   background: rgba(0, 0, 0, 0.65);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border-radius: 0.5em;
-  align-items: center;
-  gap: 8px;
-  background: 0, 0, 0, 65;
-  padding: 0.5em;
-  flex-wrap: wrap;
-  justify-content: space-between;
-}
-
-.name-title {
-  font-weight: 700;
-  font-size: 1.25rem;
-  flex: 0 0 auto;
-  color: white;
-  white-space: nowrap;
+  border-radius: 0 0 0.5em 0.5em;
 }
 
 .season-tab {
@@ -48,14 +260,14 @@
   position: relative;
   font-size: 0.9rem;
   letter-spacing: 0.5px;
-  outline: none;
   transition: opacity 0.2s;
 }
-
-.season-tab:not(.selected):hover {
-  opacity: 0.85;
+.season-tab:not(.selected) {
+  opacity: 0.75;
 }
-
+.season-tab:not(.selected):hover {
+  opacity: 1;
+}
 .season-tab.selected::after {
   content: '';
   position: absolute;
@@ -66,7 +278,6 @@
   background: white;
   border-radius: 1px;
 }
-
 .season-tab.selected::before {
   content: '';
   position: absolute;
@@ -89,91 +300,182 @@
   padding: 0.75em 0.5em;
 }
 
-/* ===== Mobile-Only Overrides ===== */
+/* ===== Mobile: scrolling page over the fixed scene ===== */
+.m-page {
+  position: relative;
+  z-index: 2;
+  color: #fff;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.m-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding: 10px 16px 8px;
+  background: rgba(10, 10, 10, 0.82);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.m-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 28px;
+}
+.m-name {
+  font-weight: 800;
+  font-size: 17px;
+}
+.m-cv {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 10px;
+  border: 1.5px solid rgba(255, 255, 255, 0.85);
+  border-radius: 999px;
+  color: #fff;
+  text-decoration: none;
+}
+.m-nav {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+.m-nav a {
+  flex: 1;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.75);
+  padding: 7px 0;
+  border-radius: 999px;
+  text-decoration: none;
+  transition: background 0.25s, color 0.25s;
+}
+.m-nav a.on {
+  color: #111;
+  background: #fff;
+}
+
+.m-hero {
+  position: relative;
+  min-height: calc(100svh - 92px);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 0 16px 28px;
+  background: linear-gradient(to bottom, transparent 45%, rgba(0, 0, 0, 0.55));
+}
+.m-hero .open-badge {
+  align-self: flex-start;
+  margin-bottom: 12px;
+}
+.m-hero h1 {
+  margin: 0;
+  font-size: 34px;
+  line-height: 1.08;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.55);
+}
+.m-hero p {
+  margin: 10px 0 0;
+  font-size: 15.5px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.94);
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.6);
+}
+.m-built {
+  position: absolute;
+  right: 16px;
+  top: 12px;
+  font-size: 11px;
+  background: rgba(0, 0, 0, 0.45);
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+.m-ctas {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+}
+.m-btn {
+  flex: 1;
+  text-align: center;
+  font-weight: 700;
+  font-size: 15px;
+  padding: 13px 0;
+  border-radius: 10px;
+  text-decoration: none;
+}
+.m-btn.primary {
+  background: #fff;
+  color: #111;
+}
+.m-btn.ghost {
+  border: 1.5px solid rgba(255, 255, 255, 0.85);
+  color: #fff;
+  background: rgba(0, 0, 0, 0.35);
+}
+.m-hint {
+  margin-top: 18px;
+  text-align: center;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.m-section {
+  padding: 8px 12px 28px;
+  scroll-margin-top: 96px;
+}
+.m-title {
+  margin: 6px 4px 12px;
+  font-size: 22px;
+  font-weight: 800;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
+}
+/* Panels render inline on the page: no inner scroll areas or extra outer spacing */
+.m-section .works-panel,
+.m-section .about-panel,
+.m-section .services-panel {
+  margin: 0;
+  padding: 0;
+  max-height: none;
+  overflow: visible;
+}
+.m-section .works-panel > .panel-heading:first-child {
+  display: none; /* the section title already says "Selected work" */
+}
+.m-section .section {
+  margin-bottom: 12px;
+}
+.m-section .contact-panel {
+  padding: 14px;
+}
+.m-footer {
+  padding: 24px 16px 40px;
+  text-align: center;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
 @media (max-width: 1000px) {
-  /* Top bar */
-  .mobile-topbar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    display: flex;
+  .scene-layer {
+    pointer-events: none; /* swipes scroll the page */
+  }
+  .loading-pill {
+    left: 50%;
+    bottom: auto;
+    top: 150px;
+    transform: translateX(-50%);
     align-items: center;
-    padding: 6px 12px;
-    gap: 12px;
-    background: rgba(0, 0, 0, 0.65);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    z-index: 30;
-  }
-
-  /* Reuse name-title within topbar if needed */
-  .mobile-topbar .name-title {
-    font-size: 1.1rem;
-  }
-
-  /* Season tabs inline in topbar */
-  .mobile-topbar .season-tabs {
-    display: flex;
-    gap: 8px;
-    overflow-x: auto;
-    flex: 1;
-  }
-
-  /* Hide desktop panel-frame */
-  .panel-frame {
-    display: none;
-  }
-
-  /* Bottom drawer panel */
-  .mobile-bottom-panel {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    display: flex;
-    flex-direction: column;
-    background: rgba(0, 0, 0, 0.65);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-top: 1px solid rgba(255, 255, 255, 0.2);
-    overflow: hidden;
-    transition: max-height 0.25s ease;
-    max-height: 30px; /* collapsed state */
-    z-index: 25;
-  }
-
-  .mobile-bottom-panel.expanded {
-    max-height: 60vh; /* expanded state */
-  }
-
-  .mobile-bottom-panel .expand-handle {
-    align-self: center;
-    width: 60px;
-    height: 30px;
-    background: rgba(255, 255, 255, 0.6);
-    border-radius: 3px;
-    margin: 6px auto;
-    cursor: pointer;
-  }
-
-  .mobile-bottom-panel .panel-content {
-    flex: 1;
-    overflow-y: auto;
-    padding: 6px 10px;
-    display: block;
-  }
-
-  /* Make each section full width in the drawer */
-  .mobile-bottom-panel .section {
-    width: 100%;
   }
 }
 
-@media (min-width: 1001px) {
-  .panel-frame {
-    background: none !important;
-    border: none !important;
-    /* keep border if you still want that outline look */
-  }
+/* Babylon inspector (press "i"): keep it above the site UI */
+#embed-host,
+#inspector-host,
+#scene-explorer-host {
+  z-index: 100 !important;
 }
