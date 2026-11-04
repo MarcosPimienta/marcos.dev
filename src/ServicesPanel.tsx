@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import Section from "./Section";
 
 const ServicesPanel: React.FC = () => {
   const [openSection, setOpenSection] = useState<string | null>("fullstack");
@@ -108,32 +109,6 @@ const ServicesPanel: React.FC = () => {
           </li>
         </ul>
       </Section> */}
-    </div>
-  );
-};
-
-interface SectionProps {
-  id: string;
-  title: string;
-  isOpen: boolean;
-  onToggle: (key: string) => void;
-  children: React.ReactNode;
-}
-
-const Section: React.FC<SectionProps> = ({
-  id,
-  title,
-  isOpen,
-  onToggle,
-  children,
-}) => {
-  return (
-    <div className="section">
-      <div className="section-toggle" onClick={() => onToggle(id)}>
-        <div>{title}</div>
-        <div>{isOpen ? "−" : "+"}</div>
-      </div>
-      {isOpen && <div className="section-content">{children}</div>}
     </div>
   );
 };

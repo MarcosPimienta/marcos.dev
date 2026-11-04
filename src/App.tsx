@@ -70,13 +70,6 @@ const App: React.FC<{ havok: unknown }> = ({ havok }) => {
     }
   }, [selectedSeason, isMobile]);
 
-  useEffect(() => {
-    if (bjsScene && prevSeason !== selectedSeason) {
-      const onComplete = () => setPrevSeason(selectedSeason);
-      return;
-    }
-  }, [bjsScene, prevSeason, selectedSeason]);
-
   return (
     <div style={{ position: 'relative', width: '100vw', height: '100vh' }}>
       {isMobile ? (

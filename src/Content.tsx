@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import {
   Scene,
   ParticleHelper,
@@ -75,132 +75,40 @@ export const Content: React.FC<ContentProps & {
   const { meshes: snowMeshes } = useModel(`${basePath}/meshes/Snow.glb`);
   const { meshes: groundLeafMeshes } = useModel(`${basePath}/meshes/GroundLeafs.glb`);
   const { meshes: hillLeafMeshes } = useModel(`${basePath}/meshes/HillLeafs.glb`);
-  // somewhere up top of your component, build both boxes:
+  // Invisible particle emitter boxes, created once per scene (not on every render).
+  const { winterEmitter, otherEmitter } = useMemo(() => {
+    const winterEmitter = MeshBuilder.CreateBox("winterEmitter", { size: 5 }, scene);
+    winterEmitter.position.set(0, 4, 0);
+    winterEmitter.isVisible = false;
 
-  const winterEmitter = MeshBuilder.CreateBox("winterEmitter", { size: 5 }, scene);
-  winterEmitter.position.set(0, 4, 0);
-  winterEmitter.isVisible = false;
-  winterEmitter.showBoundingBox = true;
+    const otherEmitter = MeshBuilder.CreateBox("otherEmitter", { size: 4 }, scene);
+    otherEmitter.position.set(0, 2, 0);
+    otherEmitter.isVisible = false;
 
-  // for the others:
-  const otherEmitter = MeshBuilder.CreateBox("otherEmitter", { size: 4 }, scene);
-  otherEmitter.position.set(0, 2, 0);
-  otherEmitter.isVisible = false;
-  otherEmitter.showBoundingBox = true;
+    return { winterEmitter, otherEmitter };
+  }, [scene]);
 
-  // 1) Create four particle systems, parented to your tree root (or world origin)
-  // --- PETALS ---
-  async function createPetalFallFromJSON(
+  // Load a particle system from public/particlesettings/<file>.json.
+  // Signature is (name, url, scene, gpu, rootUrl): rootUrl is prefixed to the
+  // texture paths stored in the JSON ("/textures/particles/...").
+  async function loadParticleSystem(
     scene: Scene,
-    emitter: AbstractMesh
+    name: string,
+    file: string,
+    emitter: AbstractMesh,
+    activeIn: Season
   ): Promise<ParticleSystem> {
-    const url       = `${basePath}/particlesettings/petals.json`;
-    // force the “string rootUrl” overload
-    const ps = await (ParticleHelper.ParseFromFileAsync as any)(
-      "petals",     // system name
-      url,         // JSON file URL
-      scene,       // your scene
-      basePath     // <<< correct rootUrl so that "/textures/..." in the JSON resolves under your /anime‑foliage
-    ) as ParticleSystem;
+    const ps = (await ParticleHelper.ParseFromFileAsync(
+      name,
+      `${basePath}/particlesettings/${file}.json`,
+      scene,
+      false,     // CPU particle system
+      basePath   // rootUrl
+    )) as ParticleSystem;
 
     ps.emitter = emitter;
-    if (season === Season.Spring) {
-      // because scene starts in Spring, we need to start it manually
-      ps.particleTexture = new Texture(
-        `${basePath}/textures/particles/petal.png`,
-        scene
-      );
-      ps.start();
-    } else {
-      ps.stop();
-    }
-
-    return ps;
-  }
-
-  async function createLeafFallFromJSON(
-    scene: Scene,
-    emitter: AbstractMesh
-  ): Promise<ParticleSystem> {
-    const url       = `${basePath}/particlesettings/leafs.json`;
-    // force the “string rootUrl” overload
-    const ps = await (ParticleHelper.ParseFromFileAsync as any)(
-      "leafs",     // system name
-      url,         // JSON file URL
-      scene,       // your scene
-      basePath     // <<< correct rootUrl so that "/textures/..." in the JSON resolves under your /anime‑foliage
-    ) as ParticleSystem;
-
-    // reassign texture now that the JSON has loaded
-      ps.particleTexture = new Texture(
-        `${basePath}/textures/particles/leaf.png`,
-        scene
-      );
-
-    ps.emitter = emitter;
-    if (season === Season.Summer) {
-      ps.start();
-    } else {
-      ps.stop();
-    }
-
-    return ps;
-  }
-  async function createRedLeafFallFromJSON(
-    scene: Scene,
-    emitter: AbstractMesh
-  ): Promise<ParticleSystem> {
-    const url       = `${basePath}/particlesettings/redLeafs.json`;
-    // force the “string rootUrl” overload
-    const ps = await (ParticleHelper.ParseFromFileAsync as any)(
-      "leafs",     // system name
-      url,         // JSON file URL
-      scene,       // your scene
-      basePath     // <<< correct rootUrl so that "/textures/..." in the JSON resolves under your /anime‑foliage
-    ) as ParticleSystem;
-
-    // reassign texture now that the JSON has loaded
-      ps.particleTexture = new Texture(
-        `${basePath}/textures/particles/redLeaf.png`,
-        scene
-      );
-
-    ps.emitter = emitter;
-    if (season === Season.Fall) {
-      ps.start();
-    } else {
-      ps.stop();
-    }
-
-    return ps;
-  }
-
-  async function createSnowFallFromJSON(
-    scene: Scene,
-    emitter: AbstractMesh
-  ): Promise<ParticleSystem> {
-    const url       = `${basePath}/particlesettings/snow.json`;
-    // force the “string rootUrl” overload
-    const ps = await (ParticleHelper.ParseFromFileAsync as any)(
-      "leafs",     // system name
-      url,         // JSON file URL
-      scene,       // your scene
-      basePath     // <<< correct rootUrl so that "/textures/..." in the JSON resolves under your /anime‑foliage
-    ) as ParticleSystem;
-
-    // reassign texture now that the JSON has loaded
-      ps.particleTexture = new Texture(
-        `${basePath}/textures/particles/snowflake.png`,
-        scene
-      );
-
-    ps.emitter = emitter;
-    if (season === Season.Winter) {
-      ps.start();
-    } else {
-      ps.stop();
-    }
-
+    if (season === activeIn) ps.start();
+    else ps.stop();
     return ps;
   }
 
@@ -432,9 +340,9 @@ export const Content: React.FC<ContentProps & {
       varying vec2 vUV;`
     );
     flowerMat.Vertex_MainBegin(`vUV = uv;`);
-    flowerMat.Vertex_Before_PositionUpdated(
+    flowerMat.Vertex_After_WorldPosComputed(
       `#ifdef INSTANCES
-        vFaceNormal = normalize((world * vec4(faceNormal, 0.0)).xyz);
+        vFaceNormal = normalize((finalWorld * vec4(faceNormal, 0.0)).xyz);
         vShadeOffset = shadeOffset;
       #endif`
     );
@@ -506,9 +414,9 @@ export const Content: React.FC<ContentProps & {
       varying vec2 vUV;`
     );
     leafMat.Vertex_MainBegin(`vUV = uv;`);
-    leafMat.Vertex_Before_PositionUpdated(
+    leafMat.Vertex_After_WorldPosComputed(
       `#ifdef INSTANCES
-        vFaceNormal = normalize((world * vec4(faceNormal, 0.0)).xyz);
+        vFaceNormal = normalize((finalWorld * vec4(faceNormal, 0.0)).xyz);
         vShadeOffset = shadeOffset;
       #endif`
     );
@@ -561,9 +469,9 @@ export const Content: React.FC<ContentProps & {
       varying vec2 vUV;`
     );
     redLeafMat.Vertex_MainBegin(`vUV = uv;`);
-    redLeafMat.Vertex_Before_PositionUpdated(
+    redLeafMat.Vertex_After_WorldPosComputed(
       `#ifdef INSTANCES
-        vFaceNormal = normalize((world * vec4(faceNormal, 0.0)).xyz);
+        vFaceNormal = normalize((finalWorld * vec4(faceNormal, 0.0)).xyz);
         vShadeOffset = shadeOffset;
       #endif`
     );
@@ -698,9 +606,9 @@ export const Content: React.FC<ContentProps & {
       varying vec2 vUV;`
     );
     grassMat.Vertex_MainBegin(`vUV = uv;`);
-    grassMat.Vertex_Before_PositionUpdated(
+    grassMat.Vertex_After_WorldPosComputed(
       `#ifdef INSTANCES
-        vFaceNormal = normalize((world * vec4(faceNormal, 0.0)).xyz);
+        vFaceNormal = normalize((finalWorld * vec4(faceNormal, 0.0)).xyz);
         vShadeOffset = shadeOffset;
       #endif`
     );
@@ -851,10 +759,10 @@ export const Content: React.FC<ContentProps & {
     let alive = true;
 
     Promise.all([
-      createPetalFallFromJSON(scene, otherEmitter),
-      createLeafFallFromJSON(scene, otherEmitter),
-      createRedLeafFallFromJSON(scene, otherEmitter),
-      createSnowFallFromJSON(scene, winterEmitter)
+      loadParticleSystem(scene, 'petals',   'petals',   otherEmitter,  Season.Spring),
+      loadParticleSystem(scene, 'leafs',    'leafs',    otherEmitter,  Season.Summer),
+      loadParticleSystem(scene, 'redLeafs', 'redLeafs', otherEmitter,  Season.Fall),
+      loadParticleSystem(scene, 'snow',     'snow',     winterEmitter, Season.Winter)
     ]).then(([petals, green, red, snow]) => {
       if (!alive) return;
       setPetalPS(petals);

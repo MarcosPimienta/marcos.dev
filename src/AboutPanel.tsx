@@ -132,7 +132,7 @@ const experience: ExperienceEntry[] = [
     title: "Project Manager & Blockchain Consultant",
     company: "Hexocoin",
     location: "Medellin, Colombia",
-    period: "Octuber 2017 – September 2019",
+    period: "October 2017 – September 2019",
     bullets: [
       "Oversaw deployment, tuning, and maintenance of ASIC/GPU rigs, managing cooling, power, uptime, firmware updates, and physical/network security.",
       "Negotiated and managed power procurement and usage, implemented load balancing and efficiency improvements, and forecasted capacity to maximize hash rate per watt and ROI.",
