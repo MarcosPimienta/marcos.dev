@@ -134,14 +134,12 @@ const App: React.FC<{ havok: unknown }> = ({ havok }) => {
                 kbInfo.type === KeyboardEventTypes.KEYUP &&
                 kbInfo.event.key === 'i'
               ) {
-                if (scene.debugLayer.isVisible()) {
-                  scene.debugLayer.hide();
-                } else {
-                  // Inspector is large; load it only when first requested.
-                  import('@babylonjs/inspector').then(() =>
-                    scene.debugLayer.show({ embedMode: true, overlay: true })
-                  );
-                }
+                // Inspector is large; load it from npm only when first requested.
+                // (scene.debugLayer would also fetch a CDN copy, which breaks.)
+                import('@babylonjs/inspector').then(({ Inspector }) => {
+                  if (Inspector.IsVisible) Inspector.Hide();
+                  else Inspector.Show(scene, { embedMode: true, overlay: true });
+                });
               }
             });
           }}
