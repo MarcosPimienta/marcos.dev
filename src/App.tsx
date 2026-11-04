@@ -5,7 +5,6 @@ import { Engine } from 'reactylon/web';
 import { Scene } from 'reactylon';
 import { HavokPlugin } from '@babylonjs/core/Physics/v2/Plugins/havokPlugin';
 import '@babylonjs/loaders';
-import '@babylonjs/inspector';
 import { KeyboardEventTypes } from '@babylonjs/core/Events/keyboardEvents';
 import type { Scene as BjsScene, ParticleSystem } from '@babylonjs/core';
 import ServicesPanel from './ServicesPanel';
@@ -69,13 +68,6 @@ const App: React.FC<{ havok: unknown }> = ({ havok }) => {
       setMobileExpanded(true);
     }
   }, [selectedSeason, isMobile]);
-
-  useEffect(() => {
-    if (bjsScene && prevSeason !== selectedSeason) {
-      const onComplete = () => setPrevSeason(selectedSeason);
-      return;
-    }
-  }, [bjsScene, prevSeason, selectedSeason]);
 
   return (
     <div style={{ position: 'relative', width: '100vw', height: '100vh' }}>
@@ -142,11 +134,12 @@ const App: React.FC<{ havok: unknown }> = ({ havok }) => {
                 kbInfo.type === KeyboardEventTypes.KEYUP &&
                 kbInfo.event.key === 'i'
               ) {
-                if (scene.debugLayer.isVisible()) {
-                  scene.debugLayer.hide();
-                } else {
-                  scene.debugLayer.show({ embedMode: true, overlay: true });
-                }
+                // Inspector is large; load it from npm only when first requested.
+                // (scene.debugLayer would also fetch a CDN copy, which breaks.)
+                import('@babylonjs/inspector').then(({ Inspector }) => {
+                  if (Inspector.IsVisible) Inspector.Hide();
+                  else Inspector.Show(scene, { embedMode: true, overlay: true });
+                });
               }
             });
           }}
