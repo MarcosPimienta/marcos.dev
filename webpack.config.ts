@@ -13,7 +13,9 @@ const config: Configuration = {
   entry: "./src/index.tsx",
   output: {
     path: path.resolve(__dirname, "dist"),
-    filename: "main.js",
+    // Content hashes in production so browsers never run a stale bundle after a deploy.
+    filename: process.env.NODE_ENV === 'production' ? "[name].[contenthash].js" : "main.js",
+    chunkFilename: process.env.NODE_ENV === 'production' ? "[name].[contenthash].js" : "[name].js",
     clean: true,
     publicPath: process.env.NODE_ENV === 'production' ? '/marcos.dev/' : '/',
   },
