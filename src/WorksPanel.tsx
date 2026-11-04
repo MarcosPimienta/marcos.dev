@@ -6,6 +6,54 @@ const basePath = getBasePath();
 
 const projects = [
   {
+    title: "EmberForge3D – Interactive 3D Product Configurator",
+    mediaType: "gif",
+    src: `${basePath}/gifs/EmberForge3D.gif`,
+    description:
+      "A web-based 3D product configurator for the firearms industry. Users assemble a build part by part in real time, inspect every component in 3D, and look through a configured optic in a simulated scope view, all backed by a typed API and relational data model.",
+    url: "https://emberforge3d.com/v2",
+    features: [
+      "🧩 Real-time modular assembly: parts snap onto socket markers, with a state machine handling nested attachments and blocking incompatible combinations",
+      "🔭 Optical simulation mode: look through the configured scope with reticles, magnification-scaled markings, and targets sized to real distance",
+      "⚡ Performance: Draco-compressed assets with WebAssembly decoding, on-demand rendering, and a capped pixel ratio for mobile",
+      "🎨 Visuals: PBR materials, SSAO, bloom, and selection outlines",
+      "🛠️ Blender-to-glTF asset pipeline with calibrated reticles",
+    ],
+    stack: [
+      "React",
+      "React Three Fiber",
+      "Three.js",
+      "TypeScript",
+      "Express",
+      "Prisma",
+      "PostgreSQL",
+      "Blender",
+    ],
+  },
+  {
+    title: "Sigil & Script – Event Invitation & Guest Management Suite",
+    mediaType: "gif",
+    src: `${basePath}/gifs/SigilAndScript.gif`,
+    description:
+      "An event-planning tool that replaces a handful of disconnected apps with one workspace. Hosts design an interactive invitation, manage guests and RSVPs, and plan seating, with design, guest, and seating data kept in sync.",
+    url: "https://sigil-and-script-frontend.vercel.app/",
+    features: [
+      "✉️ Live invitation designer with a custom wax seal rendered at runtime",
+      "👪 Guest roster with families and dependents, CSV import, and per-guest RSVP links",
+      "🪑 Drag-and-drop seating planner with a printable seating manifest",
+      "🤝 Co-host roles for shared event management",
+      "🔐 Rate limiting and row-level security",
+    ],
+    stack: [
+      "React",
+      "TypeScript",
+      "Node.js",
+      "Prisma",
+      "Supabase",
+      "PostgreSQL",
+    ],
+  },
+  {
     title: "Amantti Weather Insight – 3D Geospatial Weather Monitoring",
     mediaType: "image",
     src: `${basePath}/gifs/WeatherDisplayApp.gif`,
