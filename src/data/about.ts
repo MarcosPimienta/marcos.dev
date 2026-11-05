@@ -74,6 +74,21 @@ export interface ExperienceEntry {
 
 export const experience: ExperienceEntry[] = [
   {
+    title: "Software Engineer (Full Stack)",
+    company: "Café Amantti",
+    location: "Medellín, Colombia · Remote · Full-time",
+    period: "January 2023 – Present",
+    bullets: [
+      "Designed and built from scratch the platform that runs Café Amantti, a Colombian specialty coffee brand. It covers the online store, the customer portal and the back-office system the company uses for sales, inventory, purchasing and finance.",
+      "Online store with subscriptions, ePayco payments, order tracking and WhatsApp notifications.",
+      "Siigo integration for DIAN e-invoicing (Colombian tax authority), plus credit notes, purchases, customer receipts and sales import.",
+      "Lot-based inventory ledger (Kardex) that tracks coffee from parchment and green through hulling, roasting and packaging. A PostgreSQL trigger derives each product's stock from its inventory movements, which eliminated mismatches between the two.",
+      "Finance modules: cash flow, P&L, receivables and payables, loans, fixed assets, and automated bank reconciliation from PDF, Excel and CSV statements.",
+      "PDF quotes and commercial proposals, a client CRM with multi-site accounts, and tracking of espresso machines placed with corporate clients on loan.",
+      "Bilingual site (Spanish/English), 94 versioned database migrations and 900+ automated tests.",
+    ],
+  },
+  {
     title: "Software Engineer",
     company: "Freelance",
     location: "Miami, Florida",

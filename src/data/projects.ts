@@ -14,6 +14,25 @@ export interface Project {
 
 export const projects: Project[] = [
   {
+    title: "Café Amantti – Coffee Platform: 3D Store, Customer Portal & Back Office",
+    summary: "The full platform behind a Colombian specialty coffee brand: 3D storefront, subscriptions, e-invoicing, inventory and finance.",
+    featured: true,
+    media: "CafeAmantti",
+    url: "https://www.cafeamantti.com/",
+    description:
+      "Designed and built from scratch as Café Amantti's full-stack engineer. One platform runs the online store, the customer portal and the back-office system the company uses for sales, inventory, purchasing and finance. On the storefront, each roast is a 3D bag model shoppers can rotate and inspect before choosing weight and grind.",
+    features: [
+      "☕ 3D product carousel: one glTF bag model per roast (Premium, Honey Process, Chiroso), drag to rotate",
+      "🛒 Online store with subscriptions, ePayco payments, order tracking and WhatsApp notifications",
+      "🧾 Siigo integration for DIAN e-invoicing, plus credit notes, purchases, customer receipts and sales import",
+      "📦 Lot-based inventory ledger (Kardex) from parchment and green coffee through hulling, roasting and packaging; a PostgreSQL trigger derives stock from inventory movements",
+      "💰 Finance: cash flow, P&L, receivables and payables, loans, fixed assets, and automated bank reconciliation from PDF, Excel and CSV statements",
+      "🤝 PDF quotes and proposals, a client CRM with multi-site accounts, and tracking of espresso machines loaned to corporate clients",
+      "🌎 Bilingual (Spanish/English), 94 versioned database migrations and 900+ automated tests",
+    ],
+    stack: ["Next.js", "React", "Three.js", "PostgreSQL", "ePayco", "Siigo API", "glTF"],
+  },
+  {
     title: "EmberForge3D – Interactive 3D Product Configurator",
     summary: "3D product configurator with real-time modular assembly and a simulated scope view.",
     featured: true,
@@ -210,31 +229,5 @@ export const projects: Project[] = [
       "📥 Editable mentor lists with add/drop functionality for program adaptability",
     ],
     stack: ["React", "Node.js", "Express", "PostgreSQL", "Auth0", "Ant Design"],
-  },
-  {
-    title: "Anime Foliage – Seasonal Interactive 3D Scene",
-    summary: "Seasonal 3D garden with instanced foliage and particles: the scene behind this site.",
-    featured: true,
-    media: "AnimeFoliage",
-    url: "https://marcospimienta.github.io/anime-foliage/",
-    description:
-      "An immersive WebGL/React application that simulates seasonal foliage transitions—spring blossoms, summer greens, fall red leaves, and winter snow—using instanced geometry, particle systems, and custom shading to create a stylized, animated environment.",
-    features: [
-      "🌸 Spring petal bloom powered by JSON-configured particle systems",
-      "🍁 Fall red and green leaf instancing with smooth transitions",
-      "❄️ Winter snow with customizable particle effects and glittery PBR material",
-      "🌿 Procedural instancing of leaves, flowers, and grass based on mesh face centers and normals",
-      "🎨 Custom materials: cell-shaded tree, watercolor post-process, and snow glitter/shimmer effects",
-      "⛅ Dynamic skybox and lighting that tween between seasons",
-    ],
-    stack: [
-      "React",
-      "Reactylon",
-      "TypeScript",
-      "Babylon.js",
-      "Blender",
-      "GLSL",
-      "WebGL",
-    ],
   },
 ];

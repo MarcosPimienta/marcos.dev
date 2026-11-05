@@ -13,46 +13,37 @@ const Tags: React.FC<{ stack: string[] }> = ({ stack }) => (
   </div>
 );
 
-const LiveLink: React.FC<{ url?: string }> = ({ url }) =>
-  url ? (
-    <a className="live-link" href={url} target="_blank" rel="noopener noreferrer">
-      Live ↗
-    </a>
-  ) : null;
-
-// Featured project: preview, one-line summary, tags and link up front; full write-up on demand.
-const ProjectCard: React.FC<{ project: Project }> = ({ project }) => {
-  const [open, setOpen] = useState(false);
-  const [name, subtitle] = project.title.split(" – ");
-  return (
-    <article className="project-card">
-      <ProjectMedia media={project.media} title={name} />
-      <div className="project-card-body">
-        <h3>{name}</h3>
-        {subtitle && <div className="project-subtitle">{subtitle}</div>}
-        <p className="project-summary">{project.summary}</p>
-        <div className="project-meta">
-          <Tags stack={project.stack.slice(0, 4)} />
-          <LiveLink url={project.url} />
-        </div>
-        <button type="button" className="details-toggle" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
-          {open ? "Hide details" : "Details"}
-        </button>
-        {open && (
-          <div className="project-details">
-            <p className="project-description">{project.description}</p>
-            <ul className="feature-list">
-              {project.features.map((f) => (
-                <li key={f}>{f}</li>
-              ))}
-            </ul>
-            <Tags stack={project.stack} />
-          </div>
-        )}
-      </div>
-    </article>
-  );
-};
+// One project as a collapsible section: title + one-line summary when closed;
+// preview video, link, features and stack when opened. Everything starts closed.
+const ProjectSection: React.FC<{
+  project: Project;
+  isOpen: boolean;
+  onToggle: (id: string) => void;
+}> = ({ project, isOpen, onToggle }) => (
+  <Section
+    id={`project-${project.media}`}
+    title={project.title}
+    teaser={<div>{project.summary}</div>}
+    isOpen={isOpen}
+    onToggle={onToggle}
+  >
+    <ProjectMedia media={project.media} title={project.title} />
+    <p className="project-description">{project.description}</p>
+    {project.url && (
+      <p className="project-link">
+        <a className="live-link" href={project.url} target="_blank" rel="noopener noreferrer">
+          Live ↗
+        </a>
+      </p>
+    )}
+    <ul className="feature-list">
+      {project.features.map((f) => (
+        <li key={f}>{f}</li>
+      ))}
+    </ul>
+    <Tags stack={project.stack} />
+  </Section>
+);
 
 const WorksPanel: React.FC = () => {
   const [openProjects, setOpenProjects] = useState<Set<string>>(new Set());
@@ -66,42 +57,21 @@ const WorksPanel: React.FC = () => {
 
   const featured = projects.filter((p) => p.featured);
   const more = projects.filter((p) => !p.featured);
+  const render = (p: Project) => (
+    <ProjectSection
+      key={p.media}
+      project={p}
+      isOpen={openProjects.has(`project-${p.media}`)}
+      onToggle={toggleProject}
+    />
+  );
 
   return (
     <div className="works-panel">
       <h2 className="panel-heading">Selected work</h2>
-      {featured.map((p) => (
-        <ProjectCard key={p.title} project={p} />
-      ))}
-
+      {featured.map(render)}
       <h2 className="panel-heading">More projects</h2>
-      {more.map((project) => {
-        const id = `more-${project.media}`;
-        return (
-          <Section
-            key={id}
-            id={id}
-            title={project.title}
-            teaser={<div>{project.summary}</div>}
-            isOpen={openProjects.has(id)}
-            onToggle={toggleProject}
-          >
-            <ProjectMedia media={project.media} title={project.title} />
-            <p className="project-description">{project.description}</p>
-            {project.url && (
-              <p className="project-link">
-                <LiveLink url={project.url} />
-              </p>
-            )}
-            <ul className="feature-list">
-              {project.features.map((f) => (
-                <li key={f}>{f}</li>
-              ))}
-            </ul>
-            <Tags stack={project.stack} />
-          </Section>
-        );
-      })}
+      {more.map(render)}
     </div>
   );
 };
