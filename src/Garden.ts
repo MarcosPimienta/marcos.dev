@@ -318,13 +318,21 @@ void main(){
   vec3 gSh  = mix(gravel, rockShade, 0.55) * (0.95 + speck) * mix(1.0, 0.92, rake);
   float inBed = step(bed, 0.0) * step(0.0, isl);
   litCol = mix(litCol, gLit, inBed); shCol = mix(shCol, gSh, inBed);
-  // Curb: square-cut stones.
+  // Curb: a row of stone blocks that follows the bed's outline. Blocks are counted by angle
+  // around the bed's centre, so the joints always run straight across the band; each block's
+  // top is slightly rounded (darker towards both edges).
   float inCurb = step(0.0, bed) * step(bed, ${f(CURB)});
-  float block = h21(vec2(floor((g.x + g.y) * 2.2), 7.0));
-  litCol = mix(litCol, mix(rock * mix(0.85, 1.0, block), grass, snow * 0.8), inCurb);
-  shCol  = mix(shCol, mix(rockShade * mix(0.9, 1.05, block), grassShade, snow * 0.8), inCurb);
-  float joint = smoothstep(0.92, 1.0, fract((g.x + g.y) * 2.2)) * inCurb;
-  litCol *= 1.0 - joint * 0.35 * (1.0 - snow); shCol *= 1.0 - joint * 0.35 * (1.0 - snow);
+  vec2 cq = g - vec2(${f(BED.a)}, ${f(BED.s)});
+  float cu = (atan(cq.y, cq.x) / 6.2831853 + 0.5) * 56.0;       // 56 blocks around the garden
+  float block = h21(vec2(floor(cu), 7.0));
+  float across = clamp(bed / ${f(CURB)}, 0.0, 1.0);
+  float bevel = smoothstep(0.0, 0.22, across) * smoothstep(1.0, 0.78, across);
+  float joint = (1.0 - smoothstep(0.0, 0.045, min(fract(cu), 1.0 - fract(cu)))) * inCurb;
+  vec3 curbLit = rock * mix(0.86, 1.02, block) * mix(0.8, 1.04, bevel) * (0.97 + speck);
+  vec3 curbSh  = rockShade * mix(0.92, 1.04, block) * mix(0.85, 1.02, bevel);
+  litCol = mix(litCol, mix(curbLit, grass, snow * 0.8), inCurb);
+  shCol  = mix(shCol, mix(curbSh, grassShade, snow * 0.8), inCurb);
+  litCol *= 1.0 - joint * 0.3 * (1.0 - snow); shCol *= 1.0 - joint * 0.3 * (1.0 - snow);
   // Moss islands: deeper green with a soft dark rim.
   float inIsl = step(bed, 0.0) * step(isl, 0.0);
   vec3 moss = grass * mix(mix(0.78, 0.92, vnoise(vW.xz * 3.0)), 1.0, snow);
