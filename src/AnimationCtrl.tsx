@@ -7,14 +7,12 @@ import '@babylonjs/core/Animations/animatable'
 import type { Scene } from '@babylonjs/core/scene'
 import { Color3 } from '@babylonjs/core/Maths/math.color'
 import { Vector3 } from '@babylonjs/core/Maths/math.vector'
-import { Texture } from '@babylonjs/core/Materials/Textures/texture'
-import { CubeTexture } from '@babylonjs/core/Materials/Textures/cubeTexture'
 import type { InstancedMesh } from '@babylonjs/core/Meshes/instancedMesh'
 import type { ParticleSystem } from '@babylonjs/core/Particles/particleSystem'
 import type { CustomMaterial } from '@babylonjs/materials/custom/customMaterial'
 import type { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial'
 import { Season } from './Content'
-import { getBasePath } from './config'
+import { MOODS } from './seasonMood'
 
 interface AnimationCtrlProps {
   scene: Scene;
@@ -85,12 +83,10 @@ export const AnimationCtrl: React.FC<AnimationCtrlProps> = ({
       [Season.Fall]:   Color3.FromHexString('#FFD1A3').toLinearSpace(),
       [Season.Winter]: Color3.FromHexString('#C8E8FF').toLinearSpace(),
     }
-    const lightIntMap: Record<Season, number> = {
-      [Season.Spring]: 1.1,
-      [Season.Summer]: 1.2,
-      [Season.Fall]:   0.8,
-      [Season.Winter]: 0.9,
-    }
+    // sun, sky fill, fog and exposure come from seasonMood.ts
+    const moodMap = <K extends keyof typeof MOODS[Season]>(key: K) =>
+      Object.fromEntries(order.map(s => [s, MOODS[s][key]])) as Record<Season, typeof MOODS[Season][K]>
+    const lightIntMap = moodMap('hemiIntensity')
     const leafTintMap: Record<Season, Color3> = {
       [Season.Spring]: Color3.FromHexString('#8CCF3B').toLinearSpace(),
       [Season.Summer]: Color3.Green(),
@@ -102,18 +98,6 @@ export const AnimationCtrl: React.FC<AnimationCtrlProps> = ({
       [Season.Summer]: 0.7,
       [Season.Fall]:   0.6,
       [Season.Winter]: 0.8,
-    }
-    const snowPosMap: Record<Season, Vector3> = {
-      [Season.Spring]: new Vector3(0, -3,   0),
-      [Season.Summer]: new Vector3(0, -3,   0),
-      [Season.Fall]:   new Vector3(0, -3,   0),
-      [Season.Winter]: new Vector3(0, -1.2, 0),
-    }
-    const grassPosMap: Record<Season, Vector3> = {
-      [Season.Spring]: new Vector3(0, -1, 0),
-      [Season.Summer]: new Vector3(0, -1, 0),
-      [Season.Fall]:   new Vector3(0, -1.08, 0),
-      [Season.Winter]: new Vector3(0, -2, 0),
     }
     const greenAlphaMap: Record<Season, number> = {
       [Season.Spring]: 1,
@@ -127,12 +111,6 @@ export const AnimationCtrl: React.FC<AnimationCtrlProps> = ({
       [Season.Fall]:   1,
       [Season.Winter]: 0,
     }
-    const groundLeafAlphaMap: Record<Season, number> = {
-      [Season.Spring]: 0,
-      [Season.Summer]: 0,
-      [Season.Fall]:   1,
-      [Season.Winter]: 0,
-    };
     // 7) helper to build key‑frame animations
     function buildAnim<T>(
       property: string,
@@ -164,55 +142,34 @@ export const AnimationCtrl: React.FC<AnimationCtrlProps> = ({
     }
 
     // 8) grab scene targets
-    const light   = scene.lights[0]!
+    const light   = scene.getLightByName('default light')!
+    const sun     = scene.getLightByName('sun')
     const leafMat = scene.getMaterialByName('leafMat') as CustomMaterial
     const redLeafMat = scene.getMaterialByName('redLeafMat') as CustomMaterial;
-    const snow    = scene.getMeshByName('Snow')!
-    const grass   = scene.getTransformNodeByName('GrassRoot')!
-    const skyMat1 = scene.getMaterialByName('skyBox1Mat') as StandardMaterial
-    const skyMat2 = scene.getMaterialByName('skyBox2Mat') as StandardMaterial
-    const groundLeafMat = scene.getMaterialByName('groundLeafCell') as StandardMaterial;
 
     // ensure correct initial alpha
     leafMat.alpha    = 1
     redLeafMat.alpha = 0
 
-    // preload & assign skyboxes
-    const urlFrom = `${getBasePath()}/textures/skybox/sky_${from}`
-    const urlTo   = `${getBasePath()}/textures/skybox/sky_${to}`
-    const faces   = ['_px.jpg','_py.jpg','_pz.jpg','_nx.jpg','_ny.jpg','_nz.jpg']
-    skyMat1.reflectionTexture = new CubeTexture(urlFrom, scene, faces)
-    skyMat1.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE
-    skyMat1.alpha = 1
-    skyMat2.reflectionTexture = new CubeTexture(urlTo, scene, faces)
-    skyMat2.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE
-    skyMat2.alpha = 0
-
-    // sky fade animations
-    const fadeOut = new Animation('fadeOutSky1','alpha',60,Animation.ANIMATIONTYPE_FLOAT,Animation.ANIMATIONLOOPMODE_CONSTANT)
-    fadeOut.setKeys([ { frame:0, value:1 }, { frame:totalFrames, value:0 } ])
-    fadeOut.setEasingFunction(ease)
-    const fadeIn  = new Animation('fadeInSky2','alpha',60,Animation.ANIMATIONTYPE_FLOAT,Animation.ANIMATIONLOOPMODE_CONSTANT)
-    fadeIn.setKeys([ { frame:0, value:0 }, { frame:totalFrames, value:1 } ])
-    fadeIn.setEasingFunction(ease)
-    skyMat1.animations = [fadeOut]
-    skyMat2.animations = [fadeIn]
-    fadeIn.addEvent(new AnimationEvent(totalFrames, () => onComplete?.(), true))
 
     // 9) apply all the seasonal tweens
     light.animations  = [
       buildAnim('diffuse',   Animation.ANIMATIONTYPE_COLOR3, lightColorMap),
       buildAnim('intensity', Animation.ANIMATIONTYPE_FLOAT,  lightIntMap),
+      buildAnim('groundColor', Animation.ANIMATIONTYPE_COLOR3, moodMap('hemiGround')),
     ]
+    // The tween ends at totalFrames: tell the parent the transition is done.
+    light.animations[0].addEvent(new AnimationEvent(totalFrames, () => onComplete?.(), true))
+    const sunAnims = [
+      buildAnim('diffuse',   Animation.ANIMATIONTYPE_COLOR3,  moodMap('sunColor')),
+      buildAnim('intensity', Animation.ANIMATIONTYPE_FLOAT,   moodMap('sunIntensity')),
+      buildAnim('direction', Animation.ANIMATIONTYPE_VECTOR3, moodMap('sunDirection')),
+    ]
+    const exposureAnims = [ buildAnim('exposure', Animation.ANIMATIONTYPE_FLOAT, moodMap('exposure')) ]
     leafMat.animations = [
       buildAnim('diffuseColor', Animation.ANIMATIONTYPE_COLOR3, leafTintMap),
       buildAnim('alphaCutOff',  Animation.ANIMATIONTYPE_FLOAT,  leafCutoffMap),
     ]
-    snow.animations  = [ buildAnim('position', Animation.ANIMATIONTYPE_VECTOR3, snowPosMap) ]
-    grass.animations = [ buildAnim('position', Animation.ANIMATIONTYPE_VECTOR3, grassPosMap) ]
-    groundLeafMat.animations = [
-      buildAnim('alpha', Animation.ANIMATIONTYPE_FLOAT, groundLeafAlphaMap)
-    ];
     // start them
     disposables.current.forEach(d => d.stop())
     disposables.current = [
@@ -226,13 +183,10 @@ export const AnimationCtrl: React.FC<AnimationCtrlProps> = ({
         [ buildAnim('alpha', Animation.ANIMATIONTYPE_FLOAT, redAlphaMap) ],
         0, totalFrames, false, 1
       ),
-      scene.beginDirectAnimation(groundLeafMat, groundLeafMat.animations!, 0, totalFrames, false, 1),
-      scene.beginDirectAnimation(skyMat1, skyMat1.animations!, 0, totalFrames, false,1),
-      scene.beginDirectAnimation(skyMat2, skyMat2.animations!, 0, totalFrames, false,1),
       scene.beginDirectAnimation(light,   light.animations!,   0, totalFrames, false,1),
+      ...(sun ? [scene.beginDirectAnimation(sun, sunAnims, 0, totalFrames, false, 1)] : []),
+      scene.beginDirectAnimation(scene.imageProcessingConfiguration, exposureAnims, 0, totalFrames, false, 1),
       scene.beginDirectAnimation(leafMat, leafMat.animations!, 0, totalFrames, false,1),
-      scene.beginDirectAnimation(snow,    snow.animations!,    0, totalFrames, false,1),
-      scene.beginDirectAnimation(grass,   grass.animations!,   0, totalFrames, false,1),
     ]
 
     // 10) petals vs leaves scaling only on Spring transitions

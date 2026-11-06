@@ -4,11 +4,13 @@ import { ParticleHelper } from '@babylonjs/core/Particles/particleHelper';
 import type { ParticleSystem } from '@babylonjs/core/Particles/particleSystem';
 import '@babylonjs/core/Particles/particleSystemComponent';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
-import { Color3 } from '@babylonjs/core/Maths/math.color';
-import { PostProcess } from '@babylonjs/core/PostProcesses/postProcess';
-import { Effect } from '@babylonjs/core/Materials/effect';
+import { Color3, Color4 } from '@babylonjs/core/Maths/math.color';
+import { Vector2 } from '@babylonjs/core/Maths/math.vector';
+import { DefaultRenderingPipeline } from '@babylonjs/core/PostProcesses/RenderPipeline/Pipelines/defaultRenderingPipeline';
+import '@babylonjs/core/PostProcesses/RenderPipeline/postProcessRenderPipelineManagerSceneComponent';
+import '@babylonjs/core/Rendering/outlineRenderer';
+import { ImageProcessingConfiguration } from '@babylonjs/core/Materials/imageProcessingConfiguration';
 import { Texture } from '@babylonjs/core/Materials/Textures/texture';
-import { CubeTexture } from '@babylonjs/core/Materials/Textures/cubeTexture';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import type { InstancedMesh } from '@babylonjs/core/Meshes/instancedMesh';
 import type { AbstractMesh } from '@babylonjs/core/Meshes/abstractMesh';
@@ -19,16 +21,12 @@ import { PBRMaterial } from '@babylonjs/core/Materials/PBR/pbrMaterial';
 import { ArcRotateCamera } from '@babylonjs/core/Cameras/arcRotateCamera';
 import { Camera } from '@babylonjs/core/Cameras/camera';
 import { Tools } from '@babylonjs/core/Misc/tools';
-import { SSAO2RenderingPipeline } from '@babylonjs/core/PostProcesses/RenderPipeline/Pipelines/ssao2RenderingPipeline';
-// Scene components SSAO2 relies on (registered as side effects; the full-package import used to pull them in).
-import '@babylonjs/core/PostProcesses/RenderPipeline/postProcessRenderPipelineManagerSceneComponent';
-import '@babylonjs/core/Rendering/geometryBufferRendererSceneComponent';
-import '@babylonjs/core/Rendering/prePassRendererSceneComponent';
-import '@babylonjs/core/Rendering/depthRendererSceneComponent';
 import { CustomMaterial } from '@babylonjs/materials/custom/customMaterial';
 import { useScene, useModel } from 'reactylon';
 import '@babylonjs/loaders/glTF/2.0';
 import { getBasePath } from './config';
+import { applyMood } from './seasonMood';
+import { buildGarden } from './Garden';
 
 import { Season } from './season';
 export { Season };
@@ -69,15 +67,12 @@ export const Content: React.FC<ContentProps & {
   const [redPS,    setRedPS]    = useState<ParticleSystem|null>(null);
   const [snowPS,   setSnowPS]   = useState<ParticleSystem|null>(null);
   const scene = useScene();
+  const gardenRef = useRef<ReturnType<typeof buildGarden> | null>(null);
+  // The meadow palette (grass, ground, rocks, haze) blends towards the new season on its own.
+  useEffect(() => { gardenRef.current?.setSeason(season); }, [season]);
   const basePath = getBasePath();
   const { meshes: leafMeshes } = useModel(`${basePath}/meshes/leaf_emitter.glb`);
   const { meshes: treeMeshes } = useModel(`${basePath}/meshes/SakuraTree.glb`);
-  const { meshes: hillMeshes } = useModel(`${basePath}/meshes/Hill.glb`);
-  const { meshes: grassEmitter } = useModel(`${basePath}/meshes/GrassEmitter.glb`);
-  const { meshes: smallWallMeshes } = useModel(`${basePath}/meshes/SmallerWalls.glb`);
-  const { meshes: snowMeshes } = useModel(`${basePath}/meshes/Snow.glb`);
-  const { meshes: groundLeafMeshes } = useModel(`${basePath}/meshes/GroundLeafs.glb`);
-  const { meshes: hillLeafMeshes } = useModel(`${basePath}/meshes/HillLeafs.glb`);
   // Invisible particle emitter boxes, created once per scene (not on every render).
   const { winterEmitter, otherEmitter } = useMemo(() => {
     const winterEmitter = MeshBuilder.CreateBox("winterEmitter", { size: 5 }, scene);
@@ -120,12 +115,7 @@ export const Content: React.FC<ContentProps & {
     if (
       !scene ||
       leafMeshes.length   === 0 ||
-      treeMeshes.length   === 0 ||
-      hillMeshes.length   === 0 ||
-      grassEmitter.length === 0 ||
-      smallWallMeshes.length === 0 ||
-      groundLeafMeshes.length === 0 ||
-      hillLeafMeshes.length   === 0
+      treeMeshes.length   === 0
     ) {
       return;
     }
@@ -161,10 +151,11 @@ export const Content: React.FC<ContentProps & {
     );
 
     // Orbit constraints
-    camera.lowerBetaLimit = Tools.ToRadians(45);   // Prevent going too low
-    camera.upperBetaLimit = Tools.ToRadians(98);   // Prevent flipping over
+    // Mobile auto-rotates at its own angle; desktop orbits stay near eye level so the sky stays in frame.
+    camera.lowerBetaLimit = Tools.ToRadians(isMobile ? 45 : 55);
+    camera.upperBetaLimit = Tools.ToRadians(95);   // About eye level
     camera.lowerRadiusLimit = 3;                  // Zoom-in limit
-    camera.upperRadiusLimit = 7;                // Zoom-out limit
+    camera.upperRadiusLimit = 12;               // Zoom-out limit
     camera.allowUpsideDown = false;
     camera.panningSensibility = 0;                // ❌ Disable panning
 
@@ -173,7 +164,7 @@ export const Content: React.FC<ContentProps & {
       // and aim lower so the tree sits in the upper part of the screen above the text.
       camera.fovMode = Camera.FOVMODE_HORIZONTAL_FIXED;
       camera.fov = 1.05;
-      camera.radius = 7;
+      camera.radius = 8.5;
       camera.target = new Vector3(0, 0.9, 0);
       // No touch orbit on phones: a swipe should scroll the page. Turn slowly instead.
       camera.useAutoRotationBehavior = true;
@@ -183,136 +174,19 @@ export const Content: React.FC<ContentProps & {
         camera.autoRotationBehavior.idleRotationSpinupTime = 0;
       }
     } else {
+      // Eye-level framing: the canopy sits against the sky and the tree takes the left half,
+      // clear of the content panel on the right. Radius stays inside the courtyard walls.
+      camera.target = new Vector3(0, 1.6, 0);
+      camera.alpha = Tools.ToRadians(140);
+      camera.beta = Tools.ToRadians(83);
+      camera.radius = 9;
+      camera.fov = 0.95;
+      camera.targetScreenOffset = new Vector2(-1.8, 0);
       camera.attachControl(undefined, true);
     }
-    // ─── Defer SSAO until scene is fully initialized ─────────────────────────
-      try {
-        if (scene.activeCamera && !isMobile) {
-          new SSAO2RenderingPipeline(
-            "ssao",
-            scene,
-            0.5,
-            [scene.activeCamera]
-          );
-        }
-      } catch (e) {
-        console.warn("SSAO pipeline failed to initialize:", (e as Error)?.message ?? e);
-      }
     scene.activeCamera = camera;
 
-    // Skybox
-    const skyContainer = new TransformNode("skyContainer", scene);
-
-    function makeSky(name: string, initialAlpha: number) {
-      const sky = MeshBuilder.CreateBox(name, { size: 500 }, scene);
-      sky.parent            = skyContainer;
-      sky.infiniteDistance  = true;      // always behind everything
-      sky.isPickable        = false;     // don’t ray‑pick it
-      sky.renderingGroupId  = 0;         // render first
-      const mat = new StandardMaterial(name + "Mat", scene);
-      mat.backFaceCulling   = false;
-      mat.disableLighting   = true;
-      mat.disableDepthWrite = true;      // <-- crucial!
-      mat.alpha             = initialAlpha;
-      sky.material          = mat;
-      return { sky, mat };
-    }
-
-    // 1) make the two skyboxes
-    const { sky: skybox1, mat: skyMat1 } = makeSky("skyBox1", 1);
-    const { sky: skybox2, mat: skyMat2 } = makeSky("skyBox2", 0);
-
-    // 2) assign each its cube texture *before* you set coordinatesMode
-    const faces = ["_px.jpg","_py.jpg","_pz.jpg","_nx.jpg","_ny.jpg","_nz.jpg"];
-
-    skyMat1.reflectionTexture = new CubeTexture(
-      `${basePath}/textures/skybox/sky_spring`, scene, faces
-    );
-    skyMat1.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
-
-    skyMat2.reflectionTexture = new CubeTexture(
-      `${basePath}/textures/skybox/sky_spring`, scene, faces
-    );
-    skyMat2.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
-
-    // ─── Wall setup ─────────────────────────
-    const walls = smallWallMeshes.find(m => m.name === 'LargeWalls') ?? smallWallMeshes[0];
-    walls.position.set(0, -1.8, 0);
-    walls.isVisible = true;
-
-    // ─── Snow setup ─────────────────────────
-    const snow = snowMeshes.find(m => m.name === 'Snow') ?? snowMeshes[0];
-    snow.position.set(0, -3, 0);
-    snow.isVisible = true;
-
-    // 2) Create a PBRMaterial
-    const snowGlitterMat = new PBRMaterial("snowGlitter", scene);
-
-    // 3) Base snow color/texture
-    snowGlitterMat.albedoColor = Color3.FromHexString('#C0EAFF').toLinearSpace();
-    const snowAlbedoTex = new Texture(`${basePath}/textures/sand_diffuse.jpg`, scene);
-    snowAlbedoTex.uScale = 25;
-    snowAlbedoTex.vScale = 25;
-    snowGlitterMat.albedoTexture = snowAlbedoTex;
-
-    const snowNormalTex = new Texture(`${basePath}/textures/sand_normal.jpg`, scene);
-    snowNormalTex.uScale = 25;
-    snowNormalTex.vScale = 25;
-    snowGlitterMat.bumpTexture = snowNormalTex;
-
-    // 4) Metallic/roughness—keep metallic=0, but drive microSurface with the mask
-    snowGlitterMat.metallic = 0;
-    snowGlitterMat.roughness = 0.9;
-    snowGlitterMat.microSurface = 0.7;
-
-    // 5) Plug your sparkle mask into the microSurface channel
-    //    white areas → high microSurface → sharp specular “glints”
-    //    black areas → low microSurface → diffuse snow
-    //snowGlitterMat.microSurfaceTexture = sparkleMask;
-
-    // 6) Tweak specular color/intensity if you want colored glints:
-    snowGlitterMat.reflectivityColor = new Color3(1,1,1);
-    snowGlitterMat.environmentIntensity = 1.2; // make glints brighter
-    snow.material = snowGlitterMat;
-
-    // Load ground from height map
-    const ground = MeshBuilder.CreateGroundFromHeightMap(
-      "sandGround",
-      "./textures/sand_height_waves.png", // ✅ your heightmap image
-      {
-        width: 15,             // Width of ground
-        height: 15,            // Height of ground
-        subdivisions: 500,      // 500 keeps the ripples visible; 1000 (4x the vertices) looked the same
-        minHeight: 0,          // Lowest height
-        maxHeight: 0.15          // Highest height
-      },
-      scene
-    );
-
-    // Adjust position if needed
-    ground.position.y = -1.5;
-
-    // Create PBR Material for sand
-    const sandPBRMat = new PBRMaterial("sandPBRMat", scene);
-
-    // Albedo (diffuse) texture for sand color
-    const albedoTex = new Texture(`${basePath}/textures/sand_diffuse.jpg`, scene);
-    albedoTex.uScale = 10; // Tile
-    albedoTex.vScale = 10;
-    sandPBRMat.albedoTexture = albedoTex;
-
-    // Macro height details
-    const normalTex = new Texture(`${basePath}/textures/sand_normal.jpg`, scene);
-    normalTex.uScale = 10;
-    normalTex.vScale = 10;
-    sandPBRMat.bumpTexture = normalTex;
-
-    // PBR settings
-    sandPBRMat.metallic = 0;
-    sandPBRMat.roughness = 0.8;
-
-    // Apply material
-    ground.material = sandPBRMat;
+    // Sky: a gradient dome built in Garden.ts.
 
     // ─── Tree setup ─────────────────────────
     const treeRoot = treeMeshes[0];
@@ -411,6 +285,8 @@ export const Content: React.FC<ContentProps & {
     leafMat.emissiveTexture = new Texture(`${basePath}/textures/grass_ramp.png`, scene);
     leafMat.specularColor = new Color3(0.1, 0.3, 0.1);
     leafMat.specularPower = 128;
+    // The ramp is applied in the shader; a weaker emissive pass keeps the green from going neon.
+    leafMat.emissiveTexture.level = 0.4;
 
     leafMat.Vertex_Definitions(
       `#ifdef INSTANCES
@@ -443,6 +319,9 @@ export const Content: React.FC<ContentProps & {
       vec3 rampCol = texture2D(emissiveSampler, vec2(u, 0.5)).rgb;
       float ao = texture2D(ambientSampler, vUV).r;
       rampCol *= ao;
+      // Pull the ramp back from neon: a little less saturation and brightness.
+      rampCol = mix(vec3(dot(rampCol, vec3(0.299, 0.587, 0.114))), rampCol, 0.8) * 0.85;
+      rampCol *= vec3(0.8, 0.9, 0.72); // deeper, less yellow summer green
       diffuseColor = rampCol;`
     );
     leafMat.Fragment_Custom_Alpha(`alpha = texture2D(diffuseSampler, vUV).a * alpha;`);
@@ -586,126 +465,6 @@ export const Content: React.FC<ContentProps & {
       allFlowerInstances.forEach(i => i.scaling.setAll(0));
     }
 
-    // ─── Grass instancing ─────────────────────────────
-    const grassPlane = MeshBuilder.CreatePlane("grassPlane", { size: 1 }, scene);
-    const grassRoot = new TransformNode('GrassRoot', scene);
-    grassRoot.position = new Vector3(0, -0.95, 0);
-    grassRoot.parent = root;
-    grassPlane.scaling.scaleInPlace(0.1);
-    grassPlane.isVisible = false;
-    grassPlane.registerInstancedBuffer('faceNormal', 3);
-    grassPlane.registerInstancedBuffer('shadeOffset', 1);
-
-    const grassMat = new CustomMaterial('grassMat', scene);
-    grassMat.diffuseTexture = new Texture(`${basePath}/textures/grass_leaf.png`, scene);
-    grassMat.diffuseTexture.hasAlpha = true;
-    grassMat.alphaCutOff = 0.7;
-    grassMat.emissiveTexture = new Texture(`${basePath}/textures/grass_ramp.png`, scene);
-    grassMat.specularColor = new Color3(0.1, 0.3, 0.1);
-    grassMat.specularPower = 128;
-
-    grassMat.Vertex_Definitions(
-      `#ifdef INSTANCES
-        attribute vec3 faceNormal;
-        attribute float shadeOffset;
-        varying vec3 vFaceNormal;
-        varying float vShadeOffset;
-      #endif
-      varying vec2 vUV;`
-    );
-    grassMat.Vertex_MainBegin(`vUV = uv;`);
-    grassMat.Vertex_After_WorldPosComputed(
-      `#ifdef INSTANCES
-        vFaceNormal = normalize((finalWorld * vec4(faceNormal, 0.0)).xyz);
-        vShadeOffset = shadeOffset;
-      #endif`
-    );
-    grassMat.Fragment_Definitions(
-      `varying vec3 vFaceNormal;
-      varying vec2 vUV;
-      varying float vShadeOffset;
-      uniform sampler2D ambientSampler;`
-    );
-    grassMat.Fragment_Custom_Diffuse(
-      `float a = texture2D(diffuseSampler, vUV).a;
-      if (a < 0.5) discard;
-
-      float ndl = max(dot(normalize(vFaceNormal), normalize(vec3(1.0,1.0,0.5))), 0.0);
-      float u = clamp(ndl + vShadeOffset, 0.0, 1.0);
-      vec3 rampCol = texture2D(emissiveSampler, vec2(u, 0.5)).rgb;
-      float ao = texture2D(ambientSampler, vUV).r;
-      rampCol *= ao;
-      diffuseColor = rampCol;`
-    );
-    grassMat.Fragment_Custom_Alpha(`alpha = texture2D(diffuseSampler, vUV).a;`);
-    grassPlane.material = grassMat;
-
-    const hill = hillMeshes.find(m => m.name === 'Hill') ?? hillMeshes[0];
-    hill.scaling = new Vector3(0.92, 0.445, 0.91);
-    hill.parent = root;
-    hill.isVisible = true;
-    const hillMat = new StandardMaterial('hillCell', scene);
-    hillMat.diffuseColor = Color3.FromHexString('#89EF00').toLinearSpace();
-    hillMat.diffuseTexture = new Texture(`${basePath}/textures/HillBase.png`, scene);
-    hillMat.emissiveTexture = new Texture(`${basePath}/textures/HillBase.png`, scene);
-    hillMat.specularColor = new Color3(0, 0, 0);
-
-
-    const groundLeafs = groundLeafMeshes.find(m => m.name === 'GroundLeafs') ?? hillMeshes[0];
-    groundLeafs.position.set(0, 0.47, 0);
-    groundLeafs.scaling.set(0.025, 0.03, 0.025);
-    groundLeafs.parent = root;
-    groundLeafs.isVisible = true;
-    const groundLeafsMat = new StandardMaterial('groundLeafCell', scene);
-    groundLeafsMat.diffuseColor = Color3.FromHexString('#ff4d00').toLinearSpace();
-    groundLeafsMat.specularColor = new Color3(0, 0, 0);
-    groundLeafsMat.alpha = 0;
-    groundLeafsMat.transparencyMode = StandardMaterial.MATERIAL_ALPHABLEND;
-    groundLeafsMat.backFaceCulling = false;
-    groundLeafs.material = groundLeafsMat;
-
-    const hillLeafs = hillLeafMeshes.find(m => m.name === 'HillLeafs') ?? hillMeshes[0];
-    hillLeafs.isVisible = true;
-
-    hillLeafs.material = groundLeafsMat;
-
-    const baseEmitter = grassEmitter.find(m => m.name === 'GrassEmitt') ?? grassEmitter[0];
-    baseEmitter.parent = root;
-    baseEmitter.isVisible = false;
-
-    const gPositions = baseEmitter.getVerticesData('position')!;
-    const gIndices = baseEmitter.getIndices()!;
-    const gFaceCenters: Vector3[] = [];
-    const gFaceNormals: Vector3[] = [];
-    for (let i = 0; i < gIndices.length; i += 3) {
-      const [i0, i1, i2] = [gIndices[i], gIndices[i + 1], gIndices[i + 2]];
-      const wm = baseEmitter.getWorldMatrix();
-      const v0 = Vector3.TransformCoordinates(new Vector3(...gPositions.slice(i0 * 3, i0 * 3 + 3)), wm);
-      const v1 = Vector3.TransformCoordinates(new Vector3(...gPositions.slice(i1 * 3, i1 * 3 + 3)), wm);
-      const v2 = Vector3.TransformCoordinates(new Vector3(...gPositions.slice(i2 * 3, i2 * 3 + 3)), wm);
-      const center = v0.add(v1).add(v2).scale(1 / 3);
-      const normal = Vector3.Cross(v1.subtract(v0), v2.subtract(v0)).normalize();
-      gFaceCenters.push(center);
-      gFaceNormals.push(normal);
-    }
-
-    const grassInstances: InstancedMesh[] = [];
-
-    gFaceCenters.forEach((center, idx) => {
-      if (Math.random() > 0.4) return;
-      const normal = gFaceNormals[idx];
-      const inst = grassPlane.createInstance(`g_inst_${idx}`);
-      inst.position = center.subtract(root.position); // compensate for root shift
-      inst.parent = grassRoot;
-      inst.billboardMode = Mesh.BILLBOARDMODE_ALL;
-      const s = 0.15 + Math.random() * 0.15;
-      inst.scaling = new Vector3(s, s, s);
-      inst.rotation.z = Math.random() * Math.PI * 2;
-      inst.instancedBuffers.faceNormal = [normal.x, normal.y, normal.z];
-      inst.instancedBuffers.shadeOffset = [Math.random() * 0.2 - 0.1];
-      grassInstances.push(inst);
-    });
-
     const windObs = scene.onBeforeRenderObservable.add(() => {
       const t = performance.now() * 0.001;
       allInstances.forEach((i, x) => {
@@ -717,52 +476,49 @@ export const Content: React.FC<ContentProps & {
       allRedLeafInstances.forEach((i, x) => {
         i.rotation.z = Math.sin(t + x * 0.15) * 0.1;
       });
-      grassInstances.forEach((g, x) => {
-        g.rotation.z = Math.cos(t + x * 0.11) * 0.08;
-      });
     });
 
-    // PostProcess: Watercolor Shader
-    Effect.ShadersStore["watercolorFragmentShader"] =
-      `precision highp float;
-      varying vec2 vUV;
-      uniform sampler2D textureSampler;
+    // ─── Cel-shaded hilltop garden, grass and meadow (Garden.ts) ───────
+    const garden = buildGarden(scene, { isMobile, season, tree: treeMeshes });
+    gardenRef.current = garden;
 
-      void main(void) {
-        vec4 color = texture2D(textureSampler, vUV);
-        float gray = dot(color.rgb, vec3(0.299, 0.587, 0.114));
-        gray += (fract(sin(dot(vUV.xy, vec2(12.9898,78.233))) * 43758.5453123) - 0.5) * 0.05;
-        vec3 finalColor = mix(color.rgb, vec3(gray), 0.3);
-        gl_FragColor = vec4(finalColor, 1.0);
-      }`
-    ;
-    const watercolorPost = new PostProcess(
-      "watercolor",
-      "watercolor",
-      [],
-      null,
-      1.0,
-      camera
-    );
+    // Post: FXAA, a soft bloom on the sky (desktop) and a gentle vignette. No filmic tone
+    // mapping: the toon palette is authored in display colours.
+    const pipeline = new DefaultRenderingPipeline('post', true, scene, [camera]);
+    pipeline.fxaaEnabled = true;
+    pipeline.bloomEnabled = false; // the soft palette needs no glow; bloom only greyed it out
+    pipeline.bloomThreshold = 0.97;
+    pipeline.bloomWeight = 0.08;
+    pipeline.bloomKernel = 48;
+    pipeline.imageProcessingEnabled = true;
+    const ip = scene.imageProcessingConfiguration;
+    ip.toneMappingEnabled = false;
+    ip.contrast = 1.03;
+    ip.vignetteEnabled = true;
+    ip.vignetteWeight = 0.9;
+    ip.vignetteStretch = 0.4;
+    ip.vignetteColor = new Color4(0.08, 0.05, 0.12, 0);
+
+    applyMood(scene, season);
 
     scene.executeWhenReady(() => onReady?.());
 
     return () => {
       scene.onBeforeRenderObservable.remove(windObs);
       allInstances.forEach(i => i.dispose());
-      grassInstances.forEach(i => i.dispose());
       allBushes.forEach(b => b.dispose());
       leafMat.dispose();
       leafPlane.dispose();
-      grassPlane.dispose();
       flowerInstances.forEach(i => i.dispose());
       flowerPlane.dispose();
       flowerMat.dispose();
-      watercolorPost.dispose();
+      gardenRef.current = null;
+      garden.dispose();
+      pipeline.dispose();
       camera.dispose();
       root.dispose();
     };
-  }, [scene, leafMeshes, treeMeshes, hillMeshes, grassEmitter, smallWallMeshes, groundLeafMeshes, hillLeafMeshes]);
+  }, [scene, leafMeshes, treeMeshes]);
 
   useEffect(() => {
     let alive = true;
@@ -801,11 +557,7 @@ export const Content: React.FC<ContentProps & {
     const leafMat    = scene.getMaterialByName('leafMat')    as CustomMaterial;
     const redLeafMat = scene.getMaterialByName('redLeafMat') as CustomMaterial;
     const light   = scene.lights[0]! as any;
-    const snow    = scene.getMeshByName('Snow')!;
-    const grass   = scene.getTransformNodeByName('GrassRoot')!;
     // **look up the right material names**:
-    const skyMat1 = scene.getMaterialByName('skyBox1Mat') as StandardMaterial;
-    const skyMat2 = scene.getMaterialByName('skyBox2Mat') as StandardMaterial;
 
     // maps of Season → value
     const lightColorMap: Record<Season, Color3> = {
@@ -813,12 +565,6 @@ export const Content: React.FC<ContentProps & {
       [Season.Summer]: Color3.FromHexString('#FFF8E0').toLinearSpace(),
       [Season.Fall]:   Color3.FromHexString('#FFD1A3').toLinearSpace(),
       [Season.Winter]: Color3.FromHexString('#C8E8FF').toLinearSpace(),
-    };
-    const lightIntMap: Record<Season, number> = {
-      [Season.Spring]: 1.1,
-      [Season.Summer]: 1.2,
-      [Season.Fall]:   0.8,
-      [Season.Winter]: 0.9,
     };
     const leafColorMap: Record<Season, Color3> = {
       [Season.Spring]: Color3.FromHexString('#8CCF3B').toLinearSpace(),
@@ -838,15 +584,11 @@ export const Content: React.FC<ContentProps & {
 
     // apply light, leaves, snow & grass
     light.diffuse        = lightColorMap[s];
-    light.intensity      = lightIntMap[s];
     leafMat.diffuseColor = leafColorMap[s];
     leafMat.alphaCutOff  = leafAlphaMap[s];
-    snow.position.y      = s === Season.Winter ? -1.2 : -3;
-    grass.position.y     = s === Season.Winter ? -2   : -1;
 
-    // **only** snap which skybox is visible by alpha
-    skyMat1.alpha = 1;
-    skyMat2.alpha = 0;
+
+    applyMood(scene, s);
   };
 
   // run once on mount to snap to the current season
