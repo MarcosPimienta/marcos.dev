@@ -32,7 +32,8 @@ const SUN = new Vector3(-0.45, 0.6, 0.66).normalize(); // direction *towards* th
 // Garden layout in (along, side) metres from the tree: along points away from the camera.
 const GROUND_Y = -0.95;
 const BED = { a: 1.5, s: 0.5, halfA: 4.0, halfS: 4.6, corner: 2.4 }; // raked gravel bed (before wobble)
-const CURB = 0.3;                                                   // stone edging width
+const CURB = 0.5;                                                   // width of the earth bank around the gravel
+const PIT = 0.2;                                                    // how far the gravel sits below the lawn
 // Moss islands in the gravel: [along, side, radius, mound height]
 const ISLANDS: [number, number, number, number][] = [
   [0, 0, 1.9, 0.26],       // the tree
@@ -157,8 +158,9 @@ export function terrainHeight(x: number, z: number) {
   // Garden on the summit: level gravel, a raised stone curb, soft moss mounds.
   const bed = bedDistance(along, side);
   const { mound } = islandAt(along, side);
-  const curb = bed > -0.02 && bed < CURB ? 0.06 : 0;
-  const garden = GROUND_Y + mound + curb;
+  // The gravel sits in a shallow pit; the bank rises softly to the lawn over CURB metres.
+  const pit = PIT * (1 - smoothstep(0, CURB, bed));
+  const garden = GROUND_Y - pit + mound;
   // A short lawn around the curb, then the slope rounds over and eases out into the meadow.
   const t = smoothstep(CURB + 0.8, HILL_FOOT, bed);
   const lumps = (fbm(x * 0.12 + 3.1, z * 0.12, 3) - 0.5) * 1.2 * 4 * t * (1 - t);
@@ -318,21 +320,21 @@ void main(){
   vec3 gSh  = mix(gravel, rockShade, 0.55) * (0.95 + speck) * mix(1.0, 0.92, rake);
   float inBed = step(bed, 0.0) * step(0.0, isl);
   litCol = mix(litCol, gLit, inBed); shCol = mix(shCol, gSh, inBed);
-  // Curb: a row of stone blocks that follows the bed's outline. Blocks are counted by angle
-  // around the bed's centre, so the joints always run straight across the band; each block's
-  // top is slightly rounded (darker towards both edges).
-  float inCurb = step(0.0, bed) * step(bed, ${f(CURB)});
-  vec2 cq = g - vec2(${f(BED.a)}, ${f(BED.s)});
-  float cu = (atan(cq.y, cq.x) / 6.2831853 + 0.5) * 56.0;       // 56 blocks around the garden
-  float block = h21(vec2(floor(cu), 7.0));
-  float across = clamp(bed / ${f(CURB)}, 0.0, 1.0);
-  float bevel = smoothstep(0.0, 0.22, across) * smoothstep(1.0, 0.78, across);
-  float joint = (1.0 - smoothstep(0.0, 0.045, min(fract(cu), 1.0 - fract(cu)))) * inCurb;
-  vec3 curbLit = rock * mix(0.86, 1.02, block) * mix(0.8, 1.04, bevel) * (0.97 + speck);
-  vec3 curbSh  = rockShade * mix(0.92, 1.04, block) * mix(0.85, 1.02, bevel);
-  litCol = mix(litCol, mix(curbLit, grass, snow * 0.8), inCurb);
-  shCol  = mix(shCol, mix(curbSh, grassShade, snow * 0.8), inCurb);
-  litCol *= 1.0 - joint * 0.3 * (1.0 - snow); shCol *= 1.0 - joint * 0.3 * (1.0 - snow);
+  // Earth bank: the gravel sits in a shallow pit, and its sloped rim is bare soil with a few
+  // pebbles, blending into the lawn at the top. A little shade falls on the gravel below it.
+  float bankEdge = bed + (vnoise(vW.xz * 3.0) - 0.5) * 0.12;
+  float inBank = step(0.0, bed) * (1.0 - smoothstep(${f(CURB - 0.12)}, ${f(CURB + 0.05)}, bankEdge));
+  float soilN = vnoise(vW.xz * 6.0) * 0.6 + vnoise(vW.xz * 17.0) * 0.4;
+  vec3 soilLit = mix(vec3(0.47, 0.37, 0.27), vec3(0.6, 0.49, 0.36), soilN);
+  vec3 soilSh  = mix(vec3(0.3, 0.25, 0.24), vec3(0.38, 0.31, 0.28), soilN);
+  float pebble = step(0.93, h21(floor(vW.xz * 38.0)));
+  soilLit = mix(soilLit, vec3(0.72, 0.69, 0.62), pebble * 0.6);
+  float lip = smoothstep(${f(CURB * 0.45)}, ${f(CURB)}, bankEdge);
+  soilLit = mix(soilLit, litCol, lip * 0.6); soilSh = mix(soilSh, shCol, lip * 0.6);
+  litCol = mix(litCol, mix(soilLit, grass, snow * 0.85), inBank);
+  shCol  = mix(shCol, mix(soilSh, grassShade, snow * 0.85), inBank);
+  float underBank = inBed * smoothstep(-0.35, 0.0, bed);
+  litCol *= 1.0 - underBank * 0.14; shCol *= 1.0 - underBank * 0.1;
   // Moss islands: deeper green with a soft dark rim.
   float inIsl = step(bed, 0.0) * step(isl, 0.0);
   vec3 moss = grass * mix(mix(0.78, 0.92, vnoise(vW.xz * 3.0)), 1.0, snow);
@@ -365,7 +367,7 @@ void main(){
   float vein = 1.0 - smoothstep(0.0, 0.016, abs(vnoise(vec2(vW.x * 3.1 + vW.y * 2.3, vW.z * 3.1 - vW.y * 1.4)) - 0.5));
   c *= 1.0 - vein * 0.16;
   c *= 1.0 - step(0.955, h21(floor(vW.xz * 70.0 + vW.y * 41.0))) * 0.22;   // speckles
-  c *= mix(0.62, 1.0, smoothstep(${f(GROUND_Y)}, ${f(GROUND_Y + 0.45)}, vW.y)); // grounded base
+  c *= mix(0.62, 1.0, smoothstep(${f(GROUND_Y - PIT)}, ${f(GROUND_Y - PIT + 0.45)}, vW.y)); // grounded base
   float rim = pow(1.0 - max(dot(normalize(cameraPos - vW), n), 0.0), 3.0);
   c += rim * lit * 0.07;
   // Moss grows in patches on upward faces; snow covers every top in winter.
