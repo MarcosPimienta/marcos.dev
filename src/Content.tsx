@@ -564,10 +564,10 @@ export const Content: React.FC<ContentProps & {
 
     // maps of Season → value
     const lightColorMap: Record<Season, Color3> = {
-      [Season.Spring]: Color3.FromHexString('#FAFDE1').toLinearSpace(),
+      [Season.Spring]: Color3.FromHexString('#FFE6D2').toLinearSpace(),
       [Season.Summer]: Color3.FromHexString('#FFF8E0').toLinearSpace(),
-      [Season.Fall]:   Color3.FromHexString('#FFD1A3').toLinearSpace(),
-      [Season.Winter]: Color3.FromHexString('#C8E8FF').toLinearSpace(),
+      [Season.Fall]:   Color3.FromHexString('#FFB089').toLinearSpace(),
+      [Season.Winter]: Color3.FromHexString('#9DB2E6').toLinearSpace(),
     };
     const leafColorMap: Record<Season, Color3> = {
       [Season.Spring]: Color3.FromHexString('#8CCF3B').toLinearSpace(),

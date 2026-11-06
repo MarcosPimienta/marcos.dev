@@ -78,10 +78,10 @@ export const AnimationCtrl: React.FC<AnimationCtrlProps> = ({
 
     // 6) season → value maps
     const lightColorMap: Record<Season, Color3> = {
-      [Season.Spring]: Color3.FromHexString('#FAFDE1').toLinearSpace(),
+      [Season.Spring]: Color3.FromHexString('#FFE6D2').toLinearSpace(),
       [Season.Summer]: Color3.FromHexString('#FFF8E0').toLinearSpace(),
-      [Season.Fall]:   Color3.FromHexString('#FFD1A3').toLinearSpace(),
-      [Season.Winter]: Color3.FromHexString('#C8E8FF').toLinearSpace(),
+      [Season.Fall]:   Color3.FromHexString('#FFB089').toLinearSpace(),
+      [Season.Winter]: Color3.FromHexString('#9DB2E6').toLinearSpace(),
     }
     // sun, sky fill, fog and exposure come from seasonMood.ts
     const moodMap = <K extends keyof typeof MOODS[Season]>(key: K) =>

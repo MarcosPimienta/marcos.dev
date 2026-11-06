@@ -5,7 +5,8 @@ import type { DirectionalLight } from '@babylonjs/core/Lights/directionalLight';
 import type { HemisphericLight } from '@babylonjs/core/Lights/hemisphericLight';
 import { Season } from './season';
 
-// Per-season lighting and atmosphere: sun, sky fill, fog and exposure.
+// Per-season lighting: the sky fill on the tree's leaves follows the time of day
+// (dawn, noon, dusk, night); the rest of the scene's light lives in Garden.ts.
 // Content.tsx applies it when the scene is built; AnimationCtrl.tsx tweens between seasons.
 export interface Mood {
   sunColor: Color3;
@@ -24,22 +25,22 @@ const LOW_SUN = new Vector3(0.9, -0.55, 0.6).normalize();
 export const MOODS: Record<Season, Mood> = {
   [Season.Spring]: {
     sunColor: Color3.FromHexString('#FFF1E6'), sunIntensity: 2.4, sunDirection: DAY_SUN,
-    hemiIntensity: 0.9, hemiGround: Color3.FromHexString('#6E5A7A'),
+    hemiIntensity: 0.85, hemiGround: Color3.FromHexString('#6E5A7A'),
     fogColor: Color3.FromHexString('#F6D9E4'), exposure: 1.0,
   },
   [Season.Summer]: {
     sunColor: Color3.FromHexString('#FFF6D8'), sunIntensity: 3.0, sunDirection: DAY_SUN,
-    hemiIntensity: 0.8, hemiGround: Color3.FromHexString('#4E6B4A'),
+    hemiIntensity: 0.95, hemiGround: Color3.FromHexString('#4E6B4A'),
     fogColor: Color3.FromHexString('#D8ECD9'), exposure: 1.0,
   },
   [Season.Fall]: {
     sunColor: Color3.FromHexString('#FFB070'), sunIntensity: 3.2, sunDirection: LOW_SUN,
-    hemiIntensity: 0.8, hemiGround: Color3.FromHexString('#6A3B2A'),
+    hemiIntensity: 0.72, hemiGround: Color3.FromHexString('#6A3B2A'),
     fogColor: Color3.FromHexString('#F2C79A'), exposure: 1.0,
   },
   [Season.Winter]: {
     sunColor: Color3.FromHexString('#DDEBFF'), sunIntensity: 2.2, sunDirection: DAY_SUN,
-    hemiIntensity: 0.85, hemiGround: Color3.FromHexString('#3D4A66'),
+    hemiIntensity: 0.4, hemiGround: Color3.FromHexString('#3D4A66'),
     fogColor: Color3.FromHexString('#C9DAEA'), exposure: 1.0,
   },
 };
