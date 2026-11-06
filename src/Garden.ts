@@ -74,6 +74,7 @@ interface Palette {
   ambCol: Color3;     // light in shade (multiplier)
   glow: Color3;       // horizon glow on the sun's side
   night: number;      // 0..1: stars, moon disc, lantern light
+  treeShade: number;  // strength of the canopy's shadow (0 in winter: the tree is bare)
 }
 // Direction towards a sun at the given compass heading (in garden terms) and elevation.
 const sunAt = (along: number, side: number, elevationDeg: number) => {
@@ -89,28 +90,28 @@ const PALETTES: Record<Season, Palette> = {
     rock: hex('#a9a698'), rockShade: hex('#6c7a78'), fog: hex('#f2d9cc'), skyTop: hex('#a9bde3'),
     gravel: hex('#ece7d4'), groove: hex('#cbc3ab'), bladeHeight: 1, snow: 0, bloom: 1, leafLit: hex('#a9c96a'), leafShade: hex('#4f7e4a'),
     // Dawn: low sun on the left, peach horizon, warm light, long shadows.
-    sunDir: sunAt(1, -0.9, 12), sunCol: rgb(1.12, 0.98, 0.88), ambCol: rgb(0.86, 0.84, 0.96), glow: hex('#ffbf9a'), night: 0,
+    sunDir: sunAt(1, -0.9, 12), sunCol: rgb(1.12, 0.98, 0.88), ambCol: rgb(0.86, 0.84, 0.96), glow: hex('#ffbf9a'), night: 0, treeShade: 0.75,
   },
   [Season.Summer]: {
     grass: hex('#94c25a'), grassShade: hex('#3f7653'), root: hex('#204a2c'), tip: hex('#b7d968'),
     rock: hex('#a6a497'), rockShade: hex('#647677'), fog: hex('#e3ecef'), skyTop: hex('#7fb4e3'),
     gravel: hex('#ebe7d6'), groove: hex('#c6bfab'), bladeHeight: 1.15, snow: 0, bloom: 0, leafLit: hex('#8fbf5a'), leafShade: hex('#3d6e45'),
     // Noon: high sun, clear blue sky, crisp light.
-    sunDir: sunAt(0.3, -0.5, 68), sunCol: rgb(1.06, 1.04, 1.0), ambCol: rgb(0.9, 0.93, 1.0), glow: hex('#fff3d6'), night: 0,
+    sunDir: sunAt(0.3, -0.5, 68), sunCol: rgb(1.06, 1.04, 1.0), ambCol: rgb(0.9, 0.93, 1.0), glow: hex('#fff3d6'), night: 0, treeShade: 1,
   },
   [Season.Fall]: {
     grass: hex('#d2b25e'), grassShade: hex('#8a6a4c'), root: hex('#5e4a26'), tip: hex('#e8cc74'),
     rock: hex('#b8aa98'), rockShade: hex('#7d6e70'), fog: hex('#eea488'), skyTop: hex('#5d6699'),
     gravel: hex('#ede2cd'), groove: hex('#cdb99c'), bladeHeight: 0.95, snow: 0, bloom: 0, leafLit: hex('#e8a24a'), leafShade: hex('#9a4630'),
     // Dusk (about 5 pm): sun sinking ahead of the camera, red glow along the horizon.
-    sunDir: sunAt(1, -0.35, 7), sunCol: rgb(1.3, 0.82, 0.58), ambCol: rgb(0.72, 0.62, 0.78), glow: hex('#ff5a32'), night: 0,
+    sunDir: sunAt(1, -0.35, 7), sunCol: rgb(1.3, 0.82, 0.58), ambCol: rgb(0.72, 0.62, 0.78), glow: hex('#ff5a32'), night: 0, treeShade: 0.75,
   },
   [Season.Winter]: {
     grass: hex('#f1f3fa'), grassShade: hex('#9ea8cf'), root: hex('#d4dbee'), tip: hex('#ffffff'),
     rock: hex('#9a99ae'), rockShade: hex('#5d5d82'), fog: hex('#1f2850'), skyTop: hex('#070c24'),
     gravel: hex('#f3f5fb'), groove: hex('#d6dbee'), bladeHeight: 0, snow: 1, bloom: 0, leafLit: hex('#d4d7e2'), leafShade: hex('#7d8296'),
     // Night: moonlight, stars, and the lantern lit.
-    sunDir: sunAt(1, -0.7, 32), sunCol: rgb(0.55, 0.63, 0.88), ambCol: rgb(0.28, 0.33, 0.55), glow: hex('#2c3a6e'), night: 1,
+    sunDir: sunAt(1, -0.28, 13), sunCol: rgb(0.55, 0.63, 0.88), ambCol: rgb(0.28, 0.33, 0.55), glow: hex('#2c3a6e'), night: 1, treeShade: 0,
   },
 };
 
@@ -237,7 +238,7 @@ float vnoise(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*(3.0-2.0*f);
 const COMMON_FRAG = `
 uniform vec3 sunDir; uniform vec3 cameraPos; uniform vec3 fogColor; uniform float fogDensity;
 uniform vec3 shadowCenter; uniform vec2 shadowRadius;
-uniform vec3 sunCol; uniform vec3 ambCol; uniform float night;
+uniform vec3 sunCol; uniform vec3 ambCol; uniform float night; uniform float treeShade;
 ${NOISE_GLSL}
 // Time-of-day light: tint lit surfaces with the sun (or moon) and shaded ones with the sky.
 vec3 grade(vec3 c, float lit){ return c * mix(ambCol, sunCol, lit); }
@@ -249,7 +250,7 @@ vec3 lanternPool(vec3 w){
 float treeShadow(vec3 w){
   vec2 d = (w.xz - shadowCenter.xz) / shadowRadius;
   float n = (vnoise(w.xz * 2.5) - 0.5) * 0.35;
-  return 1.0 - smoothstep(0.82, 0.92, length(d) + n);
+  return (1.0 - smoothstep(0.82, 0.92, length(d) + n)) * treeShade;
 }
 ${SHADOW_GLSL}
 float allShadow(vec3 w){ return max(treeShadow(w), objShadow(w)); }
@@ -518,12 +519,12 @@ void main(){
   float cs = dot(d, sd);
   c += sunCol * pow(max(cs, 0.0), 60.0) * 0.45 * (1.0 - night * 0.5);
   c += vec3(1.0, 0.95, 0.8) * pow(max(cs, 0.0), 8.0) * 0.12 * low * (1.0 - night);
-  c = mix(c, mix(vec3(1.0, 0.97, 0.86), vec3(0.93, 0.95, 1.0), night), smoothstep(0.9985, 0.9991, cs));
   // Stars at night.
   vec2 sp = d.xz / (d.y + 0.25) * 90.0;
   float star = step(0.9965, h21(floor(sp))) * smoothstep(0.06, 0.35, d.y);
   c += star * night * mix(0.5, 1.0, h21(floor(sp) + 3.0));
 
+  float veil = 0.0;
   // Stylised clouds on a flat layer: puffy shapes, white lit tops, soft shaded undersides,
   // drifting slowly and fading into the haze near the horizon.
   if (d.y > 0.0) {
@@ -544,7 +545,17 @@ void main(){
     float near = smoothstep(0.02, 0.22, d.y);
     cloudCol = mix(fogColor, cloudCol, 0.35 + 0.65 * near);
     c = mix(c, cloudCol, cover * smoothstep(0.0, 0.08, d.y));
+    veil = cover * 0.65;
   }
+  // Sun / moon disc on top of the clouds (veiled when one passes in front). The moon is a little
+  // larger, with a soft halo and a few faint darker patches.
+  float discEdge = mix(0.9985, 0.998, night);
+  vec3 discCol = mix(vec3(1.0, 0.97, 0.86), vec3(0.95, 0.96, 1.0), night);
+  vec3 tang = normalize(cross(sd, vec3(0.0, 1.0, 0.0)) + 1e-4);
+  vec2 mp = vec2(dot(d - sd, tang), dot(d - sd, normalize(cross(tang, sd)))) * 40.0;
+  discCol *= 1.0 - night * 0.1 * smoothstep(0.35, 0.8, vnoise(mp * 1.3 + 3.0) * 0.7 + vnoise(mp * 2.9 + 7.0) * 0.3);
+  c += vec3(0.75, 0.8, 1.0) * pow(max(cs, 0.0), 300.0) * 0.35 * night * (1.0 - veil);
+  c = mix(c, discCol, smoothstep(discEdge, discEdge + 0.0005, cs) * (1.0 - veil));
   gl_FragColor = vec4(pow(c, vec3(2.2)), 1.0); // linear out, see outColor()
 }`;
 
@@ -595,7 +606,7 @@ void main(){
 }`;
 
 // ─── Builders ───────────────────────────────────────────────────────────────
-const COMMON_UNIFORMS = ['world', 'viewProjection', 'sunDir', 'cameraPos', 'fogColor', 'fogDensity', 'shadowCenter', 'shadowRadius', 'sunCol', 'ambCol', 'night'];
+const COMMON_UNIFORMS = ['world', 'viewProjection', 'sunDir', 'cameraPos', 'fogColor', 'fogDensity', 'shadowCenter', 'shadowRadius', 'sunCol', 'ambCol', 'night', 'treeShade'];
 
 function toonMaterial(scene: Scene, name: string, frag: string, extraUniforms: string[], opts: { uv?: boolean; vcolor?: boolean; samplers?: string[] } = {}) {
   const mat = new ShaderMaterial(name, scene, { vertexSource: TOON_VERT, fragmentSource: frag }, {
@@ -769,6 +780,7 @@ export function buildGarden(scene: Scene, { isMobile, season, tree }: GardenOpti
     gravel: p.gravel.clone(), groove: p.groove.clone(),
     bladeHeight: p.bladeHeight, snow: p.snow, bloom: p.bloom, leafLit: p.leafLit.clone(), leafShade: p.leafShade.clone(),
     sunDir: p.sunDir.clone(), sunCol: p.sunCol.clone(), ambCol: p.ambCol.clone(), glow: p.glow.clone(), night: p.night,
+    treeShade: p.treeShade,
   });
   const current = clonePalette(PALETTES[season]);
   let target = PALETTES[season];
@@ -777,10 +789,13 @@ export function buildGarden(scene: Scene, { isMobile, season, tree }: GardenOpti
   const canopy = new Vector3(0, 2.4, 0);
   const groundY = terrainHeight(0, 0);
   const shadowCenter = new Vector3();
-  // A very low sun would throw the shadow off the hill: cap how long it gets.
+  // A low sun (dawn, dusk) would throw the shadow far from the tree: cap how far it shifts so it
+  // stays attached to the trunk.
   const placeTreeShadow = (sun: Vector3) => {
     const s = new Vector3(sun.x, Math.max(sun.y, 0.35), sun.z).normalize();
     canopy.subtractToRef(s.scale((canopy.y - groundY) / s.y), shadowCenter);
+    const len = Math.hypot(shadowCenter.x, shadowCenter.z), maxLen = 1.6;
+    if (len > maxLen) { shadowCenter.x *= maxLen / len; shadowCenter.z *= maxLen / len; }
   };
   placeTreeShadow(current.sunDir);
   const shadowRadius = new Vector2(2.3, 1.9);
@@ -991,6 +1006,7 @@ export function buildGarden(scene: Scene, { isMobile, season, tree }: GardenOpti
     current.snow += (target.snow - current.snow) * k;
     current.bloom += (target.bloom - current.bloom) * k;
     current.night += (target.night - current.night) * k;
+    current.treeShade += (target.treeShade - current.treeShade) * k;
     Vector3.LerpToRef(current.sunDir, target.sunDir, k, current.sunDir);
     current.sunDir.normalize();
     placeTreeShadow(current.sunDir);
@@ -1023,6 +1039,7 @@ export function buildGarden(scene: Scene, { isMobile, season, tree }: GardenOpti
       mat.setColor3('ambCol', current.ambCol);
       mat.setColor3('glowColor', current.glow);
       mat.setFloat('night', current.night);
+      mat.setFloat('treeShade', current.treeShade);
       mat.setFloat('time', time);
       mat.setFloat('bladeHeight', current.bladeHeight);
       mat.setFloat('snow', current.snow);
@@ -1039,6 +1056,7 @@ export function buildGarden(scene: Scene, { isMobile, season, tree }: GardenOpti
       current.snow = target.snow;
       current.bloom = target.bloom;
       current.night = target.night;
+      current.treeShade = target.treeShade;
       current.sunDir.copyFrom(target.sunDir);
     },
     dispose() {
