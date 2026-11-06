@@ -108,7 +108,27 @@ const sunOnArc = (phase: number) => {
   }
   return sunAt(Math.cos(az), Math.sin(az), el);
 };
-const MOON = sunAt(1, -0.28, 13);
+// The moon travels the same east–west line during the night part of the cycle: it rises on the
+// left as the sun sets, rides a low arc in front of the tree (in view at the winter phase), and
+// sets on the right as the sun rises. Phase 1..1.25 takes it from moonrise to its winter spot,
+// 1.25..DAY_CYCLE from there to moonset; in daytime it is below the horizon.
+const MOON_EL = 14;
+const moonOnArc = (phase: number) => {
+  const p = ((phase % DAY_CYCLE) + DAY_CYCLE) % DAY_CYCLE;
+  let m: number;
+  if (p >= 1 && p <= 1.25) m = ((p - 1) / 0.25) * 0.42;
+  else if (p > 1.25) m = 0.42 + ((p - 1.25) / (DAY_CYCLE - 1.25)) * 0.58;
+  else m = 1 + p;                                   // daytime: round the back, below the horizon
+  let az: number, el: number;
+  if (m <= 1) {
+    az = RISE_AZ + (SET_AZ - RISE_AZ) * m;
+    el = MOON_EL * Math.pow(Math.sin(Math.PI * m), 1.3);
+  } else {
+    az = SET_AZ + (RISE_AZ + 2 * Math.PI - SET_AZ) * (m - 1);
+    el = -30 * Math.sin(Math.PI * (m - 1));
+  }
+  return sunAt(Math.cos(az), Math.sin(az), el);
+};
 const hex = (h: string) => Color3.FromHexString(h);
 const PALETTES: Record<Season, Palette> = {
   [Season.Spring]: {
@@ -137,7 +157,7 @@ const PALETTES: Record<Season, Palette> = {
     rock: hex('#9a99ae'), rockShade: hex('#5d5d82'), fog: hex('#1f2850'), skyTop: hex('#070c24'),
     gravel: hex('#f3f5fb'), groove: hex('#d6dbee'), bladeHeight: 0, snow: 1, bloom: 0, leafLit: hex('#d4d7e2'), leafShade: hex('#7d8296'),
     // Night: moonlight, stars, and the lantern lit.
-    sunDir: MOON, dayPhase: 1.25, sunCol: rgb(0.55, 0.63, 0.88), ambCol: rgb(0.28, 0.33, 0.55), glow: hex('#2c3a6e'), night: 1, treeShade: 0,
+    sunDir: moonOnArc(1.25), dayPhase: 1.25, sunCol: rgb(0.55, 0.63, 0.88), ambCol: rgb(0.28, 0.33, 0.55), glow: hex('#2c3a6e'), night: 1, treeShade: 0,
   },
 };
 
@@ -523,7 +543,7 @@ const SKY_FRAG = `
 precision highp float;
 varying vec3 vDir;
 uniform vec3 fogColor; uniform vec3 skyTop; uniform vec3 sunDir; uniform float time;
-uniform vec3 sunCol; uniform vec3 glowColor; uniform float night;
+uniform vec3 sunCol; uniform vec3 glowColor; uniform float night; uniform vec3 solDir; uniform vec3 moonDir;
 ${NOISE_GLSL}
 float fbm5(vec2 p){ float v = 0.0, a = 0.5; for (int i = 0; i < 5; i++){ v += a * vnoise(p); p = p * 2.03 + vec2(17.1, 9.2); a *= 0.5; } return v; }
 // Big, puffy, slightly swirled shapes (domain-warped noise).
@@ -541,10 +561,13 @@ void main(){
   float low = 1.0 - smoothstep(0.15, 0.6, sd.y);
   float band = 1.0 - smoothstep(0.0, 0.32, abs(d.y - 0.02));
   c = mix(c, glowColor, band * (0.25 + 0.75 * pow(az, 3.0)) * low * 0.85);
-  // Sun / moon: soft halo plus a crisp disc.
-  float cs = dot(d, sd);
-  c += sunCol * pow(max(cs, 0.0), 60.0) * 0.45 * (1.0 - night * 0.5);
-  c += vec3(1.0, 0.95, 0.8) * pow(max(cs, 0.0), 8.0) * 0.12 * low * (1.0 - night);
+  // Sun and moon each on their own path: soft halo plus (below, over the clouds) a crisp disc.
+  vec3 so = normalize(solDir), mo = normalize(moonDir);
+  float cs = dot(d, so), cm = dot(d, mo);
+  float sunUp = smoothstep(-0.05, 0.03, so.y), moonUp = smoothstep(-0.05, 0.03, mo.y);
+  c += sunCol * pow(max(cs, 0.0), 60.0) * 0.45 * sunUp * (1.0 - night);
+  c += vec3(1.0, 0.95, 0.8) * pow(max(cs, 0.0), 8.0) * 0.12 * low * sunUp * (1.0 - night);
+  c += sunCol * pow(max(cm, 0.0), 60.0) * 0.22 * moonUp * night;
   // Stars at night.
   vec2 sp = d.xz / (d.y + 0.25) * 90.0;
   float star = step(0.9965, h21(floor(sp))) * smoothstep(0.06, 0.35, d.y);
@@ -575,14 +598,15 @@ void main(){
   }
   // Sun / moon disc on top of the clouds (veiled when one passes in front). The moon is a little
   // larger, with a soft halo and a few faint darker patches.
-  float discEdge = mix(0.9985, 0.998, night);
-  // The disc is always brighter than the glow around it (a flat colour read as a dark spot).
-  vec3 discCol = mix(max(c * 1.06 + 0.1, vec3(1.0, 0.98, 0.9)), max(c + 0.12, vec3(0.95, 0.96, 1.0)), night);
-  vec3 tang = normalize(cross(sd, vec3(0.0, 1.0, 0.0)) + 1e-4);
-  vec2 mp = vec2(dot(d - sd, tang), dot(d - sd, normalize(cross(tang, sd)))) * 40.0;
-  discCol *= 1.0 - night * 0.1 * smoothstep(0.35, 0.8, vnoise(mp * 1.3 + 3.0) * 0.7 + vnoise(mp * 2.9 + 7.0) * 0.3);
-  c += vec3(0.75, 0.8, 1.0) * pow(max(cs, 0.0), 300.0) * 0.35 * night * (1.0 - veil);
-  c = mix(c, discCol, smoothstep(discEdge, discEdge + 0.0005, cs) * (1.0 - veil));
+  // Both discs are always brighter than the glow around them (a flat colour read as a dark spot).
+  vec3 sunDisc = max(c * 1.06 + 0.1, vec3(1.0, 0.98, 0.9));
+  c = mix(c, sunDisc, smoothstep(0.9985, 0.999, cs) * (1.0 - veil) * sunUp * (1.0 - night));
+  vec3 moonDisc = max(c + 0.12, vec3(0.95, 0.96, 1.0));
+  vec3 tang = normalize(cross(mo, vec3(0.0, 1.0, 0.0)) + 1e-4);
+  vec2 mp = vec2(dot(d - mo, tang), dot(d - mo, normalize(cross(tang, mo)))) * 40.0;
+  moonDisc *= 1.0 - 0.1 * smoothstep(0.35, 0.8, vnoise(mp * 1.3 + 3.0) * 0.7 + vnoise(mp * 2.9 + 7.0) * 0.3);
+  c += vec3(0.75, 0.8, 1.0) * pow(max(cm, 0.0), 300.0) * 0.35 * night * moonUp * (1.0 - veil);
+  c = mix(c, moonDisc, smoothstep(0.998, 0.9985, cm) * (1.0 - veil) * moonUp * night);
   gl_FragColor = vec4(pow(c, vec3(2.2)), 1.0); // linear out, see outColor()
 }`;
 
@@ -825,6 +849,8 @@ export function buildGarden(scene: Scene, { isMobile, season, tree }: GardenOpti
     if (len > maxLen) { shadowCenter.x *= maxLen / len; shadowCenter.z *= maxLen / len; }
   };
   placeTreeShadow(current.sunDir);
+  const solDir = sunOnArc(current.dayPhase).normalize();
+  const moonDir = moonOnArc(current.dayPhase).normalize();
   const shadowRadius = new Vector2(2.3, 1.9);
 
   const mats: ShaderMaterial[] = [];
@@ -842,7 +868,7 @@ export function buildGarden(scene: Scene, { isMobile, season, tree }: GardenOpti
 
   // Sky dome (follows the camera, drawn at the far plane behind everything).
   const skyMat = register(new ShaderMaterial('gradientSky', scene, { vertexSource: SKY_VERT, fragmentSource: SKY_FRAG }, {
-    attributes: ['position'], uniforms: ['world', 'viewProjection', 'fogColor', 'skyTop', 'sunDir', 'time', 'sunCol', 'glowColor', 'night'],
+    attributes: ['position'], uniforms: ['world', 'viewProjection', 'fogColor', 'skyTop', 'sunDir', 'time', 'sunCol', 'glowColor', 'night', 'solDir', 'moonDir'],
   }));
   skyMat.backFaceCulling = false;
   skyMat.disableDepthWrite = true;
@@ -1037,7 +1063,10 @@ export function buildGarden(scene: Scene, { isMobile, season, tree }: GardenOpti
     // Sun along its arc (forward only), blended into the moon as night falls.
     const ahead = (((target.dayPhase - current.dayPhase) % DAY_CYCLE) + DAY_CYCLE) % DAY_CYCLE;
     current.dayPhase = (current.dayPhase + ahead * k) % DAY_CYCLE;
-    Vector3.LerpToRef(sunOnArc(current.dayPhase), MOON, current.night, current.sunDir);
+    sunOnArc(current.dayPhase).normalizeToRef(solDir);
+    moonOnArc(current.dayPhase).normalizeToRef(moonDir);
+    // Light comes from the sun by day and the moon by night.
+    Vector3.LerpToRef(solDir, moonDir, current.night, current.sunDir);
     current.sunDir.normalize();
     placeTreeShadow(current.sunDir);
     lanternGlow.emissiveColor.copyFrom(LANTERN_GLOW).scaleInPlace(1 + current.night * 0.6);
@@ -1069,6 +1098,8 @@ export function buildGarden(scene: Scene, { isMobile, season, tree }: GardenOpti
       mat.setColor3('ambCol', current.ambCol);
       mat.setColor3('glowColor', current.glow);
       mat.setFloat('night', current.night);
+      mat.setVector3('solDir', solDir);
+      mat.setVector3('moonDir', moonDir);
       mat.setFloat('treeShade', current.treeShade);
       mat.setFloat('time', time);
       mat.setFloat('bladeHeight', current.bladeHeight);
