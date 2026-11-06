@@ -55,9 +55,9 @@ ffmpeg -ss 3 -i public/media/MyProject.mp4 -frames:v 1 -q:v 4 public/media/MyPro
 ## How it loads
 
 * The page text renders from a small bundle (~0.2 MB). Babylon and the scene are a separate chunk
-  (`src/Scene3D.tsx`) that streams in behind a still render of the garden (`public/media/poster-*.jpg`),
+  (`src/Scene3D.tsx`) that streams in behind a painted dawn backdrop drawn in CSS (no image to download),
   which fades out when the live scene is ready.
-* Phones with data saver on (or on 2G) get the still image and a button to load the 3D on demand.
+* Phones with data saver on (or on 2G) get the painted backdrop and a button to load the 3D on demand.
 * Project previews are MP4s that only download and play while on screen.
 * Models are compressed with meshopt (`EXT_meshopt_compression`, no quantization). The decoder is
   self-hosted in `public/libs/`. Re-run the same treatment on any new GLB before adding it.
@@ -70,7 +70,7 @@ marcos.dev/
 ├── public/
 │   ├── index.html          # HTML template: meta/Open Graph tags, fonts, stylesheets
 │   ├── css/                # Styles (panels.css holds layout, desktop + mobile)
-│   ├── media/              # Project preview MP4s + posters, loading posters, og-image.jpg
+│   ├── media/              # Project preview MP4s + posters, og-image.jpg
 │   ├── meshes/             # GLB models (meshopt-compressed)
 │   ├── libs/               # Self-hosted meshopt decoder
 │   ├── particlesettings/   # Particle system JSON (petals, leaves, red leaves, snow)

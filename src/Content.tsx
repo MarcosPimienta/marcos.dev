@@ -34,7 +34,7 @@ interface ContentProps {
   season: Season;
   // Phone layout: portrait framing, no touch orbit (swipes scroll the page), lighter effects.
   isMobile?: boolean;
-  // Called once the scene is built and ready to render (used to fade out the loading poster).
+  // Called once the scene is built and ready to render (used to fade out the loading backdrop).
   onReady?: () => void;
 };
 

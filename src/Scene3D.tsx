@@ -25,7 +25,7 @@ interface Props {
 }
 
 // Everything Babylon lives in this module so it loads as its own chunk: the page text renders
-// from a small bundle first, and the 3D streams in behind the loading poster.
+// from a small bundle first, and the 3D streams in behind the loading backdrop.
 const Scene3D: React.FC<Props> = ({ season, isMobile, lowRes, onReady }) => {
   const [prevSeason, setPrevSeason] = useState<Season>(season);
   const seasonRef = useRef(season);

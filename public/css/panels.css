@@ -55,14 +55,55 @@ button.section-toggle:focus-visible,
   outline-offset: 2px;
 }
 
-/* ===== Loading poster ===== */
+/* ===== Loading backdrop: painted dawn, pure CSS (matches the garden's spring sky) ===== */
 .loading-overlay {
   position: fixed;
   inset: 0;
   z-index: 1;
-  background: #c9cfc4 center / cover no-repeat;
+  overflow: hidden;
+  background: linear-gradient(to bottom, #a9bde3 0%, #c9c8e2 30%, #ecd3cf 52%, #f2d9cc 62%);
   transition: opacity 0.8s ease;
   pointer-events: none;
+}
+.loading-sun {
+  position: absolute;
+  left: 8%;
+  top: 34%;
+  width: 46vmin;
+  height: 46vmin;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 246, 228, 0.95) 0 9%, rgba(255, 214, 180, 0.45) 22%, rgba(255, 200, 170, 0) 62%);
+  animation: loading-breathe 3.2s ease-in-out infinite;
+}
+.loading-hill {
+  position: absolute;
+  left: -20%;
+  right: -20%;
+  border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+}
+.loading-hill.far {
+  top: 55%;
+  bottom: 0;
+  background: linear-gradient(to bottom, #9fb88c, #7ea072 40%);
+  opacity: 0.85;
+}
+.loading-hill.near {
+  top: 66%;
+  bottom: 0;
+  left: -35%;
+  right: 5%;
+  background: linear-gradient(to bottom, #8fb260, #5d8a4a 45%, #46703f);
+}
+/* Phones: the content panel covers the bottom half, so the hills sit higher, in the open area. */
+.loading-overlay.is-mobile .loading-sun { top: 18%; left: 12%; }
+.loading-overlay.is-mobile .loading-hill.far { top: 30%; }
+.loading-overlay.is-mobile .loading-hill.near { top: 38%; right: -30%; }
+@keyframes loading-breathe {
+  50% { opacity: 0.8; transform: translate(-50%, -50%) scale(1.05); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .loading-sun { animation: none; }
 }
 .loading-overlay.fade {
   opacity: 0;

@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { getBasePath } from './config';
 
 interface Props {
   isMobile: boolean;
-  // Scene finished building: fade the poster out.
+  // Scene finished building: fade the backdrop out.
   ready: boolean;
   // 3D is downloading: show the progress pill.
   loading: boolean;
@@ -11,8 +10,8 @@ interface Props {
   onLoad3D?: () => void;
 }
 
-// A still render of the garden shown instantly, so visitors never stare at a blank screen while
-// the 3D scene downloads. It fades out once the live scene is ready.
+// A soft, painted dawn backdrop (pure CSS, nothing to download) shown instantly, so visitors never
+// stare at a blank screen while the 3D scene downloads. It fades into the live scene once ready.
 const LoadingOverlay: React.FC<Props> = ({ isMobile, ready, loading, onLoad3D }) => {
   const [gone, setGone] = useState(false);
   useEffect(() => {
@@ -22,15 +21,14 @@ const LoadingOverlay: React.FC<Props> = ({ isMobile, ready, loading, onLoad3D })
   }, [ready]);
   if (gone) return null;
 
-  const poster = `${getBasePath()}/media/poster-${isMobile ? 'mobile' : 'desktop'}.jpg`;
   return (
     <>
-      <div
-        className={`loading-overlay ${ready ? 'fade' : ''}`}
-        style={{ backgroundImage: `url(${poster})` }}
-        aria-hidden="true"
-      />
-      {/* Separate top layer: the poster sits under the page, but the pill must stay tappable. */}
+      <div className={`loading-overlay ${ready ? 'fade' : ''} ${isMobile ? 'is-mobile' : ''}`} aria-hidden="true">
+        <div className="loading-sun" />
+        <div className="loading-hill far" />
+        <div className="loading-hill near" />
+      </div>
+      {/* Separate top layer: the backdrop sits under the page, but the pill must stay tappable. */}
       {(loading || onLoad3D) && !ready && (
         <div className="loading-pill-layer">
           {loading && (
