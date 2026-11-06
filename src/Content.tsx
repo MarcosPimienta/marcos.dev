@@ -161,12 +161,15 @@ export const Content: React.FC<ContentProps & {
 
     if (isMobile) {
       // Portrait screens: fix the horizontal field of view so the whole tree fits the width,
-      // and aim lower so the tree sits in the upper part of the screen above the text.
+      // and shift the view so the tree and garden sit in the clear space above the content
+      // panel along the bottom of the screen.
       camera.fovMode = Camera.FOVMODE_HORIZONTAL_FIXED;
       camera.fov = 1.05;
-      camera.radius = 8.5;
+      camera.radius = 11;
+      camera.beta = Tools.ToRadians(70);
       camera.target = new Vector3(0, 0.9, 0);
-      // No touch orbit on phones: a swipe should scroll the page. Turn slowly instead.
+      camera.targetScreenOffset = new Vector2(0, 4);
+      // No touch orbit on phones (the panel's swipes and scrolls stay with the content). Turn slowly instead.
       camera.useAutoRotationBehavior = true;
       if (camera.autoRotationBehavior) {
         camera.autoRotationBehavior.idleRotationSpeed = 0.06;
