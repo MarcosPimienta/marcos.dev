@@ -85,13 +85,15 @@ const sunAt = (along: number, side: number, elevationDeg: number) => {
 };
 const rgb = (r: number, g: number, b: number) => new Color3(r, g, b);
 
-// The sun's daily arc. Phase 0..1 is daytime: it rises low on the left of the tree, passes high
-// overhead at 0.5 and sets low on the right; 1..DAY_CYCLE is night, below the horizon. Seasons
+// The sun's daily arc. Phase 0..1 is daytime: it rises low on the left, passes high in front of
+// the tree at 0.5 and sets low on the right; 1..DAY_CYCLE is night, below the horizon. Seasons
 // move the phase FORWARD only (like the season tabs, which step through the year), so switching
 // season always sweeps the sun across the sky the way a day would, never backwards.
 const DAY_CYCLE = 1.5;
-const RISE_AZ = Math.atan2(-0.9, 1);   // left of the view at dawn
-const SET_AZ = Math.atan2(0.06, 1);    // right of the tree at dusk, clear of the desktop panel
+// Rise and set are exactly opposite (an east–west line across the view), so the tree's shadow at
+// dusk points the opposite way from its shadow at dawn.
+const RISE_AZ = -Math.PI / 2;          // due left of the default view at dawn
+const SET_AZ = Math.PI / 2;            // due right at dusk
 const NOON_EL = 68;
 const sunOnArc = (phase: number) => {
   const p = ((phase % DAY_CYCLE) + DAY_CYCLE) % DAY_CYCLE;
