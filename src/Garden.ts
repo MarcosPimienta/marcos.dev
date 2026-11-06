@@ -181,15 +181,16 @@ function fbm(x: number, z: number, oct = 4) {
 
 // The hill: flat garden on top, grassy slopes down to a wide rolling meadow.
 const PLAIN_Y = -11;
-const HILL_FOOT = 20;       // metres from the garden edge to the bottom of the slope
+const HILL_TOP = 4;         // flat lawn around the garden before the slope starts (metres)
+const HILL_FOOT = 30;       // metres from the garden edge to the bottom of the slope
 // Layered rolling hills: gentle near the tree's hill, bigger further out so distant ridges
 // stack up towards the horizon.
 function plainHeight(x: number, z: number) {
   const r = Math.hypot(x, z);
-  const far = smoothstep(25, 120, r);
+  const far = smoothstep(40, 150, r);
   return PLAIN_Y
     + (fbm(x * 0.0065 + 5.2, z * 0.0065, 3) - 0.5) * (10 + 38 * far)
-    + (fbm(x * 0.022, z * 0.022, 3) - 0.5) * 5 * (1 - smoothstep(40, 110, r))
+    + (fbm(x * 0.022, z * 0.022, 3) - 0.5) * 5 * (1 - smoothstep(50, 130, r))
     + Math.pow(smoothstep(700, 2000, r), 2) * 20;      // far edge curves up to meet the horizon
 }
 // Organic edges come from a few smooth sine waves (not hash noise), so the shaders compute
@@ -230,8 +231,8 @@ export function terrainHeight(x: number, z: number) {
   // The gravel sits in a shallow pit; the bank rises softly to the lawn over CURB metres.
   const pit = PIT * (1 - smoothstep(0, CURB, bed));
   const garden = GROUND_Y - pit + mound;
-  // A short lawn around the curb, then the slope rounds over and eases out into the meadow.
-  const t = smoothstep(CURB + 0.8, HILL_FOOT, bed);
+  // A broad, level lawn around the garden, then the slope rounds over and eases into the meadow.
+  const t = smoothstep(CURB + HILL_TOP, HILL_FOOT, bed);
   const lumps = (fbm(x * 0.12 + 3.1, z * 0.12, 3) - 0.5) * 1.2 * 4 * t * (1 - t);
   return garden + (plainHeight(x, z) - garden) * t + lumps;
 }
@@ -372,7 +373,7 @@ void main(){
   float grassTex = strokes * 0.7 + flecks * 0.3;
   float detail = (1.0 - smoothstep(20.0, 85.0, dist0)) * (1.0 - snow * 0.8);
   // Near the hill the ground takes on the blades' own colour, so the blades blend into it.
-  float underBlades = (1.0 - smoothstep(22.0, 42.0, length(vW.xz))) * (1.0 - snow);
+  float underBlades = (1.0 - smoothstep(30.0, 52.0, length(vW.xz))) * (1.0 - snow);
   gr = mix(gr, mix(root, tip, 0.68), underBlades * 0.65);
   // Coarser tufts and clumps that still read from far away (down the hill, across the meadow).
   float tufts = vnoise(vec2(sq.x * 1.0, sq.y * 2.6)) * 0.55 + vnoise(vW.xz * 1.3) * 0.45;
@@ -862,9 +863,9 @@ export function buildGarden(scene: Scene, { isMobile, season, tree }: GardenOpti
   // The coarse grid is 16 m, so its lines meet the hill mesh's edges exactly; its vertices
   // under the hill are pushed far down out of sight.
   const terrainMat = register(toonMaterial(scene, 'toonTerrain', TERRAIN_FRAG, ['grass', 'grassShade', 'rock', 'rockShade', 'gravel', 'groove', 'snow', 'time', 'root', 'tip']));
-  const near = heightGround(scene, 'hill', 64, isMobile ? 160 : 256, terrainHeight);
-  const far = heightGround(scene, 'meadowFar', 4032, 252, (x, z) =>
-    Math.abs(x) < 31 && Math.abs(z) < 31 ? PLAIN_Y - 12 : terrainHeight(x, z));
+  const near = heightGround(scene, 'hill', 192, isMobile ? 240 : 384, terrainHeight);
+  const far = heightGround(scene, 'meadowFar', 4032, 336, (x, z) =>
+    Math.abs(x) < 95 && Math.abs(z) < 95 ? PLAIN_Y - 20 : terrainHeight(x, z));
   near.material = terrainMat; far.material = terrainMat;
   disposables.push(near, far);
 
@@ -963,7 +964,7 @@ export function buildGarden(scene: Scene, { isMobile, season, tree }: GardenOpti
   grassMat.backFaceCulling = false;
   const blade = bladeMesh(scene);
   blade.material = grassMat;
-  const target_count = isMobile ? 36000 : 130000;
+  const target_count = isMobile ? 42000 : 170000;
   const matrices = new Float32Array(target_count * 16);
   const m = new Matrix(), q = new Quaternion(), s = new Vector3(), p = new Vector3();
   let count = 0, tries = 0;
@@ -991,7 +992,7 @@ export function buildGarden(scene: Scene, { isMobile, season, tree }: GardenOpti
   tries = 0;
   while (count < target_count && tries < target_count * 4) {
     tries++;
-    const r = 31 * Math.pow(Math.random(), 0.72);
+    const r = 40 * Math.pow(Math.random(), 0.72);
     const a = Math.random() * Math.PI * 2;
     const x = Math.cos(a) * r, z = Math.sin(a) * r;
     const along = x * VIEW.x + z * VIEW.z, side = x * RIGHT.x + z * RIGHT.z;
@@ -1003,7 +1004,7 @@ export function buildGarden(scene: Scene, { isMobile, season, tree }: GardenOpti
     if (patch < 0.32 && Math.random() < 0.6) continue; // a few thinner patches break up the carpet
     // Shorter near the curb, as if trimmed along the garden edge.
     const trim = smoothstep(CURB, CURB + 1.5, bedDistance(along, side));
-    const edgeFade = 1 - smoothstep(19, 31, r) * 0.9;   // blades shrink into the painted ground
+    const edgeFade = 1 - smoothstep(26, 40, r) * 0.9;   // blades shrink into the painted ground
     place(x, z, (0.42 + Math.random() * 0.45) * (0.7 + patch * 0.6) * (0.4 + 0.6 * trim) * edgeFade, 0.5 + Math.random() * 0.4);
   }
   blade.thinInstanceSetBuffer('matrix', matrices.subarray(0, count * 16), 16, true);
@@ -1023,7 +1024,7 @@ export function buildGarden(scene: Scene, { isMobile, season, tree }: GardenOpti
   const dm = new Float32Array(daisyCount * 16);
   let dn = 0;
   for (let tries2 = 0; dn < daisyCount && tries2 < daisyCount * 6; tries2++) {
-    const r = 3 + 22 * Math.pow(Math.random(), 0.8);
+    const r = 3 + 28 * Math.pow(Math.random(), 0.8);
     const a = Math.random() * Math.PI * 2;
     const x = Math.cos(a) * r, z = Math.sin(a) * r;
     const along = x * VIEW.x + z * VIEW.z, side = x * RIGHT.x + z * RIGHT.z;

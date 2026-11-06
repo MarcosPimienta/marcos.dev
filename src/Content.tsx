@@ -154,10 +154,11 @@ export const Content: React.FC<ContentProps & {
 
     // Orbit constraints
     // Mobile auto-rotates at its own angle; desktop orbits stay near eye level so the sky stays in frame.
-    camera.lowerBetaLimit = Tools.ToRadians(isMobile ? 45 : 55);
+    // Keep the view from looking down onto the far meadow, where the ground gets coarse.
+    camera.lowerBetaLimit = Tools.ToRadians(isMobile ? 45 : 66);
     camera.upperBetaLimit = Tools.ToRadians(95);   // About eye level
     camera.lowerRadiusLimit = 3;                  // Zoom-in limit
-    camera.upperRadiusLimit = 12;               // Zoom-out limit
+    camera.upperRadiusLimit = isMobile ? 12 : 9.5; // Zoom-out limit (phones use a fixed, wider view)
     camera.allowUpsideDown = false;
     camera.panningSensibility = 0;                // ❌ Disable panning
 
