@@ -44,6 +44,8 @@ export const AnimationCtrl: React.FC<AnimationCtrlProps> = ({
 
     // 1) stop any that might still be running
     [petalPS, greenPS, redPS, snowPS].forEach(ps => ps?.stop());
+    // Snow falls slowly and lives long: leaving winter, let it drift a moment, then clear it.
+    const clearSnow = to !== Season.Winter ? window.setTimeout(() => snowPS?.reset(), 1500) : undefined;
 
     // 2) fire off exactly the one for the new season
     switch (to) {
@@ -248,6 +250,7 @@ export const AnimationCtrl: React.FC<AnimationCtrlProps> = ({
     animateGroup(allLeafInstances, 0, 1);
   }
     return () => {
+      window.clearTimeout(clearSnow)
       disposables.current.forEach(d => d.stop())
       disposables.current = []
     }

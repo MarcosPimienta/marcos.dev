@@ -106,8 +106,10 @@ export const Content: React.FC<ContentProps & {
 
     ps.emitter = emitter;
     if (isMobile) ps.emitRate *= 0.5;
+    // Parsing auto-starts the system (and pre-warms the snow, filling the sky at once), so a
+    // system for another season is stopped AND cleared, not just stopped.
     if (season === activeIn) ps.start();
-    else ps.stop();
+    else { ps.stop(); ps.reset(); }
     return ps;
   }
 
