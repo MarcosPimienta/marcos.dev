@@ -69,7 +69,8 @@ interface Palette {
   leafLit: Color3;    // round far-off trees: lit / shaded foliage
   leafShade: Color3;
   // Time of day: spring = dawn, summer = noon, fall = dusk, winter = night (the "sun" is the moon).
-  sunDir: Vector3;    // towards the sun (or moon)
+  sunDir: Vector3;    // towards the sun at this season's time of day (the moon in winter)
+  dayPhase: number;   // where the sun is on its daily arc (see sunOnArc)
   sunCol: Color3;     // light on lit surfaces (multiplier)
   ambCol: Color3;     // light in shade (multiplier)
   glow: Color3;       // horizon glow on the sun's side
@@ -83,6 +84,29 @@ const sunAt = (along: number, side: number, elevationDeg: number) => {
   return new Vector3(h.x * Math.cos(e), Math.sin(e), h.z * Math.cos(e));
 };
 const rgb = (r: number, g: number, b: number) => new Color3(r, g, b);
+
+// The sun's daily arc. Phase 0..1 is daytime: it rises low on the left of the tree, passes high
+// overhead at 0.5 and sets low on the right; 1..DAY_CYCLE is night, below the horizon. Seasons
+// move the phase FORWARD only (like the season tabs, which step through the year), so switching
+// season always sweeps the sun across the sky the way a day would, never backwards.
+const DAY_CYCLE = 1.5;
+const RISE_AZ = Math.atan2(-0.9, 1);   // left of the view at dawn
+const SET_AZ = Math.atan2(0.06, 1);    // right of the tree at dusk, clear of the desktop panel
+const NOON_EL = 68;
+const sunOnArc = (phase: number) => {
+  const p = ((phase % DAY_CYCLE) + DAY_CYCLE) % DAY_CYCLE;
+  let az: number, el: number;
+  if (p <= 1) {
+    az = RISE_AZ + (SET_AZ - RISE_AZ) * p;
+    el = NOON_EL * Math.pow(Math.sin(Math.PI * p), 1.3);
+  } else {
+    const q = (p - 1) / (DAY_CYCLE - 1);           // back round, below the horizon
+    az = SET_AZ + (RISE_AZ + 2 * Math.PI - SET_AZ) * q;
+    el = -30 * Math.sin(Math.PI * q);
+  }
+  return sunAt(Math.cos(az), Math.sin(az), el);
+};
+const MOON = sunAt(1, -0.28, 13);
 const hex = (h: string) => Color3.FromHexString(h);
 const PALETTES: Record<Season, Palette> = {
   [Season.Spring]: {
@@ -90,28 +114,28 @@ const PALETTES: Record<Season, Palette> = {
     rock: hex('#a9a698'), rockShade: hex('#6c7a78'), fog: hex('#f2d9cc'), skyTop: hex('#a9bde3'),
     gravel: hex('#ece7d4'), groove: hex('#cbc3ab'), bladeHeight: 1, snow: 0, bloom: 1, leafLit: hex('#a9c96a'), leafShade: hex('#4f7e4a'),
     // Dawn: low sun on the left, peach horizon, warm light, long shadows.
-    sunDir: sunAt(1, -0.9, 12), sunCol: rgb(1.12, 0.98, 0.88), ambCol: rgb(0.86, 0.84, 0.96), glow: hex('#ffbf9a'), night: 0, treeShade: 0.75,
+    sunDir: sunOnArc(0.05), dayPhase: 0.05, sunCol: rgb(1.12, 0.98, 0.88), ambCol: rgb(0.86, 0.84, 0.96), glow: hex('#ffbf9a'), night: 0, treeShade: 0.75,
   },
   [Season.Summer]: {
     grass: hex('#94c25a'), grassShade: hex('#3f7653'), root: hex('#204a2c'), tip: hex('#b7d968'),
     rock: hex('#a6a497'), rockShade: hex('#647677'), fog: hex('#e3ecef'), skyTop: hex('#7fb4e3'),
     gravel: hex('#ebe7d6'), groove: hex('#c6bfab'), bladeHeight: 1.15, snow: 0, bloom: 0, leafLit: hex('#8fbf5a'), leafShade: hex('#3d6e45'),
     // Noon: high sun, clear blue sky, crisp light.
-    sunDir: sunAt(0.3, -0.5, 68), sunCol: rgb(1.06, 1.04, 1.0), ambCol: rgb(0.9, 0.93, 1.0), glow: hex('#fff3d6'), night: 0, treeShade: 1,
+    sunDir: sunOnArc(0.5), dayPhase: 0.5, sunCol: rgb(1.06, 1.04, 1.0), ambCol: rgb(0.9, 0.93, 1.0), glow: hex('#fff3d6'), night: 0, treeShade: 1,
   },
   [Season.Fall]: {
     grass: hex('#d2b25e'), grassShade: hex('#8a6a4c'), root: hex('#5e4a26'), tip: hex('#e8cc74'),
     rock: hex('#b8aa98'), rockShade: hex('#7d6e70'), fog: hex('#eea488'), skyTop: hex('#5d6699'),
     gravel: hex('#ede2cd'), groove: hex('#cdb99c'), bladeHeight: 0.95, snow: 0, bloom: 0, leafLit: hex('#e8a24a'), leafShade: hex('#9a4630'),
     // Dusk (about 5 pm): sun sinking ahead of the camera, red glow along the horizon.
-    sunDir: sunAt(1, -0.35, 7), sunCol: rgb(1.3, 0.82, 0.58), ambCol: rgb(0.72, 0.62, 0.78), glow: hex('#ff5a32'), night: 0, treeShade: 0.75,
+    sunDir: sunOnArc(0.965), dayPhase: 0.965, sunCol: rgb(1.3, 0.82, 0.58), ambCol: rgb(0.72, 0.62, 0.78), glow: hex('#ff5a32'), night: 0, treeShade: 0.75,
   },
   [Season.Winter]: {
     grass: hex('#f1f3fa'), grassShade: hex('#9ea8cf'), root: hex('#d4dbee'), tip: hex('#ffffff'),
     rock: hex('#9a99ae'), rockShade: hex('#5d5d82'), fog: hex('#1f2850'), skyTop: hex('#070c24'),
     gravel: hex('#f3f5fb'), groove: hex('#d6dbee'), bladeHeight: 0, snow: 1, bloom: 0, leafLit: hex('#d4d7e2'), leafShade: hex('#7d8296'),
     // Night: moonlight, stars, and the lantern lit.
-    sunDir: sunAt(1, -0.28, 13), sunCol: rgb(0.55, 0.63, 0.88), ambCol: rgb(0.28, 0.33, 0.55), glow: hex('#2c3a6e'), night: 1, treeShade: 0,
+    sunDir: MOON, dayPhase: 1.25, sunCol: rgb(0.55, 0.63, 0.88), ambCol: rgb(0.28, 0.33, 0.55), glow: hex('#2c3a6e'), night: 1, treeShade: 0,
   },
 };
 
@@ -550,7 +574,8 @@ void main(){
   // Sun / moon disc on top of the clouds (veiled when one passes in front). The moon is a little
   // larger, with a soft halo and a few faint darker patches.
   float discEdge = mix(0.9985, 0.998, night);
-  vec3 discCol = mix(vec3(1.0, 0.97, 0.86), vec3(0.95, 0.96, 1.0), night);
+  // The disc is always brighter than the glow around it (a flat colour read as a dark spot).
+  vec3 discCol = mix(max(c * 1.06 + 0.1, vec3(1.0, 0.98, 0.9)), max(c + 0.12, vec3(0.95, 0.96, 1.0)), night);
   vec3 tang = normalize(cross(sd, vec3(0.0, 1.0, 0.0)) + 1e-4);
   vec2 mp = vec2(dot(d - sd, tang), dot(d - sd, normalize(cross(tang, sd)))) * 40.0;
   discCol *= 1.0 - night * 0.1 * smoothstep(0.35, 0.8, vnoise(mp * 1.3 + 3.0) * 0.7 + vnoise(mp * 2.9 + 7.0) * 0.3);
@@ -779,7 +804,7 @@ export function buildGarden(scene: Scene, { isMobile, season, tree }: GardenOpti
     rock: p.rock.clone(), rockShade: p.rockShade.clone(), fog: p.fog.clone(), skyTop: p.skyTop.clone(),
     gravel: p.gravel.clone(), groove: p.groove.clone(),
     bladeHeight: p.bladeHeight, snow: p.snow, bloom: p.bloom, leafLit: p.leafLit.clone(), leafShade: p.leafShade.clone(),
-    sunDir: p.sunDir.clone(), sunCol: p.sunCol.clone(), ambCol: p.ambCol.clone(), glow: p.glow.clone(), night: p.night,
+    sunDir: p.sunDir.clone(), dayPhase: p.dayPhase, sunCol: p.sunCol.clone(), ambCol: p.ambCol.clone(), glow: p.glow.clone(), night: p.night,
     treeShade: p.treeShade,
   });
   const current = clonePalette(PALETTES[season]);
@@ -1007,7 +1032,10 @@ export function buildGarden(scene: Scene, { isMobile, season, tree }: GardenOpti
     current.bloom += (target.bloom - current.bloom) * k;
     current.night += (target.night - current.night) * k;
     current.treeShade += (target.treeShade - current.treeShade) * k;
-    Vector3.LerpToRef(current.sunDir, target.sunDir, k, current.sunDir);
+    // Sun along its arc (forward only), blended into the moon as night falls.
+    const ahead = (((target.dayPhase - current.dayPhase) % DAY_CYCLE) + DAY_CYCLE) % DAY_CYCLE;
+    current.dayPhase = (current.dayPhase + ahead * k) % DAY_CYCLE;
+    Vector3.LerpToRef(sunOnArc(current.dayPhase), MOON, current.night, current.sunDir);
     current.sunDir.normalize();
     placeTreeShadow(current.sunDir);
     lanternGlow.emissiveColor.copyFrom(LANTERN_GLOW).scaleInPlace(1 + current.night * 0.6);
@@ -1058,6 +1086,7 @@ export function buildGarden(scene: Scene, { isMobile, season, tree }: GardenOpti
       current.night = target.night;
       current.treeShade = target.treeShade;
       current.sunDir.copyFrom(target.sunDir);
+      current.dayPhase = target.dayPhase;
     },
     dispose() {
       scene.onBeforeRenderObservable.remove(obs);
