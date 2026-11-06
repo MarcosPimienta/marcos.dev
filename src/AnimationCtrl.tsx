@@ -60,8 +60,6 @@ export const AnimationCtrl: React.FC<AnimationCtrlProps> = ({
       .filter(m => /^b\d+_l/.test(m.name)) as InstancedMesh[]
     const allFlowerInstances = scene.meshes
       .filter(m => m.name.startsWith('flw_')) as InstancedMesh[]
-      const allRedLeafInstances = scene.meshes
-      .filter(m => m.name.startsWith('rb_')) as InstancedMesh[]
 
     // 4) compute how many frames our transition spans
     const startIdx = order.indexOf(from)
@@ -191,22 +189,17 @@ export const AnimationCtrl: React.FC<AnimationCtrlProps> = ({
       scene.beginDirectAnimation(leafMat, leafMat.animations!, 0, totalFrames, false,1),
     ]
 
-    // 10) petals vs leaves scaling only on Spring transitions
-    const fadeInSpring  = from !== Season.Spring && to === Season.Spring
-    const fadeOutSpring = from === Season.Spring && to !== Season.Spring
+    // 10) blossoms and green leaves: each instance grows or shrinks from its CURRENT size to the
+    // size it has in the destination season. A transition interrupted by a fast tab switch then
+    // never leaves the tree in a mixed state (blossoms lingering in fall, for example).
+    // Red fall leaves keep their own sizes and are shown/hidden by their material's alpha.
+    const flowerTarget = to === Season.Spring ? 0.85 : 0
+    const leafTarget   = to === Season.Summer ? 1 : 0
 
-    const fadeInWinter  = from !== Season.Winter && to === Season.Winter
-    const fadeOutWinter = from === Season.Winter && to !== Season.Winter
-
-    const fadeInFall  = from !== Season.Fall && to === Season.Fall
-    const fadeOutFall = from === Season.Fall && to !== Season.Fall
-
-    function animateGroup(
-      instances: InstancedMesh[],
-      fromScale: number,
-      toScale: number
-    ) {
+    function animateTo(instances: InstancedMesh[], target: number) {
+      const end = new Vector3(target, target, target)
       for (const inst of instances) {
+        if (Math.abs(inst.scaling.x - target) < 1e-3) continue
         const anim = new Animation(
           `${inst.name}_scale`,
           'scaling',
@@ -216,8 +209,8 @@ export const AnimationCtrl: React.FC<AnimationCtrlProps> = ({
         )
         anim.setEasingFunction(ease)
         anim.setKeys([
-          { frame:0,           value: new Vector3(fromScale, fromScale, fromScale) },
-          { frame:totalFrames, value: new Vector3(toScale,   toScale,   toScale) }
+          { frame: 0,           value: inst.scaling.clone() },
+          { frame: totalFrames, value: end },
         ])
         disposables.current.push(
           scene.beginDirectAnimation(inst, [anim], 0, totalFrames, false, 1)
@@ -225,30 +218,8 @@ export const AnimationCtrl: React.FC<AnimationCtrlProps> = ({
       }
     }
 
-  if (fadeOutSpring) {
-    // leaving Spring: hide petals, show leaves
-    animateGroup(allFlowerInstances, 1, 0);
-    animateGroup(allLeafInstances,   0, 1);
-  }
-  else if (fadeInSpring) {
-    // arriving at Spring: show petals, hide leaves
-    animateGroup(allFlowerInstances, 0, 1);
-    animateGroup(allLeafInstances,   1, 0);
-  }
-  else if (fadeInFall) {
-    animateGroup(allLeafInstances,    1, 0);
-    animateGroup(allRedLeafInstances, 0, 1);
-  }
-  else if (fadeOutFall) {
-    animateGroup(allRedLeafInstances, 1, 0);
-    animateGroup(allLeafInstances,    0, 1);
-  }
-  else if (fadeInWinter) {
-    animateGroup(allLeafInstances, 1, 0);
-  }
-  else if (fadeOutWinter) {
-    animateGroup(allLeafInstances, 0, 1);
-  }
+    animateTo(allFlowerInstances, flowerTarget)
+    animateTo(allLeafInstances, leafTarget)
     return () => {
       window.clearTimeout(clearSnow)
       disposables.current.forEach(d => d.stop())
