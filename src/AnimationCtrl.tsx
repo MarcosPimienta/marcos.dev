@@ -147,9 +147,21 @@ export const AnimationCtrl: React.FC<AnimationCtrlProps> = ({
     const leafMat = scene.getMaterialByName('leafMat') as CustomMaterial
     const redLeafMat = scene.getMaterialByName('redLeafMat') as CustomMaterial;
 
-    // ensure correct initial alpha
-    leafMat.alpha    = 1
-    redLeafMat.alpha = 0
+    // The tree's foliage changes on its own, much shorter timeline than the sky and light, always
+    // starting from where it is now (no snapping), so a fast tab switch just redirects it.
+    const LEAF_FRAMES = 40   // about 0.7 s
+    const leafEase = new CubicEase() as unknown as EasingFunction
+    leafEase.setEasingMode(EasingFunction.EASINGMODE_EASEOUT)
+    function quickTo(target: any, property: string, dataType: number, end: any) {
+      const start = target[property]
+      const anim = new Animation(`quick_${property}`, property, 60, dataType, Animation.ANIMATIONLOOPMODE_CONSTANT)
+      anim.setKeys([
+        { frame: 0, value: typeof start === 'number' ? start : start.clone() },
+        { frame: LEAF_FRAMES, value: end },
+      ])
+      anim.setEasingFunction(leafEase)
+      return scene.beginDirectAnimation(target, [anim], 0, LEAF_FRAMES, false, 1)
+    }
 
 
     // 9) apply all the seasonal tweens
@@ -166,27 +178,16 @@ export const AnimationCtrl: React.FC<AnimationCtrlProps> = ({
       buildAnim('direction', Animation.ANIMATIONTYPE_VECTOR3, moodMap('sunDirection')),
     ]
     const exposureAnims = [ buildAnim('exposure', Animation.ANIMATIONTYPE_FLOAT, moodMap('exposure')) ]
-    leafMat.animations = [
-      buildAnim('diffuseColor', Animation.ANIMATIONTYPE_COLOR3, leafTintMap),
-      buildAnim('alphaCutOff',  Animation.ANIMATIONTYPE_FLOAT,  leafCutoffMap),
-    ]
     // start them
     disposables.current.forEach(d => d.stop())
     disposables.current = [
-      scene.beginDirectAnimation(
-        leafMat,
-        [ buildAnim('alpha', Animation.ANIMATIONTYPE_FLOAT, greenAlphaMap) ],
-        0, totalFrames, false, 1
-      ),
-      scene.beginDirectAnimation(
-        redLeafMat,
-        [ buildAnim('alpha', Animation.ANIMATIONTYPE_FLOAT, redAlphaMap) ],
-        0, totalFrames, false, 1
-      ),
+      quickTo(leafMat, 'alpha', Animation.ANIMATIONTYPE_FLOAT, greenAlphaMap[to]),
+      quickTo(redLeafMat, 'alpha', Animation.ANIMATIONTYPE_FLOAT, redAlphaMap[to]),
+      quickTo(leafMat, 'diffuseColor', Animation.ANIMATIONTYPE_COLOR3, leafTintMap[to].clone()),
+      quickTo(leafMat, 'alphaCutOff', Animation.ANIMATIONTYPE_FLOAT, leafCutoffMap[to]),
       scene.beginDirectAnimation(light,   light.animations!,   0, totalFrames, false,1),
       ...(sun ? [scene.beginDirectAnimation(sun, sunAnims, 0, totalFrames, false, 1)] : []),
       scene.beginDirectAnimation(scene.imageProcessingConfiguration, exposureAnims, 0, totalFrames, false, 1),
-      scene.beginDirectAnimation(leafMat, leafMat.animations!, 0, totalFrames, false,1),
     ]
 
     // 10) blossoms and green leaves: each instance grows or shrinks from its CURRENT size to the
@@ -200,21 +201,7 @@ export const AnimationCtrl: React.FC<AnimationCtrlProps> = ({
       const end = new Vector3(target, target, target)
       for (const inst of instances) {
         if (Math.abs(inst.scaling.x - target) < 1e-3) continue
-        const anim = new Animation(
-          `${inst.name}_scale`,
-          'scaling',
-          60,
-          Animation.ANIMATIONTYPE_VECTOR3,
-          Animation.ANIMATIONLOOPMODE_CONSTANT
-        )
-        anim.setEasingFunction(ease)
-        anim.setKeys([
-          { frame: 0,           value: inst.scaling.clone() },
-          { frame: totalFrames, value: end },
-        ])
-        disposables.current.push(
-          scene.beginDirectAnimation(inst, [anim], 0, totalFrames, false, 1)
-        )
+        disposables.current.push(quickTo(inst, 'scaling', Animation.ANIMATIONTYPE_VECTOR3, end))
       }
     }
 
